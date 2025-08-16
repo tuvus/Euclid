@@ -1,5 +1,5 @@
 game:
-	cmake -B build -G Ninja -S . -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake
+	cmake -B build -S . -G Ninja -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 
 	cmake --build build
 
 debug:

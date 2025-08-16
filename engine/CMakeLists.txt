@@ -32,8 +32,8 @@ set(Headers
         ${PROJECT_SOURCE_DIR}/include/engine/emath.h
 )
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "") # works
 add_library(${PROJECT_NAME} STATIC ${Sources} ${Headers})
+
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR} ${PROJECT_SOURCE_DIR}/include/engine ${PROJECT_SOURCE_DIR})
 
