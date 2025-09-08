@@ -1,8 +1,8 @@
 #include "game_scene.h"
 
+#include "base.h"
 #include "card_player.h"
 #include "card_ui.h"
-#include "game_object_ui.h"
 #include "tower.h"
 #include "tower_card.h"
 #include "unit.h"
@@ -80,7 +80,16 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
             card->Play_Card(player, Vector2(x, y));
             return RPC_Manager::VALID_CALL_ON_CLIENTS;
         });
+    card_game.Get_Network()->bind_rpc("discard", [this](Player_ID player_id, Obj_ID object_id) {
+        Card_Player* player = static_cast<Card_Player*>(game_manager->Get_Player(player_id));
+        Card* card = static_cast<Card*>(game_manager->Get_Object(object_id));
+        // Check if the card is in the hand
+        if (ranges::find(player->deck->hand, card) == player->deck->hand.end())
+            return RPC_Manager::INVALID;
 
+        card->Discard_Card(player);
+        return RPC_Manager::VALID_CALL_ON_CLIENTS;
+    });
     Texture2D card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
 
     card_datas.emplace_back(
@@ -112,6 +121,9 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         }
         card_player->deck->Shuffle_Deck();
         card_player->deck->Draw_Card(3);
+        game_manager->Add_Object(new Base(*game_manager, *card_player,
+                                          Get_Team_Path(card_player->team)->positions[0],
+                                          Get_Team_Path(card_player->team), 20, 100));
     }
 
     for (int i = 0; i < starting_cards.size(); i++) {
@@ -183,44 +195,6 @@ bool Game_Scene::Can_Place_Tower(Vector2 pos, float min_dist) const {
 
 void Game_Scene::Update(std::chrono::milliseconds) {
     game_manager->Update();
-    if (time_until_income-- == 0) {
-        for (auto* player : game_manager->players) {
-            Card_Player* card_player = static_cast<Card_Player*>(player);
-            if (card_player->team == -1)
-                continue;
-
-            card_player->money++;
-            if (card_player->deck->hand.empty()) {
-                card_player->deck->Draw_Card(3);
-            }
-
-            if (card_player->ai && !card_player->deck->hand.empty()) {
-                uniform_int_distribution<int> hand_dist(0, card_player->deck->hand.size() - 1);
-                int card_to_play = hand_dist(game_manager->random);
-                Card* card = card_player->deck->hand[card_to_play];
-                if (Tower_Card* tower_card = dynamic_cast<Tower_Card*>(card)) {
-                    for (auto pos : Get_Team_Path(card_player->team)->positions) {
-                        static uniform_int_distribution<int> tiny_offset(-10, 10);
-                        Vector2 r_pos = Vector2(pos.x + 50 + abs(tiny_offset(game_manager->random)),
-                                                pos.y + tiny_offset(game_manager->random));
-                        if (tower_card->Can_Play_Card(card_player, r_pos)) {
-                            tower_card->Play_Card(card_player, r_pos);
-                            break;
-                        }
-                        Vector2 l_pos = Vector2(pos.x - 50 - abs(tiny_offset(game_manager->random)),
-                                                pos.y + tiny_offset(game_manager->random));
-                        if (tower_card->Can_Play_Card(card_player, l_pos)) {
-                            tower_card->Play_Card(card_player, l_pos);
-                            break;
-                        }
-                    }
-                } else if (card->Can_Play_Card(card_player, Vector2Zero())) {
-                    card->Play_Card(card_player, Vector2Zero());
-                }
-            }
-        }
-        time_until_income = 40;
-    }
 }
 
 void Game_Scene::On_Disconnected() {
