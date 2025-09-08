@@ -101,6 +101,9 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
 
     for (auto player : game_manager->players) {
         Card_Player* card_player = static_cast<Card_Player*>(player);
+        if (card_player->team == -1)
+            continue;
+
         card_player->deck = new Deck(*game_manager, card_player);
         game_manager->Add_Object(card_player->deck);
         for (auto& card : starting_cards) {
@@ -183,6 +186,9 @@ void Game_Scene::Update(std::chrono::milliseconds) {
     if (time_until_income-- == 0) {
         for (auto* player : game_manager->players) {
             Card_Player* card_player = static_cast<Card_Player*>(player);
+            if (card_player->team == -1)
+                continue;
+
             card_player->money++;
             if (card_player->deck->hand.empty()) {
                 card_player->deck->Draw_Card(3);
