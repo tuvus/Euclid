@@ -130,6 +130,8 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         game_manager->Delete_Object(starting_cards[i]);
     }
     starting_cards.clear();
+
+    money_text->is_visible = static_cast<Card_Player*>(game_manager->local_player)->team != -1;
 }
 
 void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
