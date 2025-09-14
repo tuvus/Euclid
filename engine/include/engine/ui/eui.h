@@ -44,6 +44,8 @@ class EUI_Style {
     std::optional<Color> background_color;
     std::optional<Color> text_color;
 
+    std::string height, width;
+
     // Units are all px
     Sides margin, padding = {0};
 
