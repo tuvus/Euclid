@@ -1,8 +1,8 @@
-#include "game_scene.h"
+#include <raylib.h>
 
 #include "card_player.h"
+#include "game_scene.h"
 #include "card_ui.h"
-#include "game_object_ui.h"
 #include "tower.h"
 #include "tower_card.h"
 #include "unit.h"
@@ -190,6 +190,15 @@ void Game_Scene::Update(std::chrono::milliseconds) {
         }
         time_until_income = 40;
     }
+
+    if (IsKeyDown(KEY_A))
+        game_ui_manager->camera.offset.x += 10;
+    if (IsKeyDown(KEY_D))
+        game_ui_manager->camera.offset.x -= 10;
+    if (IsKeyDown(KEY_W))
+        game_ui_manager->camera.offset.y += 10;
+    if (IsKeyDown(KEY_S))
+        game_ui_manager->camera.offset.y -= 10;
 }
 
 void Game_Scene::On_Disconnected() {
