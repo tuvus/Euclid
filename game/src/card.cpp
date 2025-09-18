@@ -17,6 +17,10 @@ void Card::Play_Card(Card_Player* card_player, Vector2 pos) {
     card_player->deck->Discard_Card(this);
 }
 
+void Card::Discard_Card(Card_Player* card_player) {
+    card_player->deck->Discard_Card(this);
+}
+
 Object_UI* Card::Create_UI_Object(Game_UI_Manager& game_ui_manager) {
     return new Card_UI(this, game_ui_manager);
 }

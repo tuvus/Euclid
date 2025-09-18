@@ -57,7 +57,7 @@ void Game_Manager::Update() {
 
     // If we are the server and the players have reached a close enough step
     // We can continue on and proceed with the next step
-    if (network.Is_Server() && step == max_step && min_step > step - 3) {
+    if (network.Is_Server() && step == max_step && min_step > step - max_step_diff) {
         max_step++;
     }
     if (step < max_step) {
@@ -120,3 +120,5 @@ vector<Game_Object*> Game_Manager::Get_All_Objects() {
     }
     return ret;
 }
+
+long Game_Manager::max_step_diff = 10;

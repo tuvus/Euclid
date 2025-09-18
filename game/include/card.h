@@ -25,5 +25,7 @@ class Card : public Game_Object {
 
     virtual void Play_Card(Card_Player* card_player, Vector2 pos);
 
+    virtual void Discard_Card(Card_Player* card_player);
+
     Object_UI* Create_UI_Object(Game_UI_Manager& game_ui_manager) override;
 };

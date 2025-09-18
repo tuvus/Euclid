@@ -68,7 +68,9 @@ void Application::Application_Loop() {
         if (network)
             network->Network_Update();
 
-        Update(delta_time);
+        for (int i = 0; i < 1; i++) {
+            Update(delta_time);
+        }
 
         if (client) {
             Update_UI(delta_time);

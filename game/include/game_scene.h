@@ -49,4 +49,8 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     void Activate_Card(Card* card);
 
     bool Can_Place_Tower(Vector2 pos, float min_dist) const;
+
+    Path* Get_Team_Path(int team) const;
+
+    static Color Get_Team_Color(int team);
 };
