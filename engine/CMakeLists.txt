@@ -17,6 +17,7 @@ set(Sources
         src/ui/button.cpp
         src/game_manager.cpp
         src/game_object.cpp
+        src/game_ui_manager.cpp
 )
 
 set(Headers
@@ -31,6 +32,8 @@ set(Headers
         ${PROJECT_SOURCE_DIR}/include/engine/game_object.h
         ${PROJECT_SOURCE_DIR}/include/engine/emath.h
         ${PROJECT_SOURCE_DIR}/include/engine/player.h
+        ${PROJECT_SOURCE_DIR}/include/engine/game_ui_manager.h
+        ${PROJECT_SOURCE_DIR}/include/engine/game_object_ui.h
 )
 
 add_library(${PROJECT_NAME} STATIC ${Sources} ${Headers})

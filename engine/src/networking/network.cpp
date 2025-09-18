@@ -402,7 +402,7 @@ void Debug_Output(ESteamNetworkingSocketsDebugOutputType error_type, const char*
     if (error_type == k_ESteamNetworkingSocketsDebugOutputType_Bug) {
         cerr << pszMsg << endl;
     } else {
-        cout << pszMsg << endl;
+        // cout << pszMsg << endl;
     }
 }
 

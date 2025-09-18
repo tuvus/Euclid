@@ -3,36 +3,28 @@
 
 #include <chrono>
 
+class Object_UI;
 class Game_UI_Manager {
   private:
-    Application& application;
-    Game_Manager& game_manager;
+    std::unordered_set<Game_Object*> to_create;
+    std::unordered_set<Game_Object*> to_delete;
+
+    void On_Create_Object(Game_Object*);
+    void On_Delete_Object(Game_Object*);
+    static Game_UI_Manager* game_ui_manager_instance;
 
   public:
+    Application& application;
+    Game_Manager& game_manager;
+    std::unordered_map<Game_Object*, Object_UI*> active_ui_objects;
+
     Camera2D camera;
 
-    Game_UI_Manager(Application& application, Game_Manager& game_manager)
-        : application(application), game_manager(game_manager) {
-        camera = {0};
-        // centers camera on the middle of the screen
-        Vector2 center = {static_cast<float>(application.screen_width) / 2,
-                          static_cast<float>(application.screen_height) / 2};
-        camera.target = center;
-        camera.offset = center;
-        camera.rotation = 0;
-        camera.zoom = 1.0f;
-    }
+    Game_UI_Manager(Application& application, Game_Manager& game_manager);
 
-    void Update_UI(std::chrono::milliseconds delta_time) {
-        BeginMode2D(camera);
-        for (const auto* obj : game_manager.Get_All_Objects()) {
-            DrawTexturePro(
-                obj->texture, {0, 0, (float) obj->texture.width, (float) obj->texture.height},
-                {obj->pos.x, obj->pos.y, obj->texture.width * obj->scale,
-                 obj->texture.height * obj->scale},
-                Vector2(obj->texture.width * obj->scale / 2, obj->texture.height * obj->scale / 2),
-                obj->rot, obj->color);
-        }
-        EndMode2D();
-    }
+    void Update_UI(std::chrono::milliseconds delta_time, EUI_Context* eui_ctx);
+
+    void DrawImage(Texture2D& texture, Vector2 pos, float rot, float scale, Color color);
+
+    void DrawScreenImage(Texture2D& texture, Vector2 pos, float rot, float scale, Color color);
 };

@@ -1,11 +1,14 @@
 #pragma once
 
+#include "card.h"
 #include "card_game.h"
 #include "game_manager.h"
 #include "game_ui_manager.h"
 #include "path.h"
 #include "scene.h"
+#include "tower.h"
 #include "ui/eui.h"
+#include "unit.h"
 
 class Game_Scene : public Scene, Network_Events_Receiver {
   private:
@@ -13,16 +16,16 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     std::unique_ptr<Game_Manager> game_manager;
     std::unique_ptr<Game_UI_Manager> game_ui_manager;
     EUI_Text* money_text;
-    EUI_Button* spawn_unit_button;
-    EUI_Button* place_tower_button;
-    Path* f_path;
-    Path* r_path;
-    bool placing_tower;
     int time_until_income;
-
-    bool Can_Place_Tower(Vector2 pos, float min_dist);
+    Tower_Data tower_data;
+    Unit_Data unit_data;
+    vector<Card_Data*> card_datas;
 
   public:
+    Path* f_path;
+    Path* r_path;
+    Card* active_card;
+
     Game_Scene(Card_Game& card_game);
 
     ~Game_Scene() override;
@@ -42,4 +45,8 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     void On_Client_Connected(Client_ID) override {}
 
     void On_Client_Disconnected(Client_ID) override {}
+
+    void Activate_Card(Card* card);
+
+    bool Can_Place_Tower(Vector2 pos, float min_dist) const;
 };

@@ -11,6 +11,10 @@ set(Sources
         src/main.cpp
         src/lobby_scene.cpp
         src/game_scene.cpp
+        src/unit.cpp
+        src/tower.cpp
+        src/deck.cpp
+        src/card.cpp
 )
 
 set(Headers
@@ -20,9 +24,16 @@ set(Headers
         include/game_scene.h
         include/unit.h
         include/path.h
-        ../engine/include/engine/game_ui_manager.h
         include/card_player.h
         include/tower.h
+        include/card.h
+        include/deck.h
+        include/unit_ui.h
+        include/tower_ui.h
+        include/deck_ui.h
+        include/unit_card.h
+        include/card_ui.h
+        include/tower_card.h
 )
 
 add_executable(game ${Sources} ${Headers})
