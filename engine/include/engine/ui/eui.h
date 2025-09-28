@@ -158,7 +158,7 @@ class EUI_Element {
 
 class EUI_Container : public EUI_Element {
   protected:
-    EUI_Container(Layout_Model lm) : layout_model(lm) {}
+    EUI_Container(Layout_Model lm);
     std::vector<EUI_Element*> children;
 
   public:

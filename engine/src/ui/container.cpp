@@ -1,5 +1,9 @@
 #include "ui/eui.h"
 
+EUI_Container::EUI_Container(Layout_Model lm) : layout_model(lm) {
+    style.display = Display::Block;
+}
+
 EUI_Container::~EUI_Container() {
     for (EUI_Element* child : children) {
         delete child;
