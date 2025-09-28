@@ -23,6 +23,8 @@ enum class Alignment { Start, Center, End, Stretch };
 
 enum class Position { Static, Relative, Absolute, Fixed, Sticky };
 
+enum class Display { Inline, Block, None, Flex };
+
 class EUI_Input;
 class EUI_Style;
 class EUI_Element;
@@ -48,6 +50,8 @@ class EUI_Style {
 
     // Units are all px
     Sides margin, padding = {0};
+
+    Display display = Display::Inline;
 
     Position position = Position::Static;
     // For relative positioning, the top/right/bottom/left values are relative to the parent
