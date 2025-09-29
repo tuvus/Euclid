@@ -2,7 +2,7 @@
 
 /* EUI_Context Implementations */
 EUI_Context::EUI_Context(EUI_Style default_style) {
-    default_style = default_style;
+    this->default_style = default_style;
 }
 
 EUI_Context::~EUI_Context() {

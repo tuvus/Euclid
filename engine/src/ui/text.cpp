@@ -15,24 +15,64 @@ EUI_Text::EUI_Text(const std::string& text) : text(text) {
 void EUI_Text::Layout() {
     EUI_Style style = Get_Effective_Style();
 
-    float text_width = MeasureText(text.c_str(), style.font_size.value());
-    float text_height = style.font_size.value();
+    float font_size = style.font_size.value_or(15.0f);
+    float text_width = MeasureText(text.c_str(), font_size);
+    float text_height = font_size;
 
     // calculate preferred size
-    float width = std::max(text_width + style.font_spacing.value() * text.length() +
-                               style.padding.left + style.padding.right,
-                           preferred_size.x);
-    float height =
-        std::max(text_height + style.padding.top + style.padding.bottom, preferred_size.y);
+    float font_spacing = style.font_spacing.value_or(1.0f);
+    float width = text_width + font_spacing * text.length() +
+                  style.padding.left + style.padding.right;
+    float height = text_height + style.padding.top + style.padding.bottom;
     preferred_size = {width, height};
 
     min_size = {text_width, text_height};
     // TODO: what should this be...
     max_size = {9999, 9999};
+    
+    // Calculate text position based on current element position and dimensions
+    // This will be updated when the element is positioned by its parent
+    Calculate_Text_Position();
 }
 
 void EUI_Text::Handle_Input() {
     // no op for now
+}
+
+void EUI_Text::Calculate_Text_Position() {
+    const auto style = Get_Effective_Style();
+    float font_size = style.font_size.value_or(15.0f);
+    float text_width = MeasureText(text.c_str(), font_size);
+    float text_height = font_size;
+
+    switch (style.text_vertical_alignment) {
+        case Alignment::Center:
+            text_pos.y =
+                pos.y + (dim.y - text_height + style.padding.top - style.padding.bottom) / 2.0f;
+            break;
+        case Alignment::End:
+            text_pos.y = pos.y + dim.y - text_height - style.padding.bottom;
+            break;
+        case Alignment::Stretch:
+        case Alignment::Start:
+        default:
+            text_pos.y = pos.y + style.padding.top;
+            break;
+    }
+    switch (style.text_horizontal_alignment) {
+        case Alignment::Center:
+            text_pos.x =
+                pos.x + (dim.x - text_width + style.padding.left - style.padding.right) / 2;
+            break;
+        case Alignment::End:
+            text_pos.x = pos.x + dim.x - text_width - style.padding.right;
+            break;
+        case Alignment::Stretch:
+        case Alignment::Start:
+        default:
+            text_pos.x = pos.x + style.padding.left;
+            break;
+    }
 }
 
 void EUI_Text::Render() {
@@ -49,37 +89,13 @@ void EUI_Text::Render() {
     if (style.border_radius > 0)
         DrawRectangleLinesEx({pos.x, pos.y, dim.x, dim.y}, style.border_radius, style.border_color);
 
+    // Update text position in case element was repositioned
+    Calculate_Text_Position();
+
     // Text
-    float text_width = MeasureText(text.c_str(), style.font_size.value());
-    float text_height = style.font_size.value();
-
-    switch (style.text_vertical_alignment) {
-        case Alignment::Center:
-            text_pos.y =
-                pos.y + (dim.y - text_height + style.padding.top - style.padding.bottom) / 2.0f;
-            break;
-        case Alignment::End:
-            text_pos.y = pos.y + dim.y - text_height - style.padding.bottom;
-            break;
-        case Alignment::Stretch:
-        case Alignment::Start:
-            text_pos.y = pos.y;
-    }
-    switch (style.text_horizontal_alignment) {
-        case Alignment::Center:
-            text_pos.x =
-                pos.x + (dim.x - text_width + style.padding.left - style.padding.right) / 2;
-            break;
-        case Alignment::End:
-            text_pos.x = pos.x + dim.x - text_width - style.padding.right;
-            break;
-        case Alignment::Stretch:
-        case Alignment::Start:
-            text_pos.x = pos.x;
-    }
-
-    DrawText(text.c_str(), text_pos.x, text_pos.y, style.font_size.value(),
-             style.text_color.value());
+    float font_size = style.font_size.value_or(15.0f);
+    Color text_color = style.text_color.value_or(BLACK);
+    DrawText(text.c_str(), text_pos.x, text_pos.y, font_size, text_color);
 }
 
 std::string& EUI_Text::Get_Text() {

@@ -3,11 +3,14 @@
 #include "game_scene.h"
 #include "lobby_scene.h"
 #include "menu_scene.h"
+#include "test_layout_scene.h"
 
 void Card_Game::resize_update() {
     auto root = scene->Get_Root();
     if (root) {
         root->dim = {(float) screen_width, (float) screen_height};
+        root->Set_Width_Fixed((float) screen_width);
+        root->Set_Height_Fixed((float) screen_height);
     }
 
     // TODO: should we panic if ctx is null?
@@ -30,8 +33,9 @@ void Card_Game::Start_Client() {
     sceens.insert({MENU, [this]() -> Scene* { return new Menu_Scene(*this); }});
     sceens.insert({LOBBY, [this]() -> Scene* { return new Lobby_Scene(*this); }});
     sceens.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
+    sceens.insert({TEST_LAYOUT, [this]() -> Scene* { return new Test_Layout_Scene(*this); }});
 
-    set_ui_screen(MENU);
+    set_ui_screen(TEST_LAYOUT);
 
     resize_update();
 }
@@ -79,6 +83,7 @@ void Card_Game::Update_UI(chrono::milliseconds deltaTime) {
 
     EndDrawing();
 
+    eui_ctx->Perform_Layout();
     eui_ctx->Render();
 
     for (auto scene_to_delete : to_delete) {

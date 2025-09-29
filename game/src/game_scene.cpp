@@ -11,6 +11,8 @@ Game_Scene::Game_Scene(Card_Game& card_game)
 
     root->pos = {0, 0};
     root->dim = {(float) card_game.screen_width, (float) card_game.screen_height};
+    root->Set_Width_Fixed((float) card_game.screen_width);
+    root->Set_Height_Fixed((float) card_game.screen_height);
     root->style.vertical_alignment = Alignment::Center;
     root->style.horizontal_alignment = Alignment::Center;
 

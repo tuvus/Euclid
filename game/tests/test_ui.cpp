@@ -20,24 +20,35 @@ EUI_Element* init_test1_ui() {
     auto* root = new EUI_HBox();
     root->pos = {0, 0};
     root->dim = {SCREEN_WIDTH, SCREEN_HEIGHT};
+    root->Set_Width_Fixed(SCREEN_WIDTH);
+    root->Set_Height_Fixed(SCREEN_HEIGHT);
     root->style.vertical_alignment = Alignment::Center;
     root->style.horizontal_alignment = Alignment::Center;
     root->style.padding = {10, 20, 10, 20};
 
+    // Container with auto sizing (will size based on children)
     auto* orange = new EUI_VBox();
     orange->style.background_color = ORANGE;
+    orange->Set_Width_Auto();
+    orange->Set_Height_Auto();
     root->Add_Child(orange);
     orange->style.padding = {20, 20, 20, 20};
 
+    // Container with fixed sizing
     auto* gold = new EUI_VBox();
     gold->style.background_color = GOLD;
+    gold->Set_Width_Fixed(200.0f);
+    gold->Set_Height_Fixed(300.0f);
     gold->style.vertical_alignment = Alignment::Center;
     gold->style.horizontal_alignment = Alignment::Center;
     root->Add_Child(gold);
     gold->style.padding = {20, 20, 20, 20};
 
+    // Container with full width sizing (100% of parent)
     auto* purple = new EUI_VBox();
     purple->style.background_color = PURPLE;
+    purple->Set_Width_Full();
+    purple->Set_Height_Fixed(300.0f);
     purple->style.vertical_alignment = Alignment::End;
     purple->style.horizontal_alignment = Alignment::End;
     root->Add_Child(purple);
@@ -50,6 +61,8 @@ EUI_Element* init_test1_ui() {
 
     auto* lime = new EUI_VBox();
     lime->style.background_color = LIME;
+    lime->Set_Width_Auto();
+    lime->Set_Height_Auto();
     lime->style.vertical_alignment = Alignment::Center;
     lime->style.horizontal_alignment = Alignment::End;
     orange->Add_Child(lime);

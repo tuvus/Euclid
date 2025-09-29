@@ -11,6 +11,7 @@ set(Sources
         src/main.cpp
         src/lobby_scene.cpp
         src/game_scene.cpp
+        src/test_layout_scene.cpp
 )
 
 set(Headers
@@ -18,6 +19,7 @@ set(Headers
         include/lobby_scene.h
         include/menu_scene.h
         include/game_scene.h
+        include/test_layout_scene.h
         include/unit.h
         include/path.h
         ../engine/include/engine/game_ui_manager.h

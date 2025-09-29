@@ -25,6 +25,8 @@ enum class Position { Static, Relative, Absolute, Fixed, Sticky };
 
 enum class Display { Inline, Block, None, Flex };
 
+enum class Sizing { Auto, Fixed, Full };
+
 class EUI_Input;
 class EUI_Style;
 class EUI_Element;
@@ -46,7 +48,11 @@ class EUI_Style {
     std::optional<Color> background_color;
     std::optional<Color> text_color;
 
-    std::string height, width;
+    // Sizing system
+    Sizing width_sizing = Sizing::Auto;
+    Sizing height_sizing = Sizing::Auto;
+    std::optional<float> width;
+    std::optional<float> height;
 
     // Units are all px
     Sides margin, padding = {0};
@@ -154,6 +160,18 @@ class EUI_Element {
     virtual void Render() = 0;
 
     virtual bool Is_Container() const { return false; };
+    
+    // Helper methods for sizing
+    float Get_Effective_Width() const;
+    float Get_Effective_Height() const;
+    
+    // Convenience methods for setting sizing
+    void Set_Width_Full();
+    void Set_Height_Full();
+    void Set_Width_Fixed(float value);
+    void Set_Height_Fixed(float value);
+    void Set_Width_Auto();
+    void Set_Height_Auto();
 };
 
 class EUI_Container : public EUI_Element {
@@ -179,6 +197,9 @@ class EUI_Container : public EUI_Element {
     void Render() override;
 
     bool Is_Container() const override { return true; }
+    
+    // Calculate size based on children
+    Vector2 Calculate_Size_From_Children();
 };
 
 class EUI_VBox : public EUI_Container {
@@ -210,6 +231,7 @@ class EUI_Text : public EUI_Element {
 
     std::string& Get_Text();
     void Set_Text(const std::string& text);
+    void Calculate_Text_Position();
 };
 
 class EUI_Button : public EUI_Text {
