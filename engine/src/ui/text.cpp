@@ -1,5 +1,3 @@
-#include <algorithm>
-
 #include "ui/eui.h"
 
 EUI_Text::EUI_Text(const std::string& text) : text(text) {
@@ -21,15 +19,15 @@ void EUI_Text::Layout() {
 
     // calculate preferred size
     float font_spacing = style.font_spacing.value_or(1.0f);
-    float width = text_width + font_spacing * text.length() +
-                  style.padding.left + style.padding.right;
+    float width =
+        text_width + font_spacing * text.length() + style.padding.left + style.padding.right;
     float height = text_height + style.padding.top + style.padding.bottom;
     preferred_size = {width, height};
 
     min_size = {text_width, text_height};
     // TODO: what should this be...
     max_size = {9999, 9999};
-    
+
     // Calculate text position based on current element position and dimensions
     // This will be updated when the element is positioned by its parent
     Calculate_Text_Position();

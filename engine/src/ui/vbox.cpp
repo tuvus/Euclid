@@ -1,6 +1,5 @@
-#include <algorithm>
-#include <iostream>
 #include "ui/eui.h"
+#include <algorithm>
 
 void EUI_VBox::Layout() {
     Alignment main_axis_alignment = style.vertical_alignment;
@@ -21,13 +20,13 @@ void EUI_VBox::Layout() {
         if (child->style.position == Position::Absolute) {
             continue;
         }
-        
+
         // layout child to get its preferred size
         child->Layout();
-        
+
         // calculate child dimensions based on sizing mode
         float child_width, child_height;
-        
+
         if (child->Is_Container()) {
             // For Full-width children, don't call Get_Effective_Width yet
             if (child->style.width_sizing == Sizing::Full) {
@@ -40,10 +39,10 @@ void EUI_VBox::Layout() {
             child_width = child->preferred_size.x;
             child_height = child->preferred_size.y;
         }
-        
+
         // set preferred size but don't position yet
         child->preferred_size = {child_width, child_height};
-        
+
         total_content_height += child->preferred_size.y;
         num_layout_children++;
     }
@@ -59,12 +58,14 @@ void EUI_VBox::Layout() {
             fixed_width += child->preferred_size.x;
         }
     }
-    
+
     // Calculate available width for full-width children
-    float available_width = dim.x - style.padding.left - style.padding.right; // Available content width
+    float available_width =
+        dim.x - style.padding.left - style.padding.right; // Available content width
     float full_width_per_child = 0;
     if (full_width_children > 0) {
-        full_width_per_child = available_width; // Each full-width child gets the full available width
+        full_width_per_child =
+            available_width; // Each full-width child gets the full available width
     }
     for (EUI_Element* child : children) {
         if (child->style.width_sizing == Sizing::Full) {
@@ -78,7 +79,7 @@ void EUI_VBox::Layout() {
         preferred_size = child_size;
         dim = child_size;
     }
-    
+
     // Handle width sizing
     if (style.width_sizing == Sizing::Full) {
         // width should be set by parent during layout, don't override it
@@ -101,10 +102,12 @@ void EUI_VBox::Layout() {
     cursor = pos.y + style.padding.top;
     switch (main_axis_alignment) {
         case Alignment::Center:
-            cursor = pos.y + style.padding.top + (available_height - total_content_height - total_gap) / 2.0f;
+            cursor = pos.y + style.padding.top +
+                     (available_height - total_content_height - total_gap) / 2.0f;
             break;
         case Alignment::End:
-            cursor = pos.y + style.padding.top + available_height - total_content_height - total_gap;
+            cursor =
+                pos.y + style.padding.top + available_height - total_content_height - total_gap;
             break;
         case Alignment::Stretch:
             interval = (available_height - total_content_height) / (children.size() - 1);

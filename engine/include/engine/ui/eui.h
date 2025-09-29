@@ -160,11 +160,11 @@ class EUI_Element {
     virtual void Render() = 0;
 
     virtual bool Is_Container() const { return false; };
-    
+
     // Helper methods for sizing
     float Get_Effective_Width() const;
     float Get_Effective_Height() const;
-    
+
     // Convenience methods for setting sizing
     void Set_Width_Full();
     void Set_Height_Full();
@@ -197,7 +197,7 @@ class EUI_Container : public EUI_Element {
     void Render() override;
 
     bool Is_Container() const override { return true; }
-    
+
     // Calculate size based on children
     Vector2 Calculate_Size_From_Children();
 };

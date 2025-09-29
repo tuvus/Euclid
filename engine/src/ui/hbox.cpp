@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 
 #include "ui/eui.h"
 
@@ -20,18 +19,18 @@ void EUI_HBox::Layout() {
     // first pass: layout children and calculate their preferred sizes
     float fixed_width = 0;
     int full_width_children = 0;
-    
+
     for (EUI_Element* child : children) {
         if (child->style.position == Position::Absolute) {
             continue;
         }
-        
+
         // layout child to get its preferred size
         child->Layout();
-        
+
         // calculate child dimensions based on sizing mode
         float child_width, child_height;
-        
+
         if (child->style.width_sizing == Sizing::Full) {
             // Don't calculate width for full-width children yet
             full_width_children++;
@@ -43,38 +42,38 @@ void EUI_HBox::Layout() {
             child_width = child->preferred_size.x;
             child_height = child->preferred_size.y;
         }
-        
+
         // set preferred size but don't position yet
         child->preferred_size = {child_width, child_height};
-        
+
         if (child->style.width_sizing != Sizing::Full) {
             fixed_width += child->preferred_size.x;
         }
         num_layout_children++;
     }
-    
+
     // Calculate gap first
     if (gap && num_layout_children)
         total_gap = gap * (num_layout_children - 1);
-    
+
     // Calculate available width for full-width children
     float available_width = dim.x - style.padding.left - style.padding.right;
     float full_width_per_child = 0;
     if (full_width_children > 0) {
         full_width_per_child = (available_width - fixed_width - total_gap) / full_width_children;
     }
-    
+
     // Update full-width children with their calculated width
     for (EUI_Element* child : children) {
         if (child->style.position == Position::Absolute) {
             continue;
         }
-        
+
         if (child->style.width_sizing == Sizing::Full) {
             child->preferred_size.x = full_width_per_child;
         }
     }
-    
+
     total_content_width = fixed_width + (full_width_per_child * full_width_children);
 
     // calculate container size if using auto sizing (after children are laid out)
@@ -88,7 +87,8 @@ void EUI_HBox::Layout() {
     cursor = pos.x + style.padding.left;
     switch (main_axis_alignment) {
         case Alignment::Center:
-            cursor = pos.x + style.padding.left + (available_width - total_content_width - total_gap) / 2.0f;
+            cursor = pos.x + style.padding.left +
+                     (available_width - total_content_width - total_gap) / 2.0f;
             break;
         case Alignment::End:
             cursor = pos.x + style.padding.left + available_width - total_content_width - total_gap;

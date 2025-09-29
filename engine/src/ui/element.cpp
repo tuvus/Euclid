@@ -70,7 +70,8 @@ float EUI_Element::Get_Effective_Width() const {
             }
             // Otherwise, calculate from parent
             if (parent) {
-                float parent_width = parent->Get_Effective_Width() - parent->style.padding.left - parent->style.padding.right;
+                float parent_width = parent->Get_Effective_Width() - parent->style.padding.left -
+                                     parent->style.padding.right;
                 return parent_width;
             }
             break;
@@ -87,7 +88,7 @@ float EUI_Element::Get_Effective_Width() const {
             // For non-containers with Auto sizing, use preferred size
             return preferred_size.x;
     }
-    
+
     // Fallback
     if (parent) {
         return parent->Get_Effective_Width();
@@ -104,7 +105,8 @@ float EUI_Element::Get_Effective_Height() const {
             break;
         case Sizing::Full:
             if (parent) {
-                return parent->Get_Effective_Height() - parent->style.padding.top - parent->style.padding.bottom;
+                return parent->Get_Effective_Height() - parent->style.padding.top -
+                       parent->style.padding.bottom;
             }
             break;
         case Sizing::Auto:
@@ -119,7 +121,7 @@ float EUI_Element::Get_Effective_Height() const {
             }
             break;
     }
-    
+
     // Fallback
     if (parent) {
         return parent->Get_Effective_Height();
