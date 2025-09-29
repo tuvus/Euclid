@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 typedef long Component_ID;
@@ -14,15 +15,37 @@ class Component_Type {
     int size;
 };
 
-// Singleton class that describes how each entity with a certain set of components is laid out.
 class Entity_Type {
     std::vector<Component_Type*> components;
 
   public:
+    Entity_Type(std::vector<Component_Type*> components) : components(std::move(components)) {}
+
+    /**
+     * Finds if the other entity is a superset of this entity.
+     * @return true if the other entity contains all components of this entity, false otherwise.
+     */
+    bool Is_Entity_Of_Type(Entity_Type* other) const {
+        return std::ranges::all_of(components, [other](Component_Type* c) {
+            return std::ranges::find(other->components, c) != other->components.end();
+        });
+    }
+
+    bool Is_Entity_Strictly_Of_type(Entity_Type* other) const {
+        if (components.size() != other->components.size())
+            return false;
+        return Is_Entity_Of_Type(other);
+    }
+};
+
+// Singleton class that describes how each entity with a certain set of components is laid out.
+class Entity_Array {
+  public:
+    Entity_Type entity_type;
     std::vector<void*> entities;
     int entity_size;
 
-    Entity_Type(std::vector<Component_Type*> components) : components(components) {
+    Entity_Array(std::vector<Component_Type*> components) : entity_type(Entity_Type(components)) {
         entity_size =
             std::accumulate(components.begin(), components.end(), 0,
                             [](const int sum, const Component_Type* c) { return sum + c->size; });
@@ -45,32 +68,17 @@ class Entity_Type {
     }
 
     void* Get_Entity(int index) { return entities[index * entity_size]; }
-
-    /**
-     * Finds if the other entity is a superset of this entity.
-     * @return true if the other entity contains all components of this entity, false otherwise.
-     */
-    bool Is_Entity_Of_Type(Entity_Type* other) const {
-        return std::ranges::all_of(components, [other](Component_Type* c) {
-            return std::ranges::find(other->components, c) != other->components.end();
-        });
-    }
-
-    bool Is_Entity_Strictly_Of_type(Entity_type* other) const {
-        if (components.size() != other->components.size())
-            return false;
-        return Is_Entity_Of_Type(other);
-    }
 };
 
 class ECS {
-    std::unordered_set<Entity_Type*> entity_components;
+    std::unordered_set<Entity_Array*> entity_components;
 
   public:
     void* Create_Entity(Entity_Type* entity_type) {
-        Entity_Type* e_type = *std::ranges::find_if(entity_components, [entity_type](Entity_Type* e) {
-            return e->Is_Entity_Strictly_Of_type(entity_type);
-        });
+        Entity_Type* e_type =
+            *std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
+                return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
+            });
         if (e_type == nullptr) {
             entity_components.emplace(entity_type);
             e_type = entity_type;
@@ -79,9 +87,9 @@ class ECS {
     }
 
     void Apply_Function_To_Entities(Entity_Type* entity_type,
-                                    const std::function<void(Entity_Type*, void*)>& op) {
+                                   const std::function<void(Entity_Array*, void*)>& op) {
         for (const auto& entity_component : entity_components) {
-            if (!entity_component->Is_Entity_Of_Type(entity_type))
+            if (!entity_component->entity_type.Is_Entity_Of_Type(entity_type))
                 continue;
             for (const auto& entity : entity_component->entities) {
                 op(entity_component, entity);
