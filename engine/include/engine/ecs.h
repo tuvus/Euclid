@@ -16,10 +16,16 @@ class Component_Type {
 };
 
 class Entity_Type {
-    std::vector<Component_Type*> components;
-
   public:
-    Entity_Type(std::vector<Component_Type*> components) : components(std::move(components)) {}
+    std::vector<Component_Type*> components;
+    // The size of each entity and its components in bytes
+    int entity_size;
+
+    Entity_Type(std::vector<Component_Type*> components) : components(std::move(components)) {
+        entity_size =
+            std::accumulate(components.begin(), components.end(), 0,
+                            [](const int sum, const Component_Type* c) { return sum + c->size; });
+    }
 
     /**
      * Finds if the other entity is a superset of this entity.
@@ -42,14 +48,12 @@ class Entity_Type {
 class Entity_Array {
   public:
     Entity_Type entity_type;
-    std::vector<void*> entities;
-    int entity_size;
+    void* entities;
+    int entity_count;
 
-    Entity_Array(std::vector<Component_Type*> components) : entity_type(Entity_Type(components)) {
-        entity_size =
-            std::accumulate(components.begin(), components.end(), 0,
-                            [](const int sum, const Component_Type* c) { return sum + c->size; });
-        entities = std::vector<void*>();
+    Entity_Array(const std::vector<Component_Type*>& components) : entity_type(Entity_Type(components)) {
+        entity_count = 10;
+        entities = new unsigned char[entity_type.entity_size * entity_count];
     }
 
     template <typename T>
@@ -87,12 +91,12 @@ class ECS {
     }
 
     void Apply_Function_To_Entities(Entity_Type* entity_type,
-                                   const std::function<void(Entity_Array*, void*)>& op) {
-        for (const auto& entity_component : entity_components) {
-            if (!entity_component->entity_type.Is_Entity_Of_Type(entity_type))
+                                    const std::function<void(Entity_Array*, void*)>& op) {
+        for (const auto& entity_array : entity_components) {
+            if (!entity_array->entity_type.Is_Entity_Of_Type(entity_type))
                 continue;
-            for (const auto& entity : entity_component->entities) {
-                op(entity_component, entity);
+            for (int i = 0; i < entity_array->entity_count; i++) {
+                op(entity_array, entity_array->Get_Entity(i));
             }
         }
     }
