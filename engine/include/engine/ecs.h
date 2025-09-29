@@ -39,6 +39,11 @@ class Entity_Type {
         throw std::invalid_argument("Failed to find a component_type for an entity.");
     }
 
+    void* Create_Entity() {
+        entities.emplace_back();
+        return entities.back();
+    }
+
     void* Get_Entity(int index) { return entities[index * entity_size]; }
 
     /**
@@ -50,12 +55,29 @@ class Entity_Type {
             return std::ranges::find(other->components, c) != other->components.end();
         });
     }
+
+    bool Is_Entity_Strictly_Of_type(Entity_type* other) const {
+        if (components.size() != other->components.size())
+            return false;
+        return Is_Entity_Of_Type(other);
+    }
 };
 
 class ECS {
     std::unordered_set<Entity_Type*> entity_components;
 
   public:
+    void* Create_Entity(Entity_Type* entity_type) {
+        Entity_Type* e_type = *std::ranges::find_if(entity_components, [entity_type](Entity_Type* e) {
+            return e->Is_Entity_Strictly_Of_type(entity_type);
+        });
+        if (e_type == nullptr) {
+            entity_components.emplace(entity_type);
+            e_type = entity_type;
+        }
+        return e_type->Create_Entity();
+    }
+
     void Apply_Function_To_Entities(Entity_Type* entity_type,
                                     const std::function<void(Entity_Type*, void*)>& op) {
         for (const auto& entity_component : entity_components) {
