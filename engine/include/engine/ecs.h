@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <raylib.h>
 #include <stdexcept>
 #include <unordered_map>
 #include <unordered_set>
@@ -65,11 +66,11 @@ class Entity_Array {
     }
 
     template <typename T>
-    T* Get_Component(char* entity, Component_Type* component_type) {
-        for (int i = 0; i < entity_type.components.size(); i++) {
-            if (component_type == entity_type.components[i])
-                return static_cast<T*>(entity);
-            entity += entity_type.components[i]->size;
+    T* Get_Component(unsigned char* entity, Component_Type* component_type) {
+        for (auto& component : entity_type.components) {
+            if (component_type == component)
+                return reinterpret_cast<T*>(entity);
+            entity += component->size;
         }
         throw std::invalid_argument("Failed to find a component_type for an entity.");
     }
@@ -89,26 +90,40 @@ class ECS {
     std::unordered_set<Entity_Array*> entity_components;
 
   public:
+    ECS() { entity_components = std::unordered_set<Entity_Array*>(); }
+
     void* Create_Entity(Entity_Type* entity_type) {
-        Entity_Array* e_array =
-            *std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
-                return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
-            });
-        if (e_array == nullptr) {
+        auto search = std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
+            return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
+        });
+        Entity_Array* e_array;
+        if (search == entity_components.end()) {
             e_array = new Entity_Array(entity_type->components);
             entity_components.emplace(e_array);
+        } else {
+            e_array = *search;
         }
         return e_array->Create_Entity();
     }
 
-    void Apply_Function_To_Entities(Entity_Type* entity_type,
-                                    const std::function<void(Entity_Array*, void*)>& op) {
+    void Apply_Function_To_Entities(
+        Entity_Type* entity_type,
+        const std::function<void(ECS* ecs, Entity_Array*, unsigned char*)>& op) {
         for (const auto& entity_array : entity_components) {
             if (!entity_array->entity_type.Is_Entity_Of_Type(entity_type))
                 continue;
             for (int i = 0; i < entity_array->entity_count; i++) {
-                op(entity_array, entity_array->Get_Entity(i));
+                op(this, entity_array, entity_array->Get_Entity(i));
             }
         }
     }
+};
+
+struct Transform_Component {
+    Vector2 pos;
+    float rot;
+    float scale;
+
+  public:
+    static Component_Type component_type;
 };

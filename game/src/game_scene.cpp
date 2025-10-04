@@ -43,6 +43,10 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ranges::sort(players, [](Player* a, Player* b) { return a->player_id <= b->player_id; });
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
+    auto ecs = new ECS();
+    auto components = vector<Component_Type*>();
+    components.emplace_back(&Unit_Component::component_type);
+    ecs->Create_Entity(new Entity_Type(components));
     vector<Vector2> positions = vector<Vector2>();
     static uniform_int_distribution<int> start_dist(-200, 200);
     positions.emplace_back(start_dist(game_manager->random) + card_game.screen_width / 2,
