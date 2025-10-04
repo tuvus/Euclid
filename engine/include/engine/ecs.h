@@ -10,6 +10,11 @@
 
 typedef long Component_ID;
 
+struct Entity {
+    // If id = 0, then the entity is not being used
+    int id;
+};
+
 class Component_Type {
   public:
     int size;
@@ -22,9 +27,10 @@ class Entity_Type {
     int entity_size;
 
     Entity_Type(std::vector<Component_Type*> components) : components(std::move(components)) {
-        entity_size =
-            std::accumulate(components.begin(), components.end(), 0,
-                            [](const int sum, const Component_Type* c) { return sum + c->size; });
+        entity_size = sizeof(Entity) + std::accumulate(components.begin(), components.end(), 0,
+                                                       [](const int sum, const Component_Type* c) {
+                                                           return sum + c->size;
+                                                       });
     }
 
     /**
@@ -48,30 +54,35 @@ class Entity_Type {
 class Entity_Array {
   public:
     Entity_Type entity_type;
-    void* entities;
+    unsigned char* entities;
     int entity_count;
+    int entities_capacity;
 
-    Entity_Array(const std::vector<Component_Type*>& components) : entity_type(Entity_Type(components)) {
-        entity_count = 10;
-        entities = new unsigned char[entity_type.entity_size * entity_count];
+    Entity_Array(const std::vector<Component_Type*>& components)
+        : entity_type(Entity_Type(components)), entity_count(0) {
+        entities_capacity = 100;
+        entities = new unsigned char[entity_type.entity_size * entity_count * entities_capacity];
     }
 
     template <typename T>
     T* Get_Component(char* entity, Component_Type* component_type) {
-        for (int i = 0; i < components.size(); i++) {
-            if (component_type == components[i])
+        for (int i = 0; i < entity_type.components.size(); i++) {
+            if (component_type == entity_type.components[i])
                 return static_cast<T*>(entity);
-            entity += components[i]->size;
+            entity += entity_type.components[i]->size;
         }
         throw std::invalid_argument("Failed to find a component_type for an entity.");
     }
 
-    void* Create_Entity() {
-        entities.emplace_back();
-        return entities.back();
+    unsigned char* Create_Entity() {
+        unsigned char* ptr = entities + entity_count * entity_type.entity_size;
+        entity_count++;
+        return ptr;
     }
 
-    void* Get_Entity(int index) { return entities[index * entity_size]; }
+    unsigned char* Get_Entity(int index) const {
+        return entities + index * entity_type.entity_size;
+    }
 };
 
 class ECS {
@@ -79,15 +90,15 @@ class ECS {
 
   public:
     void* Create_Entity(Entity_Type* entity_type) {
-        Entity_Type* e_type =
+        Entity_Array* e_array =
             *std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
                 return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
             });
-        if (e_type == nullptr) {
-            entity_components.emplace(entity_type);
-            e_type = entity_type;
+        if (e_array == nullptr) {
+            e_array = new Entity_Array(entity_type->components);
+            entity_components.emplace(e_array);
         }
-        return e_type->Create_Entity();
+        return e_array->Create_Entity();
     }
 
     void Apply_Function_To_Entities(Entity_Type* entity_type,
