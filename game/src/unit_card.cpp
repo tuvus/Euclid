@@ -7,7 +7,9 @@ void Unit_Card::Play_Card(Card_Player* card_player, Vector2 pos) {
         auto components = vector<Component_Type*>();
         components.emplace_back(&Transform_Component::component_type);
         components.emplace_back(&Unit_Component::component_type);
-        auto entity = game_scene.ecs->Create_Entity(new Entity_Type(components));
+        auto [entity, entity_array] = game_scene.ecs->Create_Entity(new Entity_Type(components));
+        Init_Unit(entity, entity_array, unit_data, game_scene.Get_Team_Path(card_player->team), 1,
+                  i * 10, card_player->team, .4f, Game_Scene::Get_Team_Color(card_player->team));
 
         game_manager.Add_Object(new Unit(
             game_scene.ecs, game_manager, unit_data, game_scene.Get_Team_Path(card_player->team), 1,

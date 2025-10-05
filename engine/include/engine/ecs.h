@@ -75,6 +75,7 @@ class Entity_Array {
 
     template <typename T>
     T* Get_Component(unsigned char* entity, Component_Type* component_type) {
+        entity += sizeof(Entity);
         for (auto& component : entity_type.components) {
             if (component_type == component)
                 return reinterpret_cast<T*>(entity);
@@ -113,7 +114,7 @@ class ECS {
     ECS() { entity_components = std::unordered_set<Entity_Array*>(); }
     int next_id = 1;
 
-    unsigned char* Create_Entity(Entity_Type* entity_type) {
+    std::tuple<unsigned char*, Entity_Array&> Create_Entity(Entity_Type* entity_type) {
         auto search = std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
             return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
         });
@@ -124,7 +125,8 @@ class ECS {
         } else {
             e_array = *search;
         }
-        return e_array->Create_Entity(next_id++);
+        return std::tuple<unsigned char*, Entity_Array&>(e_array->Create_Entity(next_id++),
+                                                         *e_array);
     }
 
     void Apply_Function_To_Entities(

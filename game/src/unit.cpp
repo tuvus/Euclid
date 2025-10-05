@@ -4,7 +4,21 @@
 #include "game_manager.h"
 #include "unit_ui.h"
 
-void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, float dist_to_move) {
+void Init_Unit(unsigned char* entity_data, Entity_Array& entity_array, Unit_Data& unit_data,
+               Path* path, float speed, float start_offset, int team, float scale, Color color) {
+    auto* unit =
+        entity_array.Get_Component<Unit_Component>(entity_data, &Unit_Component::component_type);
+    auto* transform = entity_array.Get_Component<Transform_Component>(
+        entity_data, &Transform_Component::component_type);
+    unit->path = path;
+    unit->speed = speed;
+    unit->section = 0;
+    unit->team = team;
+    unit->unit_data = &unit_data;
+    Move_Unit(unit, transform, start_offset);
+}
+
+void Move_Unit(Unit_Component* unit, Transform_Component* transform, float dist_to_move) {
     if (unit->section + 1 == unit->path->positions.size()) {
         transform->pos = unit->path->positions[unit->section];
         // Delete_Object();
@@ -50,7 +64,7 @@ void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity_dat
         entity_array->Get_Component<Unit_Component>(entity_data, &Unit_Component::component_type);
     auto* transform = entity_array->Get_Component<Transform_Component>(
         entity_data, &Transform_Component::component_type);
-    Move_Unit(ecs, unit, transform, 10);
+    Move_Unit(unit, transform, 10);
 }
 
 Unit::Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,
@@ -59,7 +73,6 @@ Unit::Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* pat
       ecs(ecs), path(path), section(0), lerp(0), speed(speed), team(team), unit_data(unit_data),
       tmp_ecs_unit(tmp_ecs_unit) {
     spawned = true;
-    // Move(start_offset);
 }
 
 void Unit::Update() {
