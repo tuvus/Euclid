@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 
+class ECS;
 typedef long Component_ID;
 
 struct Entity {
@@ -106,12 +107,29 @@ class Entity_Array {
     }
 };
 
+class System {
+  public:
+    Entity_Type* entity_type;
+    std::function<void(ECS* ecs, Entity_Array*, unsigned char*)> function;
+};
+
 class ECS {
     std::unordered_set<Entity_Array*> entity_components;
+    std::unordered_set<System*> systems;
 
   public:
-    ECS() { entity_components = std::unordered_set<Entity_Array*>(); }
     int next_id = 1;
+
+    ECS() {
+        entity_components = std::unordered_set<Entity_Array*>();
+        systems = std::unordered_set<System*>();
+    }
+
+    void Update() {
+        for (auto system : systems) {
+            Apply_Function_To_Entities(system->entity_type, system->function);
+        }
+    }
 
     std::tuple<unsigned char*, Entity_Array&> Create_Entity(Entity_Type* entity_type) {
         auto search = std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
@@ -148,6 +166,8 @@ class ECS {
         });
         return e_array;
     }
+
+    void Register_System(System* system) { systems.emplace(system); }
 };
 
 struct Transform_Component {

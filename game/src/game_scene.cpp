@@ -44,6 +44,11 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
     ecs = new ECS();
+    auto components = vector<Component_Type*>();
+    components.emplace_back(&Transform_Component::component_type);
+    components.emplace_back(&Unit_Component::component_type);
+    ecs->Register_System(new System(new Entity_Type(components), Unit_Update));
+
     vector<Vector2> positions = vector<Vector2>();
     static uniform_int_distribution<int> start_dist(-200, 200);
     positions.emplace_back(start_dist(game_manager->random) + card_game.screen_width / 2,
@@ -197,6 +202,7 @@ bool Game_Scene::Can_Place_Tower(Vector2 pos, float min_dist) const {
 }
 
 void Game_Scene::Update(std::chrono::milliseconds) {
+    ecs->Update();
     game_manager->Update();
 }
 
