@@ -18,6 +18,7 @@ struct Entity {
 
 class Component_Type {
   public:
+    std::string name;
     int size;
 };
 
@@ -65,6 +66,10 @@ class Entity_Array {
         entities = new unsigned char[entity_type.entity_size * entity_count * entities_capacity];
     }
 
+    static Entity& Get_Entity_Data(unsigned char* entity) {
+        return *reinterpret_cast<Entity*>(entity);
+    }
+
     template <typename T>
     T* Get_Component(unsigned char* entity, Component_Type* component_type) {
         for (auto& component : entity_type.components) {
@@ -75,9 +80,10 @@ class Entity_Array {
         throw std::invalid_argument("Failed to find a component_type for an entity.");
     }
 
-    unsigned char* Create_Entity() {
+    unsigned char* Create_Entity(int id) {
         unsigned char* ptr = entities + entity_count * entity_type.entity_size;
         entity_count++;
+        Get_Entity_Data(ptr).id = id;
         return ptr;
     }
 
@@ -91,8 +97,9 @@ class ECS {
 
   public:
     ECS() { entity_components = std::unordered_set<Entity_Array*>(); }
+    int next_id = 1;
 
-    void* Create_Entity(Entity_Type* entity_type) {
+    unsigned char* Create_Entity(Entity_Type* entity_type) {
         auto search = std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
             return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
         });
@@ -103,7 +110,7 @@ class ECS {
         } else {
             e_array = *search;
         }
-        return e_array->Create_Entity();
+        return e_array->Create_Entity(next_id++);
     }
 
     void Apply_Function_To_Entities(
@@ -113,9 +120,18 @@ class ECS {
             if (!entity_array->entity_type.Is_Entity_Of_Type(entity_type))
                 continue;
             for (int i = 0; i < entity_array->entity_count; i++) {
-                op(this, entity_array, entity_array->Get_Entity(i));
+                unsigned char* entity = entity_array->Get_Entity(i);
+                if (Entity_Array::Get_Entity_Data(entity).id != 0)
+                    op(this, entity_array, entity_array->Get_Entity(i));
             }
         }
+    }
+
+    Entity_Array* Get_Entities_Of_Exact_Type(Entity_Type* entity_type) {
+        auto e_array = *std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
+            return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
+        });
+        return e_array;
     }
 };
 

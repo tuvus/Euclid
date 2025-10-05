@@ -23,7 +23,7 @@ void Base::Update() {
         card_player.deck->Draw_Card(3);
     }
 
-    if (card_player.ai && !card_player.deck->hand.empty()) {
+    if (card_player.ai && !card_player.deck->hand.empty() && false) {
         std::uniform_int_distribution<int> hand_dist(0, card_player.deck->hand.size() - 1);
         int card_to_play = hand_dist(game_manager.random);
         Card* card = card_player.deck->hand[card_to_play];

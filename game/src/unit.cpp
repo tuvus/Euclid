@@ -53,18 +53,28 @@ void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity_dat
     Move_Unit(ecs, unit, transform, 10);
 }
 
-Unit::Unit(Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,
-           float start_offset, int team, float scale, Color color)
+Unit::Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,
+           float start_offset, int team, float scale, Color color, int tmp_ecs_unit)
     : Game_Object(game_manager, path->positions[0], path->Get_Rotation_On_Path(0), scale, color),
-      path(path), section(0), lerp(0), speed(speed), team(team), unit_data(unit_data) {
+      ecs(ecs), path(path), section(0), lerp(0), speed(speed), team(team), unit_data(unit_data),
+      tmp_ecs_unit(tmp_ecs_unit) {
     spawned = true;
-    Move(start_offset);
+    // Move(start_offset);
 }
 
 void Unit::Update() {
-    if (!spawned)
-        return;
-    Move(speed);
+    // if (!spawned)
+    // return;
+    // Move(speed);
+    auto components = vector<Component_Type*>();
+    components.emplace_back(&Transform_Component::component_type);
+    components.emplace_back(&Unit_Component::component_type);
+    Entity_Array* array = ecs->Get_Entities_Of_Exact_Type(new Entity_Type(components));
+    auto entity = array->Get_Entity(tmp_ecs_unit);
+    auto transform =
+        array->Get_Component<Transform_Component>(entity, &Transform_Component::component_type);
+    pos = transform->pos;
+    rot = transform->rot;
 }
 
 void Unit::Move(float dist_to_move) {
@@ -111,4 +121,4 @@ Object_UI* Unit::Create_UI_Object(Game_UI_Manager& game_ui_manager) {
     return new Unit_UI(this, game_ui_manager);
 }
 
-Component_Type Unit_Component::component_type = Component_Type{sizeof(Unit_Component)};
+Component_Type Unit_Component::component_type = Component_Type{"Unit", sizeof(Unit_Component)};

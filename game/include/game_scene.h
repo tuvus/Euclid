@@ -22,6 +22,7 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     vector<Card_Data*> card_datas;
 
   public:
+    ECS* ecs;
     Path* f_path;
     Path* r_path;
     Card* active_card;

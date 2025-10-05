@@ -32,9 +32,11 @@ class Unit : public Game_Object {
     int team;
     bool spawned;
     Unit_Data& unit_data;
+    int tmp_ecs_unit;
+    ECS* ecs;
 
-    Unit(Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,
-         float start_offset, int team, float scale, Color color);
+    Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,
+         float start_offset, int team, float scale, Color color, int tmp_ecs_unit);
 
     void Update() override;
 
