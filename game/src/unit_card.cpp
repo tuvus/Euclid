@@ -14,6 +14,6 @@ void Unit_Card::Play_Card(Card_Player* card_player, Vector2 pos) {
         game_manager.Add_Object(new Unit(
             game_scene.ecs, game_manager, unit_data, game_scene.Get_Team_Path(card_player->team), 1,
             i * 10, card_player->team, .4f, Game_Scene::Get_Team_Color(card_player->team),
-            Entity_Array::Get_Entity_Data(entity).id));
+            Entity_Array::Get_Entity_Data(entity).id - 1));
     }
 }

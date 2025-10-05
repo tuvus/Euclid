@@ -25,17 +25,21 @@ void Move_Unit(Unit_Component* unit, Transform_Component* transform, float dist_
         return;
     }
 
-    float dist = Vector2Distance(unit->path->positions[unit->section],
-                                 unit->path->positions[unit->section + 1]);
-    unit->lerp += dist_to_move / dist;
-    if (unit->lerp > 1) {
-        unit->lerp--;
-        unit->section++;
-    }
-    if (unit->section + 1 == unit->path->positions.size()) {
-        transform->pos = unit->path->positions[unit->section];
-        // Delete_Object();
-        return;
+    while (dist_to_move > 0) {
+        float dist = Vector2Distance(unit->path->positions[unit->section],
+                                     unit->path->positions[unit->section + 1]);
+        float new_dist_to_move = dist_to_move - dist * (1 - unit->lerp);
+        unit->lerp += dist_to_move / dist;
+        dist_to_move = new_dist_to_move;
+        if (unit->lerp > 1) {
+            unit->lerp = 0;
+            unit->section++;
+        }
+        if (unit->section + 1 == unit->path->positions.size()) {
+            transform->pos = unit->path->positions[unit->section];
+            // Delete_Object();
+            return;
+        }
     }
 
     // for (auto* object : game_manager.Get_All_Objects()) {

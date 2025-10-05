@@ -32,10 +32,9 @@ class Entity_Type {
     int entity_size;
 
     Entity_Type(std::vector<Component_Type*> components) : components(std::move(components)) {
-        entity_size = sizeof(Entity) + std::accumulate(components.begin(), components.end(), 0,
-                                                       [](const int sum, const Component_Type* c) {
-                                                           return sum + c->size;
-                                                       });
+        entity_size =
+            std::accumulate(this->components.begin(), this->components.end(), sizeof(Entity),
+                            [](const int sum, const Component_Type* c) { return sum + c->size; });
     }
 
     /**
