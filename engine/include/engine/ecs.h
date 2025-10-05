@@ -1,9 +1,11 @@
 #pragma once
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <numeric>
 #include <raylib.h>
 #include <stdexcept>
+#include <string.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -14,6 +16,7 @@ typedef long Component_ID;
 struct Entity {
     // If id = 0, then the entity is not being used
     int id;
+    int index;
 };
 
 class Component_Type {
@@ -63,7 +66,7 @@ class Entity_Array {
     Entity_Array(const std::vector<Component_Type*>& components)
         : entity_type(Entity_Type(components)), entity_count(0) {
         entities_capacity = 100;
-        entities = new unsigned char[entity_type.entity_size * entity_count * entities_capacity];
+        entities = new unsigned char[entity_type.entity_size * entities_capacity];
     }
 
     static Entity& Get_Entity_Data(unsigned char* entity) {
@@ -82,9 +85,20 @@ class Entity_Array {
 
     unsigned char* Create_Entity(int id) {
         unsigned char* ptr = entities + entity_count * entity_type.entity_size;
+        std::memset(ptr, 0, entity_type.entity_size);
+        Entity& entity = Get_Entity_Data(ptr);
+        entity.id = id;
+        entity.index = entity_count;
         entity_count++;
-        Get_Entity_Data(ptr).id = id;
         return ptr;
+    }
+
+    void Delete_Entity(int index) {
+        std::memcpy(entities + index * entity_type.entity_size,
+                    entities + entity_count * (entity_type.entity_size - 1),
+                    entity_type.entity_size);
+        entity_count--;
+        Get_Entity_Data(Get_Entity(index)).index = index;
     }
 
     unsigned char* Get_Entity(int index) const {
