@@ -69,7 +69,7 @@ void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity_dat
         entity_array->Get_Component<Unit_Component>(entity_data, &Unit_Component::component_type);
     auto* transform = entity_array->Get_Component<Transform_Component>(
         entity_data, &Transform_Component::component_type);
-    Move_Unit(unit, transform, 10);
+    Move_Unit(unit, transform, unit->speed);
 }
 
 Unit::Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,
@@ -84,7 +84,7 @@ void Unit::Update() {
     // if (!spawned)
     // return;
     // Move(speed);
-    auto [entity, array] = ecs->entities_by_id[tmp_ecs_unit];
+    auto [entity, index, array] = ecs->entities_by_id[tmp_ecs_unit];
     auto transform =
         array->Get_Component<Transform_Component>(entity, &Transform_Component::component_type);
     pos = transform->pos;
