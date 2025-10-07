@@ -20,10 +20,11 @@ struct Unit_Component {
     Unit_Data* unit_data;
 };
 
-void Init_Unit(unsigned char* entity, Entity_Array& entity_array, Unit_Data& unit_data, Path* path,
-               float speed, float start_offset, int team, float scale, Color color);
+void Init_Unit(ECS* ecs, unsigned char* entity, Entity_Array& entity_array, Unit_Data& unit_data,
+               Path* path, float speed, float start_offset, int team, float scale, Color color);
 
-void Move_Unit(Unit_Component* unit, Transform_Component* transform, float dist_to_move);
+void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, Entity_ID entity_id,
+               float dist_to_move);
 
 void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity_data);
 

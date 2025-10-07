@@ -4,8 +4,9 @@
 #include "game_manager.h"
 #include "unit_ui.h"
 
-void Init_Unit(unsigned char* entity_data, Entity_Array& entity_array, Unit_Data& unit_data,
-               Path* path, float speed, float start_offset, int team, float scale, Color color) {
+void Init_Unit(ECS* ecs, unsigned char* entity_data, Entity_Array& entity_array,
+               Unit_Data& unit_data, Path* path, float speed, float start_offset, int team,
+               float scale, Color color) {
     auto* unit =
         entity_array.Get_Component<Unit_Component>(entity_data, &Unit_Component::component_type);
     auto* transform = entity_array.Get_Component<Transform_Component>(
@@ -15,13 +16,14 @@ void Init_Unit(unsigned char* entity_data, Entity_Array& entity_array, Unit_Data
     unit->section = 0;
     unit->team = team;
     unit->unit_data = &unit_data;
-    Move_Unit(unit, transform, start_offset);
+    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity_data).id, start_offset);
 }
 
-void Move_Unit(Unit_Component* unit, Transform_Component* transform, float dist_to_move) {
+void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, Entity_ID entity_id,
+               float dist_to_move) {
     if (unit->section + 1 == unit->path->positions.size()) {
         transform->pos = unit->path->positions[unit->section];
-        // Delete_Object();
+        ecs->Delete_Entity(entity_id);
         return;
     }
 
@@ -37,31 +39,40 @@ void Move_Unit(Unit_Component* unit, Transform_Component* transform, float dist_
         }
         if (unit->section + 1 == unit->path->positions.size()) {
             transform->pos = unit->path->positions[unit->section];
-            // Delete_Object();
+            ecs->Delete_Entity(entity_id);
             return;
         }
     }
 
-    // for (auto* object : game_manager.Get_All_Objects()) {
-    //     if (Unit* other = dynamic_cast<Unit*>(object)) {
-    //         if (other->team == unit->team || !other->spawned)
-    //             continue;
-    //
-    //         if (Vector2Distance(transform->pos, other->pos) > 30)
-    //             continue;
-    //
-    //         // Collide
-    //         unit->spawned = false;
-    //         other->spawned = false;
-    //         // game_manager.Delete_Object(this);
-    //         // game_manager.Delete_Object(other);
-    //         return;
-    //     }
-    // }
-
     transform->pos = Vector2Lerp(unit->path->positions[unit->section],
                                  unit->path->positions[unit->section + 1], unit->lerp);
     transform->rot = unit->path->Get_Rotation_On_Path(unit->section);
+
+    auto components = vector<Component_Type*>();
+    components.emplace_back(&Transform_Component::component_type);
+    components.emplace_back(&Unit_Component::component_type);
+    for (auto [entity, entity_array] : ecs->Get_Entities_Of_Type(new Entity_Type(components))) {
+        Entity_ID other_id = entity_array->Get_Entity_Data(entity).id;
+        if (other_id == entity_id)
+            continue;
+        Unit_Component* other =
+            entity_array->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
+
+        if (other->team == unit->team || !other->spawned)
+            continue;
+
+        Transform_Component* other_transform = entity_array->Get_Component<Transform_Component>(
+            entity, &Transform_Component::component_type);
+        if (Vector2Distance(transform->pos, other_transform->pos) > 30)
+            continue;
+
+        // Collide
+        unit->spawned = false;
+        other->spawned = false;
+        ecs->Delete_Entity(entity_id);
+        ecs->Delete_Entity(other_id);
+        return;
+    }
 }
 
 void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity_data) {
@@ -69,7 +80,7 @@ void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity_dat
         entity_array->Get_Component<Unit_Component>(entity_data, &Unit_Component::component_type);
     auto* transform = entity_array->Get_Component<Transform_Component>(
         entity_data, &Transform_Component::component_type);
-    Move_Unit(unit, transform, unit->speed);
+    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity_data).id, unit->speed);
 }
 
 Unit::Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,
@@ -84,7 +95,15 @@ void Unit::Update() {
     // if (!spawned)
     // return;
     // Move(speed);
+    if (!ecs->entities_by_id.contains(tmp_ecs_unit)) {
+        Delete_Object();
+        return;
+    }
     auto [entity, index, array] = ecs->entities_by_id[tmp_ecs_unit];
+    if (Entity_Array::Get_Entity_Data(entity).id == 0) {
+        Delete_Object();
+        return;
+    }
     auto transform =
         array->Get_Component<Transform_Component>(entity, &Transform_Component::component_type);
     pos = transform->pos;

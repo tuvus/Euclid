@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstring>
 #include <functional>
+#include <memory>
 #include <numeric>
 #include <raylib.h>
 #include <stdexcept>
@@ -11,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+class Entity_Type_Iterator;
 class ECS;
 typedef long Component_ID;
 
@@ -83,11 +85,37 @@ class System {
     std::function<void(ECS* ecs, Entity_Array*, unsigned char*)> function;
 };
 
-class ECS {
-    std::unordered_set<Entity_Array*> entity_components;
-    std::unordered_set<System*> systems;
+class Entity_Iterator {
+    Entity_Type_Iterator* type_iterator;
 
   public:
+    int pos;
+    int index;
+
+    Entity_Iterator(Entity_Type_Iterator*);
+    Entity_Iterator(Entity_Type_Iterator*, int pos);
+    std::tuple<unsigned char*, Entity_Array*> operator*();
+    void operator++();
+    bool operator!=(Entity_Iterator) const;
+};
+
+class Entity_Type_Iterator {
+    Entity_Type* entity_type;
+    std::vector<Entity_Array*> arrays;
+
+  public:
+    Entity_Type_Iterator(ECS& ecs, Entity_Type* entity_type);
+    std::tuple<unsigned char*, Entity_Array*> Get_Entity(int pos, int index);
+    std::tuple<int, int> Next_Entity(int pos, int index);
+    bool Has_Next_Entity(int pos);
+    Entity_Iterator begin();
+    Entity_Iterator end();
+};
+
+class ECS {
+  public:
+    std::unordered_set<Entity_Array*> entity_components;
+    std::unordered_set<System*> systems;
     std::unordered_map<Entity_ID, std::tuple<unsigned char*, int, Entity_Array*>> entities_by_id;
     Entity_ID next_id = 1;
 
@@ -101,6 +129,8 @@ class ECS {
     void Apply_Function_To_Entities(
         Entity_Type* entity_type,
         const std::function<void(ECS* ecs, Entity_Array*, unsigned char*)>& op);
+
+    Entity_Type_Iterator Get_Entities_Of_Type(Entity_Type* entity_type);
 
     Entity_Array* Get_Entities_Of_Exact_Type(Entity_Type* entity_type);
 

@@ -42,8 +42,65 @@ void Entity_Array::Delete_Entity(ECS* ecs, int index) {
                     entity_type.entity_size);
         Entity_ID entity_id = Get_Entity_Data(Get_Entity(index)).id;
         ecs->entities_by_id[entity_id] = tuple(Get_Entity(index), index, this);
+    } else {
+        Get_Entity_Data(Get_Entity(index)).id = 0;
     }
     entity_count--;
+}
+
+Entity_Iterator::Entity_Iterator(Entity_Type_Iterator* type_iterator)
+    : type_iterator(type_iterator), pos(0), index(0) {
+}
+
+Entity_Iterator::Entity_Iterator(Entity_Type_Iterator* type_iterator, int pos)
+    : type_iterator(type_iterator), pos(pos), index(0) {
+}
+
+tuple<unsigned char*, Entity_Array*> Entity_Iterator::operator*() {
+    return type_iterator->Get_Entity(pos, index);
+}
+
+void Entity_Iterator::operator++() {
+    auto [pos, index] = type_iterator->Next_Entity(this->pos, this->index);
+    this->pos = pos;
+    this->index = index;
+}
+
+bool Entity_Iterator::operator!=(Entity_Iterator other) const {
+    return this->pos == other.pos && this->index == other.index;
+}
+
+Entity_Type_Iterator::Entity_Type_Iterator(ECS& ecs, Entity_Type* entity_type)
+    : entity_type(entity_type) {
+    arrays = vector<Entity_Array*>();
+    for (auto entity_array : ecs.entity_components) {
+        arrays.emplace_back(entity_array);
+    }
+}
+
+std::tuple<unsigned char*, Entity_Array*> Entity_Type_Iterator::Get_Entity(int pos, int index) {
+    return make_tuple(arrays[pos]->Get_Entity(index), arrays[pos]);
+}
+
+std::tuple<int, int> Entity_Type_Iterator::Next_Entity(int pos, int index) {
+    index++;
+    while (arrays[pos]->entity_count == index) {
+        pos++;
+        index = 0;
+    }
+    return make_tuple(pos, index);
+}
+
+bool Entity_Type_Iterator::Has_Next_Entity(int pos) {
+    return pos < arrays.size();
+}
+
+Entity_Iterator Entity_Type_Iterator::begin() {
+    return Entity_Iterator(this);
+}
+
+Entity_Iterator Entity_Type_Iterator::end() {
+    return Entity_Iterator(this, arrays.size());
 }
 
 ECS::ECS() {
@@ -94,6 +151,10 @@ void ECS::Apply_Function_To_Entities(
                 op(this, entity_array, entity_array->Get_Entity(i));
         }
     }
+}
+
+Entity_Type_Iterator ECS::Get_Entities_Of_Type(Entity_Type* entity_type) {
+    return Entity_Type_Iterator(*this, entity_type);
 }
 
 Entity_Array* ECS::Get_Entities_Of_Exact_Type(Entity_Type* entity_type) {
