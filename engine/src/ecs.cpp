@@ -22,17 +22,23 @@ bool Entity_Type::Is_Entity_Strictly_Of_type(Entity_Type* other) const {
 
 Entity_Array::Entity_Array(const std::vector<Component_Type*>& components)
     : entity_type(Entity_Type(components)), entity_count(0) {
-    entity_capacity = 100;
+    entity_capacity = 10;
     entities = new unsigned char[entity_type.entity_size * entity_capacity];
 }
 
-std::tuple<unsigned char*, int> Entity_Array::Create_Entity(int id) {
+std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs, Entity_ID id) {
     if (entity_count == entity_capacity) {
         unsigned char* new_entities =
             new unsigned char[entity_type.entity_size * entity_capacity * 2];
         memcpy(new_entities, entities, entity_count * entity_type.entity_size);
         delete entities;
         entities = new_entities;
+        for (int i = 0; i < entity_count; i++) {
+            unsigned char* entity = Get_Entity(i);
+            Entity_ID e_id = Get_Entity_Data(entity).id;
+            ecs->entities_by_id[e_id] = make_tuple(entity, i, this);
+        }
+        entity_capacity *= 2;
     }
     unsigned char* ptr = entities + entity_count * entity_type.entity_size;
     std::memset(ptr, 0, entity_type.entity_size);
@@ -143,9 +149,8 @@ std::tuple<unsigned char*, Entity_Array*> ECS::Create_Entity(Entity_Type* entity
     } else {
         e_array = *search;
     }
-    auto [entity, index] = e_array->Create_Entity(next_id++);
-    entities_by_id.emplace(Entity_Array::Get_Entity_Data(entity).id,
-                           std::tuple(entity, index, e_array));
+    auto [entity, index] = e_array->Create_Entity(this, next_id);
+    entities_by_id.emplace(next_id++, std::tuple(entity, index, e_array));
     return std::tuple(entity, e_array);
 }
 

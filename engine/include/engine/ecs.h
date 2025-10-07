@@ -70,7 +70,7 @@ class Entity_Array {
         throw std::invalid_argument("Failed to find a component_type for an entity.");
     }
 
-    std::tuple<unsigned char*, int> Create_Entity(int id);
+    std::tuple<unsigned char*, int> Create_Entity(ECS* ecs, Entity_ID id);
 
     void Delete_Entity(ECS* ecs, int index);
 
