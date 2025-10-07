@@ -68,8 +68,10 @@ void Game_Manager::Update() {
         }
 
         for (const Game_Object* object : objects_to_delete) {
-            objects.erase(const_cast<Game_Object*>(object)->id);
-            delete const_cast<Game_Object*>(object);
+            if (objects.contains(object->id)) {
+                objects.erase(const_cast<Game_Object*>(object)->id);
+                delete const_cast<Game_Object*>(object);
+            }
         }
         objects_to_delete.clear();
         step++;
