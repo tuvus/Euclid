@@ -43,11 +43,13 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ranges::sort(players, [](Player* a, Player* b) { return a->player_id <= b->player_id; });
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
-    ecs = new ECS();
-    auto components = vector<Component_Type*>();
-    components.emplace_back(&Transform_Component::component_type);
-    components.emplace_back(&Unit_Component::component_type);
-    ecs->Register_System(new System(new Entity_Type(components), Unit_Update));
+    ecs = new ECS(application);
+    auto unit_components =
+        vector{&Transform_Component::component_type, &Unit_Component::component_type};
+    ecs->Register_System(new System(new Entity_Type(unit_components), Unit_Update));
+    auto tower_components =
+        vector{&Transform_Component::component_type, &Tower_Component::component_type};
+    ecs->Register_System(new System(new Entity_Type(tower_components), Tower_Update));
 
     vector<Vector2> positions = vector<Vector2>();
     static uniform_int_distribution<int> start_dist(-200, 200);

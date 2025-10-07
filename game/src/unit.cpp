@@ -76,12 +76,12 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
     }
 }
 
-void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity_data) {
+void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity) {
     auto* unit =
-        entity_array->Get_Component<Unit_Component>(entity_data, &Unit_Component::component_type);
+        entity_array->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
     auto* transform = entity_array->Get_Component<Transform_Component>(
-        entity_data, &Transform_Component::component_type);
-    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity_data).id, unit->speed);
+        entity, &Transform_Component::component_type);
+    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity).id, unit->speed);
 }
 
 Unit::Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,

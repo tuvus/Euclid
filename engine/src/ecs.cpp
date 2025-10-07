@@ -118,7 +118,7 @@ Entity_Iterator Entity_Type_Iterator::end() {
     return Entity_Iterator(this, arrays.size());
 }
 
-ECS::ECS() {
+ECS::ECS(Application& application) : application(application) {
     entity_components = std::unordered_set<Entity_Array*>();
     systems = std::unordered_set<System*>();
     entities_by_id =

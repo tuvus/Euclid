@@ -17,6 +17,13 @@ bool Tower_Card::Can_Play_Card(Card_Player* card_player, Vector2 pos) {
 
 void Tower_Card::Play_Card(Card_Player* player, Vector2 pos) {
     Card::Play_Card(player, pos);
-    game_manager.Add_Object(new Tower(game_manager, tower_data, Vector2(pos.x, pos.y), 150,
-                                      player->team, .4f, player->team ? RED : BLUE));
+    auto components =
+        vector{&Transform_Component::component_type, &Tower_Component::component_type};
+    auto [entity, entity_array] = game_scene.ecs->Create_Entity(new Entity_Type(components));
+    Init_Tower(game_scene.ecs, entity, *entity_array, &tower_data, Vector2(pos.x, pos.y), 150,
+               player->team, .4f, Game_Scene::Get_Team_Color(player->team));
+
+    game_manager.Add_Object(new Tower(
+        game_scene.ecs, game_manager, tower_data, Vector2(pos.x, pos.y), 150, player->team, .4f,
+        Game_Scene::Get_Team_Color(player->team), Entity_Array::Get_Entity_Data(entity).id));
 }

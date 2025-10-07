@@ -1,4 +1,6 @@
 #pragma once
+#include "application.h"
+
 #include <algorithm>
 #include <cstring>
 #include <functional>
@@ -67,7 +69,8 @@ class Entity_Array {
                 return reinterpret_cast<T*>(entity);
             entity += component->size;
         }
-        throw std::invalid_argument("Failed to find a component_type for an entity.");
+        throw std::invalid_argument("Failed to find the component_type " + component_type->name +
+                                    " for an entity.");
     }
 
     std::tuple<unsigned char*, int> Create_Entity(ECS* ecs, Entity_ID id);
@@ -116,12 +119,13 @@ class ECS {
     std::vector<Entity_ID> to_delete;
 
   public:
+    Application& application;
     std::unordered_set<Entity_Array*> entity_components;
     std::unordered_set<System*> systems;
     std::unordered_map<Entity_ID, std::tuple<unsigned char*, int, Entity_Array*>> entities_by_id;
     Entity_ID next_id = 1;
 
-    ECS();
+    ECS(Application& application);
     void Update();
 
     std::tuple<unsigned char*, Entity_Array*> Create_Entity(Entity_Type* entity_type);
