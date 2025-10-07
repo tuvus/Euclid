@@ -107,7 +107,7 @@ class Entity_Type_Iterator {
     Entity_Type_Iterator(ECS& ecs, Entity_Type* entity_type);
     std::tuple<unsigned char*, Entity_Array*> Get_Entity(int pos, int index);
     std::tuple<int, int> Next_Entity(int pos, int index);
-    bool Has_Next_Entity(int pos);
+    bool Has_Next_Entity(int pos, int index);
     Entity_Iterator begin();
     Entity_Iterator end();
 };

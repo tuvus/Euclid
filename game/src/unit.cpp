@@ -16,6 +16,7 @@ void Init_Unit(ECS* ecs, unsigned char* entity_data, Entity_Array& entity_array,
     unit->section = 0;
     unit->team = team;
     unit->unit_data = &unit_data;
+    unit->spawned = true;
     Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity_data).id, start_offset);
 }
 

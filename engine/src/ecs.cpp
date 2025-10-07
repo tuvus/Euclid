@@ -80,14 +80,16 @@ void Entity_Iterator::operator++() {
 }
 
 bool Entity_Iterator::operator!=(Entity_Iterator other) const {
-    return this->pos == other.pos && this->index == other.index;
+    return this->pos != other.pos || this->index != other.index;
 }
 
 Entity_Type_Iterator::Entity_Type_Iterator(ECS& ecs, Entity_Type* entity_type)
     : entity_type(entity_type) {
     arrays = vector<Entity_Array*>();
     for (auto entity_array : ecs.entity_components) {
-        arrays.emplace_back(entity_array);
+        if (entity_array->entity_type.Is_Entity_Of_Type(entity_type) &&
+            entity_array->entity_count > 0)
+            arrays.emplace_back(entity_array);
     }
 }
 
@@ -97,15 +99,15 @@ std::tuple<unsigned char*, Entity_Array*> Entity_Type_Iterator::Get_Entity(int p
 
 std::tuple<int, int> Entity_Type_Iterator::Next_Entity(int pos, int index) {
     index++;
-    while (arrays[pos]->entity_count == index) {
+    if (arrays[pos]->entity_count == index) {
         pos++;
         index = 0;
     }
     return make_tuple(pos, index);
 }
 
-bool Entity_Type_Iterator::Has_Next_Entity(int pos) {
-    return pos < arrays.size();
+bool Entity_Type_Iterator::Has_Next_Entity(int pos, int index) {
+    return get<0>(Next_Entity(pos, index)) != arrays.size();
 }
 
 Entity_Iterator Entity_Type_Iterator::begin() {
@@ -161,14 +163,8 @@ void ECS::Delete_Entity(Entity_ID entity_id) {
 void ECS::Apply_Function_To_Entities(
     Entity_Type* entity_type,
     const std::function<void(ECS* ecs, Entity_Array*, unsigned char*)>& op) {
-    for (const auto& entity_array : entity_components) {
-        if (!entity_array->entity_type.Is_Entity_Of_Type(entity_type))
-            continue;
-        for (int i = 0; i < entity_array->entity_count; i++) {
-            unsigned char* entity = entity_array->Get_Entity(i);
-            if (Entity_Array::Get_Entity_Data(entity).id != 0)
-                op(this, entity_array, entity_array->Get_Entity(i));
-        }
+    for (auto [entity, entity_array] : Get_Entities_Of_Type(entity_type)) {
+        op(this, entity_array, entity);
     }
 }
 
