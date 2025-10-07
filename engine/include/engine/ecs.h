@@ -51,7 +51,7 @@ class Entity_Array {
     Entity_Type entity_type;
     unsigned char* entities;
     int entity_count;
-    int entities_capacity;
+    int entity_capacity;
 
     Entity_Array(const std::vector<Component_Type*>& components);
 
@@ -113,6 +113,8 @@ class Entity_Type_Iterator {
 };
 
 class ECS {
+    std::vector<Entity_ID> to_delete;
+
   public:
     std::unordered_set<Entity_Array*> entity_components;
     std::unordered_set<System*> systems;

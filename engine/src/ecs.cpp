@@ -22,11 +22,18 @@ bool Entity_Type::Is_Entity_Strictly_Of_type(Entity_Type* other) const {
 
 Entity_Array::Entity_Array(const std::vector<Component_Type*>& components)
     : entity_type(Entity_Type(components)), entity_count(0) {
-    entities_capacity = 100;
-    entities = new unsigned char[entity_type.entity_size * entities_capacity];
+    entity_capacity = 100;
+    entities = new unsigned char[entity_type.entity_size * entity_capacity];
 }
 
 std::tuple<unsigned char*, int> Entity_Array::Create_Entity(int id) {
+    if (entity_count == entity_capacity) {
+        unsigned char* new_entities =
+            new unsigned char[entity_type.entity_size * entity_capacity * 2];
+        memcpy(new_entities, entities, entity_count * entity_type.entity_size);
+        delete entities;
+        entities = new_entities;
+    }
     unsigned char* ptr = entities + entity_count * entity_type.entity_size;
     std::memset(ptr, 0, entity_type.entity_size);
     Entity& entity = Get_Entity_Data(ptr);
@@ -38,7 +45,7 @@ std::tuple<unsigned char*, int> Entity_Array::Create_Entity(int id) {
 void Entity_Array::Delete_Entity(ECS* ecs, int index) {
     if (index != entity_count - 1) {
         std::memcpy(entities + index * entity_type.entity_size,
-                    entities + entity_count * (entity_type.entity_size - 1),
+                    entities + (entity_count - 1) * entity_type.entity_size,
                     entity_type.entity_size);
         Entity_ID entity_id = Get_Entity_Data(Get_Entity(index)).id;
         ecs->entities_by_id[entity_id] = tuple(Get_Entity(index), index, this);
@@ -108,12 +115,21 @@ ECS::ECS() {
     systems = std::unordered_set<System*>();
     entities_by_id =
         std::unordered_map<Entity_ID, std::tuple<unsigned char*, int, Entity_Array*>>();
+    to_delete = vector<Entity_ID>();
 }
 
 void ECS::Update() {
     for (auto system : systems) {
         Apply_Function_To_Entities(system->entity_type, system->function);
     }
+    for (Entity_ID entity_id : to_delete) {
+        if (!entities_by_id.contains(entity_id))
+            continue;
+        auto [entity, index, entity_array] = entities_by_id[entity_id];
+        entities_by_id.erase(entity_id);
+        entity_array->Delete_Entity(this, index);
+    }
+    to_delete.clear();
 }
 
 std::tuple<unsigned char*, Entity_Array*> ECS::Create_Entity(Entity_Type* entity_type) {
@@ -134,9 +150,7 @@ std::tuple<unsigned char*, Entity_Array*> ECS::Create_Entity(Entity_Type* entity
 }
 
 void ECS::Delete_Entity(Entity_ID entity_id) {
-    auto [entity, index, entity_array] = entities_by_id[entity_id];
-    entities_by_id.erase(entity_id);
-    entity_array->Delete_Entity(this, index);
+    to_delete.emplace_back(entity_id);
 }
 
 void ECS::Apply_Function_To_Entities(
