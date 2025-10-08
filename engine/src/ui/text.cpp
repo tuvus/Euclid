@@ -77,9 +77,6 @@ void EUI_Text::Render() {
             text_pos.x = pos.x;
     }
 
-    DrawText(text.c_str(), text_pos.x, text_pos.y, style.font_size.value(),
-             style.text_color.value());
-    Color text_color = style.text_color.value_or(BLACK);
     DrawTextEx(Get_Font(), text.c_str(), text_pos, Get_Font_Size(), Get_Font_Spacing(),
                Get_Text_Color());
 }
