@@ -54,7 +54,7 @@ class EUI_Style {
     Color border_color = BLACK;
     float border_radius = 0;
 
-    std::optional<Font*> font;
+    std::optional<Font> font;
     std::optional<float> font_size;
     std::optional<float> font_spacing;
 
@@ -78,6 +78,13 @@ class EUI_Context {
     EUI_Element* hovered = nullptr;
     EUI_Element* active = nullptr;
     EUI_Element* focused = nullptr;
+
+    // default_font_path is needed to correctly load the font after window initialization
+    // doing it this way allows the user to not have to load their default font specifically
+    // in the start_client method, which was unintuitive. instead, they set the path in
+    // the constructor of their application
+    // TODO: maybe better way to do this
+    std::string default_font_path;
 
     EUI_Style default_style = {
         .text_color = BLACK,
@@ -134,7 +141,7 @@ class EUI_Element {
 
     // Getters for inheritable properties (optionals)
     Color Get_Text_Color() const;
-    Font* Get_Font() const;
+    Font Get_Font() const;
     float Get_Font_Size() const;
     float Get_Font_Spacing() const;
     EUI_Style Get_Effective_Style() const;

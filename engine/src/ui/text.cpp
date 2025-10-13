@@ -16,7 +16,7 @@ void EUI_Text::Layout() {
     EUI_Style style = Get_Effective_Style();
 
     Vector2 text_size =
-        MeasureTextEx(*Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
+        MeasureTextEx(Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
 
     // calculate preferred size
     float width =
@@ -50,7 +50,7 @@ void EUI_Text::Render() {
 
     // Text
     Vector2 text_size =
-        MeasureTextEx(*Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
+        MeasureTextEx(Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
 
     switch (style.text_vertical_alignment) {
         case Alignment::Center:
@@ -77,7 +77,7 @@ void EUI_Text::Render() {
             text_pos.x = pos.x;
     }
 
-    DrawTextEx(*Get_Font(), text.c_str(), text_pos, Get_Font_Size(), Get_Font_Spacing(),
+    DrawTextEx(Get_Font(), text.c_str(), text_pos, Get_Font_Size(), Get_Font_Spacing(),
                Get_Text_Color());
 }
 

@@ -27,10 +27,6 @@ void Card_Game::set_ui_screen(SCREEN new_screen) {
 void Card_Game::Start_Client() {
     Application::Start_Client();
 
-    // Load font after OpenGL context is initialized
-    custom_font = LoadFont("resources/Seagram.ttf");
-    eui_ctx->default_style.font = &custom_font;
-
     sceens.insert({MENU, [this]() -> Scene* { return new Menu_Scene(*this); }});
     sceens.insert({LOBBY, [this]() -> Scene* { return new Lobby_Scene(*this); }});
     sceens.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
@@ -94,7 +90,8 @@ void Card_Game::Update_UI(chrono::milliseconds deltaTime) {
 Card_Game::~Card_Game() {
     delete scene;
     scene = nullptr;
-    UnloadFont(custom_font);
+    if (eui_ctx->default_style.font.has_value())
+        UnloadFont(eui_ctx->default_style.font.value());
 }
 
 void Card_Game::Close_Application() {

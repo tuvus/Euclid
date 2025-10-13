@@ -1,7 +1,5 @@
 #include "ui/eui.h"
 
-#include <iostream>
-
 #define RETURN_STYLE_PROP(prop, getter)                                                            \
     if (style.prop.has_value())                                                                    \
         return style.prop.value();                                                                 \
@@ -18,18 +16,8 @@ Color EUI_Element::Get_Text_Color() const {
     RETURN_STYLE_PROP(text_color, Get_Text_Color);
 }
 
-Font* EUI_Element::Get_Font() const {
-    if (style.font.has_value()) {
-        return style.font.value();
-    }
-    if (parent) {
-        return parent->Get_Font();
-    }
-    if (ctx->default_style.font.has_value()) {
-        return ctx->default_style.font.value();
-    }
-    static Font default_font = GetFontDefault();
-    return &default_font;
+Font EUI_Element::Get_Font() const {
+    RETURN_STYLE_PROP(font, Get_Font);
 }
 float EUI_Element::Get_Font_Size() const {
     RETURN_STYLE_PROP(font_size, Get_Font_Size);

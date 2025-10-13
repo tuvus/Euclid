@@ -1,7 +1,6 @@
 #pragma once
 
 #include <chrono>
-#include <iostream>
 #include <raylib.h>
 
 #include "application.h"
@@ -26,7 +25,6 @@ class Card_Game : public Application {
   private:
     vector<Scene*> to_delete;
     void resize_update();
-    Font custom_font; // Store the loaded font
 
   protected:
     void Start_Client() override;
@@ -34,7 +32,7 @@ class Card_Game : public Application {
   public:
     Card_Game(bool client) : Application("CARD GAME", client, SCREEN_WIDTH, SCREEN_HEIGHT) {
         scene = nullptr;
-        // Font will be loaded in Start_Client() after OpenGL context is initialized
+        eui_ctx->default_font_path = "resources/Seagram.ttf";
     }
 
     void Update(chrono::milliseconds s) override;
