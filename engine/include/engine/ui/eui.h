@@ -54,7 +54,7 @@ class EUI_Style {
     Color border_color = BLACK;
     float border_radius = 0;
 
-    std::optional<Font> font;
+    std::optional<Font*> font;
     std::optional<float> font_size;
     std::optional<float> font_spacing;
 
@@ -88,7 +88,6 @@ class EUI_Context {
         .border_color = BLACK,
         .border_radius = 0,
 
-        .font = GetFontDefault(),
         .font_size = 15,
         .font_spacing = 1,
 
@@ -135,7 +134,7 @@ class EUI_Element {
 
     // Getters for inheritable properties (optionals)
     Color Get_Text_Color() const;
-    Font Get_Font() const;
+    Font* Get_Font() const;
     float Get_Font_Size() const;
     float Get_Font_Spacing() const;
     EUI_Style Get_Effective_Style() const;
