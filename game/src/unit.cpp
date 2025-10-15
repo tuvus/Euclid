@@ -4,20 +4,19 @@
 #include "game_manager.h"
 #include "unit_ui.h"
 
-void Init_Unit(ECS* ecs, unsigned char* entity_data, Entity_Array& entity_array,
-               Unit_Data& unit_data, Path* path, float speed, float start_offset, int team,
-               float scale, Color color) {
-    auto* unit =
-        entity_array.Get_Component<Unit_Component>(entity_data, &Unit_Component::component_type);
-    auto* transform = entity_array.Get_Component<Transform_Component>(
-        entity_data, &Transform_Component::component_type);
+void Init_Unit(ECS* ecs, Entity entity, Unit_Data& unit_data, Path* path, float speed,
+               float start_offset, int team, float scale, Color color) {
+    auto* unit = get<1>(entity)->Get_Component<Unit_Component>(get<0>(entity),
+                                                               &Unit_Component::component_type);
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
+        get<0>(entity), &Transform_Component::component_type);
     unit->path = path;
     unit->speed = speed;
     unit->section = 0;
     unit->team = team;
     unit->unit_data = &unit_data;
     unit->spawned = true;
-    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity_data).id, start_offset);
+    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(get<0>(entity)).id, start_offset);
 }
 
 void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, Entity_ID entity_id,
@@ -76,12 +75,12 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
     }
 }
 
-void Unit_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity) {
-    auto* unit =
-        entity_array->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
-    auto* transform = entity_array->Get_Component<Transform_Component>(
-        entity, &Transform_Component::component_type);
-    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity).id, unit->speed);
+void Unit_Update(ECS* ecs, Entity entity) {
+    auto* unit = get<1>(entity)->Get_Component<Unit_Component>(get<0>(entity),
+                                                               &Unit_Component::component_type);
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
+        get<0>(entity), &Transform_Component::component_type);
+    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(get<0>(entity)).id, unit->speed);
 }
 
 Unit::Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,

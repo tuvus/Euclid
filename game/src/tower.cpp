@@ -6,12 +6,12 @@
 
 #include <climits>
 
-void Init_Tower(ECS* ecs, unsigned char* entity, Entity_Array& entity_array, Tower_Data* tower_data,
-                Vector2 pos, float range, int team, float scale, Color color) {
-    auto* tower =
-        entity_array.Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
-    auto* transform = entity_array.Get_Component<Transform_Component>(
-        entity, &Transform_Component::component_type);
+void Init_Tower(ECS* ecs, Entity entity, Tower_Data* tower_data, Vector2 pos, float range, int team,
+                float scale, Color color) {
+    auto* tower = get<1>(entity)->Get_Component<Tower_Component>(get<0>(entity),
+                                                                 &Tower_Component::component_type);
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
+        get<0>(entity), &Transform_Component::component_type);
     transform->pos = pos;
     transform->rot = 0;
     tower->tower_data = tower_data;
@@ -19,17 +19,17 @@ void Init_Tower(ECS* ecs, unsigned char* entity, Entity_Array& entity_array, Tow
     tower->team = team;
 }
 
-void Tower_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity) {
-    auto* tower =
-        entity_array->Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
+void Tower_Update(ECS* ecs, Entity entity) {
+    auto* tower = get<1>(entity)->Get_Component<Tower_Component>(get<0>(entity),
+                                                                 &Tower_Component::component_type);
     if (tower->reload > 0)
         tower->reload--;
     if (tower->reload > 0)
         return;
 
-    Entity_ID entity_id = Entity_Array::Get_Entity_Data(entity).id;
-    auto* transform = entity_array->Get_Component<Transform_Component>(
-        entity, &Transform_Component::component_type);
+    Entity_ID entity_id = Entity_Array::Get_Entity_Data(get<0>(entity)).id;
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
+        get<0>(entity), &Transform_Component::component_type);
     Vector2 home = Vector2(tower->team == 0 ? ecs->application.screen_height : 0,
                            ecs->application.screen_width / 2);
 

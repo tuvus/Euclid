@@ -4,7 +4,7 @@ using namespace std;
 Entity_Type::Entity_Type(std::vector<Component_Type*> components)
     : components(std::move(components)) {
     entity_size =
-        std::accumulate(this->components.begin(), this->components.end(), sizeof(Entity),
+        std::accumulate(this->components.begin(), this->components.end(), sizeof(Entity_Component),
                         [](const int sum, const Component_Type* c) { return sum + c->size; });
 }
 
@@ -42,10 +42,16 @@ std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs, Entity_ID 
     }
     unsigned char* ptr = entities + entity_count * entity_type.entity_size;
     std::memset(ptr, 0, entity_type.entity_size);
-    Entity& entity = Get_Entity_Data(ptr);
+    Entity_Component& entity = Get_Entity_Data(ptr);
     entity.id = id;
     entity_count++;
     return std::tuple(ptr, entity_count - 1);
+}
+
+void Entity_Array::Copy_Entity(int src_index, int dst_index) {
+    memcpy(entities + dst_index * entity_type.entity_size + sizeof(Entity_Component),
+           entities + src_index * entity_type.entity_size + sizeof(Entity_Component),
+           entity_type.entity_size - sizeof(Entity_Component));
 }
 
 void Entity_Array::Delete_Entity(ECS* ecs, int index) {
@@ -69,7 +75,7 @@ Entity_Iterator::Entity_Iterator(Entity_Type_Iterator* type_iterator, int pos)
     : type_iterator(type_iterator), pos(pos), index(0) {
 }
 
-tuple<unsigned char*, Entity_Array*> Entity_Iterator::operator*() {
+Entity Entity_Iterator::operator*() {
     return type_iterator->Get_Entity(pos, index);
 }
 
@@ -93,7 +99,7 @@ Entity_Type_Iterator::Entity_Type_Iterator(ECS& ecs, Entity_Type* entity_type)
     }
 }
 
-std::tuple<unsigned char*, Entity_Array*> Entity_Type_Iterator::Get_Entity(int pos, int index) {
+Entity Entity_Type_Iterator::Get_Entity(int pos, int index) {
     return make_tuple(arrays[pos]->Get_Entity(index), arrays[pos]);
 }
 
@@ -140,7 +146,7 @@ void ECS::Update() {
     to_delete.clear();
 }
 
-std::tuple<unsigned char*, Entity_Array*> ECS::Create_Entity(Entity_Type* entity_type) {
+Entity ECS::Create_Entity(Entity_Type* entity_type) {
     auto search = std::ranges::find_if(entity_components, [entity_type](Entity_Array* e) {
         return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
     });
@@ -156,15 +162,21 @@ std::tuple<unsigned char*, Entity_Array*> ECS::Create_Entity(Entity_Type* entity
     return std::tuple(entity, e_array);
 }
 
+std::tuple<unsigned char*, Entity_Array*> ECS::Copy_Entity(Entity_ID entity_id) {
+    auto [_, old_entity_index, entity_array] = entities_by_id[entity_id];
+    auto [new_entity, new_entity_index] = entity_array->Create_Entity(this, next_id++);
+    entity_array->Copy_Entity(old_entity_index, new_entity_index);
+    return make_tuple(new_entity, entity_array);
+}
+
 void ECS::Delete_Entity(Entity_ID entity_id) {
     to_delete.emplace_back(entity_id);
 }
 
-void ECS::Apply_Function_To_Entities(
-    Entity_Type* entity_type,
-    const std::function<void(ECS* ecs, Entity_Array*, unsigned char*)>& op) {
-    for (auto [entity, entity_array] : Get_Entities_Of_Type(entity_type)) {
-        op(this, entity_array, entity);
+void ECS::Apply_Function_To_Entities(Entity_Type* entity_type,
+                                     const std::function<void(ECS* ecs, Entity entity)>& op) {
+    for (auto entity : Get_Entities_Of_Type(entity_type)) {
+        op(this, entity);
     }
 }
 

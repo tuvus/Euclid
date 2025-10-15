@@ -37,7 +37,7 @@ void Deck::Shuffle_Deck() {
 void Deck::Update() {
 }
 
-void Deck::Discard_Card(Card* card) {
+void Deck::Discard_Card(Entity_ID card) {
     hand.erase(ranges::find(hand, card));
     discard.emplace_back(card);
 }

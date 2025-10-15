@@ -15,10 +15,10 @@ struct Tower_Component {
     Tower_Data* tower_data;
 };
 
-void Init_Tower(ECS* ecs, unsigned char* entity, Entity_Array& entity_array, Tower_Data* tower_data,
-                Vector2 pos, float range, int team, float scale, Color color);
+void Init_Tower(ECS* ecs, Entity entity, Tower_Data* tower_data, Vector2 pos, float range, int team,
+                float scale, Color color);
 
-void Tower_Update(ECS* ecs, Entity_Array* entity_array, unsigned char* entity);
+void Tower_Update(ECS* ecs, Entity entity);
 
 class Tower : public Game_Object {
   public:

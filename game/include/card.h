@@ -1,16 +1,30 @@
 #pragma once
 #include "card_player.h"
+#include "ecs.h"
 #include "game_object.h"
 
 #include <string>
 
 class Game_Scene;
 struct Card_Data {
-    Texture2D texture;
+    Texture2D& texture;
     std::string name;
     std::string desc;
     int cost;
 };
+
+struct Card_Component {
+    static Component_Type component_type;
+    Card_Data* card_data;
+};
+
+void Init_Card(Entity entity, Card_Data& card_data) {
+    auto* card_component = std::get<1>(entity)->Get_Component<Card_Component>(
+        std::get<0>(entity), &Card_Component::component_type);
+    card_component->card_data = &card_data;
+}
+
+bool Can_Play_Card(Entity card, Entity player);
 
 class Card : public Game_Object {
   public:

@@ -14,12 +14,14 @@
 #include <utility>
 #include <vector>
 
+class Entity_Array;
 class Entity_Type_Iterator;
 class ECS;
 typedef long Component_ID;
 
 typedef long Entity_ID;
-struct Entity {
+typedef std::tuple<unsigned char*, Entity_Array*> Entity;
+struct Entity_Component {
     // If id = 0, then the entity is not being used
     Entity_ID id;
 };
@@ -57,13 +59,13 @@ class Entity_Array {
 
     Entity_Array(const std::vector<Component_Type*>& components);
 
-    static Entity& Get_Entity_Data(unsigned char* entity) {
-        return *reinterpret_cast<Entity*>(entity);
+    static Entity_Component& Get_Entity_Data(unsigned char* entity) {
+        return *reinterpret_cast<Entity_Component*>(entity);
     }
 
     template <typename T>
     T* Get_Component(unsigned char* entity, Component_Type* component_type) {
-        entity += sizeof(Entity);
+        entity += sizeof(Entity_Component);
         for (auto& component : entity_type.components) {
             if (component_type == component)
                 return reinterpret_cast<T*>(entity);
@@ -75,6 +77,11 @@ class Entity_Array {
 
     std::tuple<unsigned char*, int> Create_Entity(ECS* ecs, Entity_ID id);
 
+    /**
+     * Copies all components from src_index to dst_index, does not include the entities id.
+     */
+    void Copy_Entity(int src_index, int dst_index);
+
     void Delete_Entity(ECS* ecs, int index);
 
     unsigned char* Get_Entity(int index) const {
@@ -85,7 +92,7 @@ class Entity_Array {
 class System {
   public:
     Entity_Type* entity_type;
-    std::function<void(ECS* ecs, Entity_Array*, unsigned char*)> function;
+    std::function<void(ECS* ecs, Entity entity)> function;
 };
 
 class Entity_Iterator {
@@ -97,7 +104,7 @@ class Entity_Iterator {
 
     Entity_Iterator(Entity_Type_Iterator*);
     Entity_Iterator(Entity_Type_Iterator*, int pos);
-    std::tuple<unsigned char*, Entity_Array*> operator*();
+    Entity operator*();
     void operator++();
     bool operator!=(Entity_Iterator) const;
 };
@@ -108,7 +115,7 @@ class Entity_Type_Iterator {
 
   public:
     Entity_Type_Iterator(ECS& ecs, Entity_Type* entity_type);
-    std::tuple<unsigned char*, Entity_Array*> Get_Entity(int pos, int index);
+    Entity Get_Entity(int pos, int index);
     std::tuple<int, int> Next_Entity(int pos, int index);
     bool Has_Next_Entity(int pos, int index);
     Entity_Iterator begin();
@@ -128,13 +135,14 @@ class ECS {
     ECS(Application& application);
     void Update();
 
-    std::tuple<unsigned char*, Entity_Array*> Create_Entity(Entity_Type* entity_type);
+    Entity Create_Entity(Entity_Type* entity_type);
+
+    Entity Copy_Entity(Entity_ID entity_id);
 
     void Delete_Entity(Entity_ID entity_id);
 
-    void Apply_Function_To_Entities(
-        Entity_Type* entity_type,
-        const std::function<void(ECS* ecs, Entity_Array*, unsigned char*)>& op);
+    void Apply_Function_To_Entities(Entity_Type* entity_type,
+                                    const std::function<void(ECS* ecs, Entity)>& op);
 
     Entity_Type_Iterator Get_Entities_Of_Type(Entity_Type* entity_type);
 
