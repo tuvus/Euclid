@@ -110,7 +110,11 @@ void EUI_VBox::Layout() {
                 pos.y + style.padding.top + available_height - total_content_height - total_gap;
             break;
         case Alignment::Stretch:
-            interval = (available_height - total_content_height) / (children.size() - 1);
+            if (num_layout_children >= 2) {
+                interval = (available_height - total_content_height) / (num_layout_children - 1);
+            } else {
+                interval = 0;
+            }
             break;
         case Alignment::Start:
             break;
