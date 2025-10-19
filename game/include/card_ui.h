@@ -1,10 +1,11 @@
 #pragma once
+
+#include <raylib.h>
+
 #include "card.h"
 #include "game_object_ui.h"
 #include "game_scene.h"
 #include "game_ui_manager.h"
-
-#include <raymath.h>
 
 class Card_UI : public Game_Object_UI<Card> {
   public:
@@ -27,18 +28,21 @@ class Card_UI : public Game_Object_UI<Card> {
             object->game_scene.Activate_Card(object);
         }
 
-        const Color color = (is_hovered && object->game_scene.active_card == nullptr) ||
-                                    object->game_scene.active_card == object
-                                ? GRAY
-                                : BLACK;
-
         // Draw the card
         game_ui_manager.DrawScreenImage(object->card_data.texture,
                                         Vector2(pos.x + width / 2, pos.y - height / 2), object->rot,
                                         scale, object->color);
-        DrawText(object->card_data.name.c_str(), pos.x + 5, pos.y - height + 10, 20, color);
-        DrawText(to_string(object->card_data.cost).c_str(), pos.x + width - 25, pos.y - height + 45,
-                 20, color);
-        DrawText(object->card_data.desc.c_str(), pos.x + 5, pos.y - height / 2, 10, color);
+
+        const Color color = (is_hovered && object->game_scene.active_card == nullptr) ||
+                                    object->game_scene.active_card == object
+                                ? GRAY
+                                : BLACK;
+        const Font font = LoadFont("resources/Seagram.ttf");
+        DrawTextEx(font, object->card_data.name.c_str(), Vector2{pos.x + 5, pos.y - height + 10},
+                   20, 1, color);
+        DrawTextEx(font, to_string(object->card_data.cost).c_str(),
+                   Vector2{pos.x + width - 25, pos.y - height + 45}, 20, 1, color);
+        DrawTextEx(font, object->card_data.desc.c_str(), Vector2{pos.x + 5, pos.y - height / 2}, 10,
+                   1, color);
     }
 };

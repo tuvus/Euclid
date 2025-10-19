@@ -32,6 +32,7 @@ class Card_Game : public Application {
   public:
     Card_Game(bool client) : Application("CARD GAME", client, SCREEN_WIDTH, SCREEN_HEIGHT) {
         scene = nullptr;
+        eui_ctx->default_font_path = "resources/Seagram.ttf";
     }
 
     void Update(chrono::milliseconds s) override;
