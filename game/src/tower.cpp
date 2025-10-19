@@ -6,15 +6,14 @@
 
 #include <climits>
 
-void Init_Tower(ECS* ecs, Entity entity, Tower_Data* tower_data, Vector2 pos, float range, int team,
-                float scale, Color color) {
+void Init_Tower(ECS* ecs, Entity entity, Vector2 pos, float range, int team, float scale,
+                Color color) {
     auto* tower = get<1>(entity)->Get_Component<Tower_Component>(get<0>(entity),
                                                                  &Tower_Component::component_type);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
         get<0>(entity), &Transform_Component::component_type);
     transform->pos = pos;
     transform->rot = 0;
-    tower->tower_data = tower_data;
     tower->range = range;
     tower->team = team;
 }
@@ -68,31 +67,8 @@ void Tower_Update(ECS* ecs, Entity entity) {
     transform->rot = Get_Rotation_From_Positions(transform->pos, get<1>(closest_unit)->pos);
 }
 
-Tower::Tower(ECS* ecs, Game_Manager& game_manager, Tower_Data& tower_data, Vector2 pos, float range,
-             int team, float scale, Color color, Entity_ID tmp_ecs_tower)
-    : Game_Object(game_manager, pos, team == 0 ? 0 : 180, scale, color), ecs(ecs),
-      tower_data(tower_data), range(range), team(team), tmp_ecs_tower(tmp_ecs_tower) {
-    spawned = true;
-    reload = 100;
+Object_UI* Create_Tower_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
+    return new Tower_UI(entity, game_ui_manager);
 }
 
-void Tower::Update() {
-    if (!ecs->entities_by_id.contains(tmp_ecs_tower)) {
-        Delete_Object();
-        return;
-    }
-    auto [entity, index, array] = ecs->entities_by_id[tmp_ecs_tower];
-    if (Entity_Array::Get_Entity_Data(entity).id == 0) {
-        Delete_Object();
-        return;
-    }
-    auto transform =
-        array->Get_Component<Transform_Component>(entity, &Transform_Component::component_type);
-    pos = transform->pos;
-    rot = transform->rot;
-}
-
-Object_UI* Tower::Create_UI_Object(Game_UI_Manager& game_ui_manager) {
-    return new Tower_UI(this, game_ui_manager);
-}
 Component_Type Tower_Component::component_type = Component_Type{"Tower", sizeof(Tower_Component)};

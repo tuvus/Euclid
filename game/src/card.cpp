@@ -30,8 +30,8 @@ void Card::Discard_Card(Card_Player* card_player) {
     card_player->deck->Discard_Card(this);
 }
 
-Object_UI* Card::Create_UI_Object(Game_UI_Manager& game_ui_manager) {
-    return new Card_UI(this, game_ui_manager);
+Object_UI* Create_Card_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
+    return new Card_UI(entity, game_ui_manager);
 }
 
 Component_Type Card_Component::component_type = Component_Type{"Card", sizeof(Card_Component)};

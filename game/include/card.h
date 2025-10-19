@@ -26,6 +26,8 @@ void Init_Card(Entity entity, Card_Data& card_data) {
 
 bool Can_Play_Card(Entity card, Entity player);
 
+Object_UI* Create_Card_UI(Entity entity, Game_UI_Manager& game_ui_manager);
+
 class Card : public Game_Object {
   public:
     Card_Data& card_data;

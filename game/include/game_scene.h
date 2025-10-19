@@ -6,9 +6,7 @@
 #include "game_ui_manager.h"
 #include "path.h"
 #include "scene.h"
-#include "tower.h"
 #include "ui/eui.h"
-#include "unit.h"
 
 class Game_Scene : public Scene, Network_Events_Receiver {
   private:
@@ -17,8 +15,8 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     std::unique_ptr<Game_UI_Manager> game_ui_manager;
     EUI_Text* money_text;
     int time_until_income;
-    Tower_Data tower_data;
-    Unit_Data unit_data;
+    Texture2D unit_texture;
+    Texture2D tower_texture;
     vector<Card_Data*> card_datas;
 
   public:

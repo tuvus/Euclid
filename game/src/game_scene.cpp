@@ -29,8 +29,8 @@ Game_Scene::Game_Scene(Card_Game& card_game)
     button->style.padding = {10, 20, 10, 20};
     root->Add_Child(button);
 
-    unit_data = {LoadTextureFromImage(LoadImage("resources/Arrow.png"))};
-    tower_data = {LoadTextureFromImage(LoadImage("resources/Tower.png"))};
+    unit_texture = LoadTextureFromImage(LoadImage("resources/Arrow.png"));
+    tower_texture = LoadTextureFromImage(LoadImage("resources/Tower.png"));
 }
 
 Game_Scene::~Game_Scene() {
@@ -43,7 +43,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ranges::sort(players, [](Player* a, Player* b) { return a->player_id <= b->player_id; });
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
-    ecs = new ECS(application);
+    ecs = new ECS(application, seed);
     auto unit_components =
         vector{&Transform_Component::component_type, &Unit_Component::component_type};
     ecs->Register_System(new System(new Entity_Type(unit_components), Unit_Update));
@@ -71,7 +71,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ranges::reverse(reversed);
     r_path = new Path(reversed);
 
-    game_ui_manager = make_unique<Game_UI_Manager>(card_game, *game_manager);
+    game_ui_manager = make_unique<Game_UI_Manager>(card_game, *ecs);
     if (static_cast<Card_Player*>(game_manager->local_player)->team == 1) {
         game_ui_manager->camera.rotation = 180;
     }
@@ -96,8 +96,14 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         // card->Discard_Card(player);
         return RPC_Manager::VALID_CALL_ON_CLIENTS;
     });
-    Texture2D card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
 
+    ecs->Create_Entity_Type(Get_Unit_Entity_Type()->components, Create_Unit_UI);
+    ecs->Create_Entity_Type(Get_Tower_Entity_Type()->components, Create_Tower_UI);
+    ecs->Create_Entity_Type(vector{&Deck_Component::component_type}, Create_Deck_UI);
+    ecs->Create_Entity_Type(Get_Unit_Card_Entity_Type()->components, Create_Card_UI);
+    ecs->Create_Entity_Type(Get_Tower_Card_Entity_Type()->components, Create_Card_UI);
+
+    Texture2D card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
     card_datas.emplace_back(
         new Card_Data{card_texture, "Send Units", "Sends 7 units to the opponent.", 5});
     card_datas.emplace_back(
@@ -108,16 +114,16 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         new Card_Data{card_texture, "Tower", "Places a tower that shoots opposing units.", 15});
 
     vector<Entity_ID> starting_cards{};
-    starting_cards.emplace_back(
-        Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()), card_datas[0], &unit_data));
-    starting_cards.emplace_back(
-        Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()), card_datas[0], &unit_data));
-    starting_cards.emplace_back(
-        Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()), card_datas[1], &unit_data));
-    starting_cards.emplace_back(
-        Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()), card_datas[2], &unit_data));
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+                                               card_datas[0], {7, unit_texture}));
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+                                               card_datas[0], {7, unit_texture}));
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+                                               card_datas[1], {11, unit_texture}));
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+                                               card_datas[2], {18, unit_texture}));
     starting_cards.emplace_back(Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()),
-                                                card_datas[3], &tower_data));
+                                                card_datas[3], {0, true, 1, 90}));
 
     for (auto player : game_manager->players) {
         Card_Player* card_player = static_cast<Card_Player*>(player);

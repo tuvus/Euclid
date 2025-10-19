@@ -4,8 +4,8 @@
 #include "game_manager.h"
 #include "unit_ui.h"
 
-void Init_Unit(ECS* ecs, Entity entity, Unit_Data& unit_data, Path* path, float speed,
-               float start_offset, int team, float scale, Color color) {
+void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, float start_offset, int team,
+               Texture2D texture, float scale, Color color) {
     auto* unit = get<1>(entity)->Get_Component<Unit_Component>(get<0>(entity),
                                                                &Unit_Component::component_type);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
@@ -14,7 +14,6 @@ void Init_Unit(ECS* ecs, Entity entity, Unit_Data& unit_data, Path* path, float 
     unit->speed = speed;
     unit->section = 0;
     unit->team = team;
-    unit->unit_data = &unit_data;
     unit->spawned = true;
     Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(get<0>(entity)).id, start_offset);
 }
@@ -48,10 +47,7 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
                                  unit->path->positions[unit->section + 1], unit->lerp);
     transform->rot = unit->path->Get_Rotation_On_Path(unit->section);
 
-    auto components = vector<Component_Type*>();
-    components.emplace_back(&Transform_Component::component_type);
-    components.emplace_back(&Unit_Component::component_type);
-    for (auto [entity, entity_array] : ecs->Get_Entities_Of_Type(new Entity_Type(components))) {
+    for (auto [entity, entity_array] : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
         Entity_ID other_id = entity_array->Get_Entity_Data(entity).id;
         if (other_id == entity_id)
             continue;
@@ -83,75 +79,8 @@ void Unit_Update(ECS* ecs, Entity entity) {
     Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(get<0>(entity)).id, unit->speed);
 }
 
-Unit::Unit(ECS* ecs, Game_Manager& game_manager, Unit_Data& unit_data, Path* path, float speed,
-           float start_offset, int team, float scale, Color color, Entity_ID tmp_ecs_unit)
-    : Game_Object(game_manager, path->positions[0], path->Get_Rotation_On_Path(0), scale, color),
-      ecs(ecs), path(path), section(0), lerp(0), speed(speed), team(team), unit_data(unit_data),
-      tmp_ecs_unit(tmp_ecs_unit) {
-    spawned = true;
-}
-
-void Unit::Update() {
-    // if (!spawned)
-    // return;
-    // Move(speed);
-    if (!ecs->entities_by_id.contains(tmp_ecs_unit)) {
-        Delete_Object();
-        return;
-    }
-    auto [entity, index, array] = ecs->entities_by_id[tmp_ecs_unit];
-    if (Entity_Array::Get_Entity_Data(entity).id == 0) {
-        Delete_Object();
-        return;
-    }
-    auto transform =
-        array->Get_Component<Transform_Component>(entity, &Transform_Component::component_type);
-    pos = transform->pos;
-    rot = transform->rot;
-}
-
-void Unit::Move(float dist_to_move) {
-    if (section + 1 == path->positions.size()) {
-        pos = path->positions[section];
-        Delete_Object();
-        return;
-    }
-
-    float dist = Vector2Distance(path->positions[section], path->positions[section + 1]);
-    lerp += dist_to_move / dist;
-    if (lerp > 1) {
-        lerp--;
-        section++;
-    }
-    if (section + 1 == path->positions.size()) {
-        pos = path->positions[section];
-        Delete_Object();
-        return;
-    }
-
-    for (auto* object : game_manager.Get_All_Objects()) {
-        if (Unit* other = dynamic_cast<Unit*>(object)) {
-            if (other->team == team || !other->spawned)
-                continue;
-
-            if (Vector2Distance(pos, other->pos) > 30)
-                continue;
-
-            // Collide
-            spawned = false;
-            other->spawned = false;
-            game_manager.Delete_Object(this);
-            game_manager.Delete_Object(other);
-            return;
-        }
-    }
-
-    pos = Vector2Lerp(path->positions[section], path->positions[section + 1], lerp);
-    rot = path->Get_Rotation_On_Path(section);
-}
-
-Object_UI* Unit::Create_UI_Object(Game_UI_Manager& game_ui_manager) {
-    return new Unit_UI(this, game_ui_manager);
+Object_UI* Create_Unit_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
+    return new Unit_UI(entity, game_ui_manager);
 }
 
 Component_Type Unit_Component::component_type = Component_Type{"Unit", sizeof(Unit_Component)};

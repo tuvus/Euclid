@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <numeric>
+#include <random>
 #include <raylib.h>
 #include <stdexcept>
 #include <string.h>
@@ -14,6 +15,8 @@
 #include <utility>
 #include <vector>
 
+class Game_UI_Manager;
+class Object_UI;
 class Entity_Array;
 class Entity_Type_Iterator;
 class ECS;
@@ -37,8 +40,12 @@ class Entity_Type {
     std::vector<Component_Type*> components;
     // The size of each entity and its components in bytes
     int entity_size;
+    std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function;
 
     Entity_Type(std::vector<Component_Type*> components);
+
+    Entity_Type(std::vector<Component_Type*> components,
+                std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function);
 
     /**
      * Finds if the other entity is a superset of this entity.
@@ -56,8 +63,9 @@ class Entity_Array {
     unsigned char* entities;
     int entity_count;
     int entity_capacity;
+    ECS& ecs;
 
-    Entity_Array(const std::vector<Component_Type*>& components);
+    Entity_Array(ECS& ecs, const std::vector<Component_Type*>& components);
 
     static Entity_Component& Get_Entity_Data(unsigned char* entity) {
         return *reinterpret_cast<Entity_Component*>(entity);
@@ -129,11 +137,19 @@ class ECS {
     Application& application;
     std::unordered_set<Entity_Array*> entity_components;
     std::unordered_set<System*> systems;
-    std::unordered_map<Entity_ID, std::tuple<unsigned char*, int, Entity_Array*>> entities_by_id;
+    std::unordered_map<Entity_ID, std::tuple<Entity, int>> entities_by_id;
     Entity_ID next_id = 1;
+    std::function<void(Entity_ID)> on_add_entity;
+    std::function<void(Entity_ID)> on_delete_entity;
+    std::minstd_rand random;
 
-    ECS(Application& application);
+    ECS(Application& application, long seed);
+
     void Update();
+
+    Entity_Type*
+    Create_Entity_Type(std::vector<Component_Type*> components,
+                       std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function);
 
     Entity Create_Entity(Entity_Type* entity_type);
 

@@ -1,8 +1,15 @@
 #include "ecs.h"
+
+#include "game_ui_manager.h"
 using namespace std;
 
 Entity_Type::Entity_Type(std::vector<Component_Type*> components)
-    : components(std::move(components)) {
+    : Entity_Type(components, nullptr) {
+}
+
+Entity_Type::Entity_Type(std::vector<Component_Type*> components,
+                         std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function)
+    : components(std::move(components)), ui_creation_function(ui_creation_function) {
     entity_size =
         std::accumulate(this->components.begin(), this->components.end(), sizeof(Entity_Component),
                         [](const int sum, const Component_Type* c) { return sum + c->size; });
@@ -20,8 +27,8 @@ bool Entity_Type::Is_Entity_Strictly_Of_type(Entity_Type* other) const {
     return Is_Entity_Of_Type(other);
 }
 
-Entity_Array::Entity_Array(const std::vector<Component_Type*>& components)
-    : entity_type(Entity_Type(components)), entity_count(0) {
+Entity_Array::Entity_Array(ECS& ecs, const std::vector<Component_Type*>& components)
+    : ecs(ecs), entity_type(Entity_Type(components)), entity_count(0) {
     entity_capacity = 10;
     entities = new unsigned char[entity_type.entity_size * entity_capacity];
 }
@@ -36,7 +43,7 @@ std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs, Entity_ID 
         for (int i = 0; i < entity_count; i++) {
             unsigned char* entity = Get_Entity(i);
             Entity_ID e_id = Get_Entity_Data(entity).id;
-            ecs->entities_by_id[e_id] = make_tuple(entity, i, this);
+            ecs->entities_by_id[e_id] = tuple(tuple(entity, this), i);
         }
         entity_capacity *= 2;
     }
@@ -60,7 +67,7 @@ void Entity_Array::Delete_Entity(ECS* ecs, int index) {
                     entities + (entity_count - 1) * entity_type.entity_size,
                     entity_type.entity_size);
         Entity_ID entity_id = Get_Entity_Data(Get_Entity(index)).id;
-        ecs->entities_by_id[entity_id] = tuple(Get_Entity(index), index, this);
+        ecs->entities_by_id[entity_id] = tuple(tuple(Get_Entity(index), this), index);
     } else {
         Get_Entity_Data(Get_Entity(index)).id = 0;
     }
@@ -124,12 +131,12 @@ Entity_Iterator Entity_Type_Iterator::end() {
     return Entity_Iterator(this, arrays.size());
 }
 
-ECS::ECS(Application& application) : application(application) {
+ECS::ECS(Application& application, long seed) : application(application) {
     entity_components = std::unordered_set<Entity_Array*>();
     systems = std::unordered_set<System*>();
-    entities_by_id =
-        std::unordered_map<Entity_ID, std::tuple<unsigned char*, int, Entity_Array*>>();
+    entities_by_id = std::unordered_map<Entity_ID, std::tuple<Entity, int>>();
     to_delete = vector<Entity_ID>();
+    random = std::minstd_rand(seed);
 }
 
 void ECS::Update() {
@@ -139,11 +146,17 @@ void ECS::Update() {
     for (Entity_ID entity_id : to_delete) {
         if (!entities_by_id.contains(entity_id))
             continue;
-        auto [entity, index, entity_array] = entities_by_id[entity_id];
+        auto [entity, index] = entities_by_id[entity_id];
         entities_by_id.erase(entity_id);
-        entity_array->Delete_Entity(this, index);
+        get<1>(entity)->Delete_Entity(this, index);
     }
     to_delete.clear();
+}
+
+Entity_Type*
+ECS::Create_Entity_Type(std::vector<Component_Type*> components,
+                        std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function) {
+    return new Entity_Type(components, ui_creation_function);
 }
 
 Entity ECS::Create_Entity(Entity_Type* entity_type) {
@@ -152,25 +165,30 @@ Entity ECS::Create_Entity(Entity_Type* entity_type) {
     });
     Entity_Array* e_array;
     if (search == entity_components.end()) {
-        e_array = new Entity_Array(entity_type->components);
+        e_array = new Entity_Array(*this, entity_type->components);
         entity_components.emplace(e_array);
     } else {
         e_array = *search;
     }
-    auto [entity, index] = e_array->Create_Entity(this, next_id);
-    entities_by_id.emplace(next_id++, std::tuple(entity, index, e_array));
-    return std::tuple(entity, e_array);
+    Entity_ID id = next_id++;
+    auto [entity, index] = e_array->Create_Entity(this, id);
+    entities_by_id.emplace(id, tuple(tuple(entity, e_array), index));
+    if (on_add_entity != nullptr)
+        on_add_entity(id);
+    return tuple(entity, e_array);
 }
 
 std::tuple<unsigned char*, Entity_Array*> ECS::Copy_Entity(Entity_ID entity_id) {
-    auto [_, old_entity_index, entity_array] = entities_by_id[entity_id];
-    auto [new_entity, new_entity_index] = entity_array->Create_Entity(this, next_id++);
-    entity_array->Copy_Entity(old_entity_index, new_entity_index);
-    return make_tuple(new_entity, entity_array);
+    auto [old_entity, old_entity_index] = entities_by_id[entity_id];
+    auto [new_entity, new_entity_index] = get<1>(old_entity)->Create_Entity(this, next_id++);
+    get<1>(old_entity)->Copy_Entity(old_entity_index, new_entity_index);
+    return make_tuple(new_entity, get<1>(old_entity));
 }
 
 void ECS::Delete_Entity(Entity_ID entity_id) {
     to_delete.emplace_back(entity_id);
+    if (on_delete_entity)
+        on_delete_entity(entity_id);
 }
 
 void ECS::Apply_Function_To_Entities(Entity_Type* entity_type,
