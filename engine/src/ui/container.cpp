@@ -44,10 +44,11 @@ void EUI_Container::Render() {
     const auto style = Get_Effective_Style();
 
     if (style.background_color.has_value())
-        DrawRectangleRec({pos.x, pos.y, dim.x, dim.y}, style.background_color.value());
+        DrawRectangleRec({pos.x, pos.y, size.x, size.y}, style.background_color.value());
 
     if (style.border_radius > 0)
-        DrawRectangleLinesEx({pos.x, pos.y, dim.x, dim.y}, style.border_radius, style.border_color);
+        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, style.border_radius,
+                             style.border_color);
 
     // Render children
     for (EUI_Element* child : children) {

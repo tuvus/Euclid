@@ -39,8 +39,8 @@ void EUI_VBox::Layout() {
         total_gap = gap * (num_layout_children - 1);
 
     if (children.size())
-        default_spacing =
-            (dim.y - style.padding.top - style.padding.bottom - total_leaf_height) / num_containers;
+        default_spacing = (size.y - style.padding.top - style.padding.bottom - total_leaf_height) /
+                          num_containers;
 
     // place containers
     for (EUI_Element* child : children) {
@@ -49,8 +49,8 @@ void EUI_VBox::Layout() {
         }
         if (child->Is_Container()) {
             child->pos = {pos.x + style.padding.left, cursor};
-            child->dim = {dim.x - style.padding.left - style.padding.right, default_spacing};
-            child->preferred_size = child->dim;
+            child->size = {size.x - style.padding.left - style.padding.right, default_spacing};
+            child->preferred_size = child->size;
             child->Layout();
         }
         total_content_height += child->preferred_size.y;
@@ -61,13 +61,13 @@ void EUI_VBox::Layout() {
     cursor = pos.y + style.padding.top;
     switch (main_axis_alignment) {
         case Alignment::Center:
-            cursor = pos.y + (dim.y - total_content_height - total_gap) / 2.0f;
+            cursor = pos.y + (size.y - total_content_height - total_gap) / 2.0f;
             break;
         case Alignment::End:
-            cursor = pos.y + dim.y - total_content_height - total_gap - style.padding.bottom;
+            cursor = pos.y + size.y - total_content_height - total_gap - style.padding.bottom;
             break;
         case Alignment::Stretch:
-            interval = (dim.y - total_content_height - style.padding.top - style.padding.bottom) /
+            interval = (size.y - total_content_height - style.padding.top - style.padding.bottom) /
                        (children.size() - 1);
             break;
         case Alignment::Start:
@@ -89,10 +89,10 @@ void EUI_VBox::Layout() {
             // cross axis alignment
             switch (style.horizontal_alignment) {
                 case Alignment::Center:
-                    x = pos.x + (dim.x - width + style.padding.left - style.padding.right) / 2.0f;
+                    x = pos.x + (size.x - width + style.padding.left - style.padding.right) / 2.0f;
                     break;
                 case Alignment::End:
-                    x = pos.x + (dim.x - width - style.padding.right);
+                    x = pos.x + (size.x - width - style.padding.right);
                     break;
                 case Alignment::Stretch:
                 case Alignment::Start:
@@ -102,7 +102,7 @@ void EUI_VBox::Layout() {
 
             // Final bounds
             child->pos = {x, y};
-            child->dim = {width, height};
+            child->size = {width, height};
         }
 
         // Advance along main axis
@@ -110,6 +110,6 @@ void EUI_VBox::Layout() {
             cursor += gap;
         if (interval)
             cursor += interval;
-        cursor += child->dim.y;
+        cursor += child->size.y;
     }
 }

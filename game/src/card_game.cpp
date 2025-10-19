@@ -7,7 +7,7 @@
 void Card_Game::resize_update() {
     auto root = scene->Get_Root();
     if (root) {
-        root->dim = {(float) screen_width, (float) screen_height};
+        root->size = {(float) screen_width, (float) screen_height};
     }
 
     // TODO: should we panic if ctx is null?

@@ -43,11 +43,12 @@ void EUI_Text::Render() {
 
     // Background
     if (style.background_color.has_value())
-        DrawRectangleRec({pos.x, pos.y, dim.x, dim.y}, style.background_color.value());
+        DrawRectangleRec({pos.x, pos.y, size.x, size.y}, style.background_color.value());
 
     // Border
     if (style.border_radius > 0)
-        DrawRectangleLinesEx({pos.x, pos.y, dim.x, dim.y}, style.border_radius, style.border_color);
+        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, style.border_radius,
+                             style.border_color);
 
     // Text
     float text_width = MeasureText(text.c_str(), style.font_size.value());
@@ -56,10 +57,10 @@ void EUI_Text::Render() {
     switch (style.text_vertical_alignment) {
         case Alignment::Center:
             text_pos.y =
-                pos.y + (dim.y - text_height + style.padding.top - style.padding.bottom) / 2.0f;
+                pos.y + (size.y - text_height + style.padding.top - style.padding.bottom) / 2.0f;
             break;
         case Alignment::End:
-            text_pos.y = pos.y + dim.y - text_height - style.padding.bottom;
+            text_pos.y = pos.y + size.y - text_height - style.padding.bottom;
             break;
         case Alignment::Stretch:
         case Alignment::Start:
@@ -68,10 +69,10 @@ void EUI_Text::Render() {
     switch (style.text_horizontal_alignment) {
         case Alignment::Center:
             text_pos.x =
-                pos.x + (dim.x - text_width + style.padding.left - style.padding.right) / 2;
+                pos.x + (size.x - text_width + style.padding.left - style.padding.right) / 2;
             break;
         case Alignment::End:
-            text_pos.x = pos.x + dim.x - text_width - style.padding.right;
+            text_pos.x = pos.x + size.x - text_width - style.padding.right;
             break;
         case Alignment::Stretch:
         case Alignment::Start:

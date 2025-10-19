@@ -16,7 +16,7 @@ void EUI_Button::Handle_Input() {
 
     style.border_color = is_enabled ? BLACK : GRAY;
 
-    is_hovered = CheckCollisionPointRec(ctx->input.mouse_position, {pos.x, pos.y, dim.x, dim.y});
+    is_hovered = CheckCollisionPointRec(ctx->input.mouse_position, {pos.x, pos.y, size.x, size.y});
     if (is_hovered && is_enabled) {
         ctx->hovered = this;
     } else {

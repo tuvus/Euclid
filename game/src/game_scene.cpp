@@ -14,7 +14,7 @@ Game_Scene::Game_Scene(Card_Game& card_game)
     root_elem = root;
 
     root->pos = {0, 0};
-    root->dim = {(float) card_game.screen_width, (float) card_game.screen_height};
+    root->size = {(float) card_game.screen_width, (float) card_game.screen_height};
     root->style.vertical_alignment = Alignment::Center;
     root->style.horizontal_alignment = Alignment::Center;
 

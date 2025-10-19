@@ -33,7 +33,6 @@ EUI_Style EUI_Element::Get_Effective_Style() const {
     effective.text_color = Get_Text_Color();
 
     effective.padding = style.padding;
-    effective.margin = style.margin;
 
     effective.position = style.position;
     effective.top = style.top;

@@ -9,7 +9,7 @@ class Menu_Scene : public Scene {
         EUI_VBox* root = new EUI_VBox();
         root_elem = root;
         root->pos = {0, 0};
-        root->dim = {SCREEN_WIDTH, SCREEN_HEIGHT};
+        root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
         root->style.vertical_alignment = Alignment::Center;
         root->style.horizontal_alignment = Alignment::Center;
         root->gap = 20;
