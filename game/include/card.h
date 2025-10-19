@@ -1,8 +1,10 @@
 #pragma once
+
+#include <raylib.h>
+#include <string>
+
 #include "card_player.h"
 #include "game_object.h"
-
-#include <string>
 
 class Game_Scene;
 struct Card_Data {
