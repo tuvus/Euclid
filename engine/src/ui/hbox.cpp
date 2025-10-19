@@ -3,9 +3,9 @@
 #include "ui/eui.h"
 
 void EUI_HBox::Layout() {
-    Alignment main_axis_alignment = style.horizontal_alignment;
+    Alignment main_axis_alignment = horizontal_alignment;
 
-    float cursor = pos.x + style.padding.left;
+    float cursor = pos.x + padding.left;
     float total_content_width = 0;
     float total_leaf_width = 0;
 
@@ -23,7 +23,7 @@ void EUI_HBox::Layout() {
 
     // calculate total non-container content height
     for (EUI_Element* child : children) {
-        if (child->style.position == Position::Absolute) {
+        if (child->position == Position::Absolute) {
             continue;
         }
         if (child->Is_Container()) {
@@ -40,16 +40,16 @@ void EUI_HBox::Layout() {
 
     if (children.size())
         default_spacing =
-            (size.x - style.padding.left - style.padding.right - total_leaf_width) / num_containers;
+            (size.x - padding.left - padding.right - total_leaf_width) / num_containers;
 
     // place containers
     for (EUI_Element* child : children) {
-        if (child->Get_Effective_Style().position == Position::Absolute) {
+        if (child->position == Position::Absolute) {
             continue;
         }
         if (child->Is_Container()) {
-            child->pos = {cursor, pos.y + style.padding.top};
-            child->size = {default_spacing, size.y - style.padding.top - style.padding.bottom};
+            child->pos = {cursor, pos.y + padding.top};
+            child->size = {default_spacing, size.y - padding.top - padding.bottom};
             child->preferred_size = child->size;
             child->Layout();
         }
@@ -58,18 +58,18 @@ void EUI_HBox::Layout() {
     }
 
     // pick starting cursor location
-    cursor = pos.x + style.padding.left;
+    cursor = pos.x + padding.left;
     switch (main_axis_alignment) {
         case Alignment::Center:
-            cursor = pos.x + (size.x - total_content_width - total_gap + style.padding.left -
-                              style.padding.right) /
-                                 2.0f;
+            cursor =
+                pos.x +
+                (size.x - total_content_width - total_gap + padding.left - padding.right) / 2.0f;
             break;
         case Alignment::End:
-            cursor = pos.x + size.x - total_content_width - total_gap - style.padding.right;
+            cursor = pos.x + size.x - total_content_width - total_gap - padding.right;
             break;
         case Alignment::Stretch:
-            interval = (size.x - total_content_width - style.padding.left - style.padding.right) /
+            interval = (size.x - total_content_width - padding.left - padding.right) /
                        (children.size() - 1);
             break;
         case Alignment::Start:
@@ -80,22 +80,22 @@ void EUI_HBox::Layout() {
     for (int i = 0; i < children.size(); i++) {
         EUI_Element* child = children[i];
 
-        if (!child->Is_Container() && child->Get_Effective_Style().position != Position::Absolute) {
+        if (!child->Is_Container() && child->position != Position::Absolute) {
             // clamp to min/max
             float width = std::clamp(child->preferred_size.x, child->min_size.x, child->max_size.x);
             float height =
                 std::clamp(child->preferred_size.y, child->min_size.y, child->max_size.y);
 
             float x = cursor;
-            float y = pos.y + style.padding.top;
+            float y = pos.y + padding.top;
 
             // cross axis alignment
-            switch (child->style.vertical_alignment) {
+            switch (child->vertical_alignment) {
                 case Alignment::Center:
-                    y = pos.y + (size.y - height + style.padding.top - style.padding.bottom) / 2.0f;
+                    y = pos.y + (size.y - height + padding.top - padding.bottom) / 2.0f;
                     break;
                 case Alignment::End:
-                    y = pos.y + (size.y - height - style.padding.bottom);
+                    y = pos.y + (size.y - height - padding.bottom);
                     break;
                 case Alignment::Stretch:
                 case Alignment::Start:

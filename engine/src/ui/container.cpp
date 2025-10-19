@@ -41,14 +41,11 @@ void EUI_Container::Render() {
     if (!is_visible)
         return;
 
-    const auto style = Get_Effective_Style();
+    if (background_color.has_value())
+        DrawRectangleRec({pos.x, pos.y, size.x, size.y}, background_color.value());
 
-    if (style.background_color.has_value())
-        DrawRectangleRec({pos.x, pos.y, size.x, size.y}, style.background_color.value());
-
-    if (style.border_radius > 0)
-        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, style.border_radius,
-                             style.border_color);
+    if (border_radius > 0)
+        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, border_radius, border_color);
 
     // Render children
     for (EUI_Element* child : children) {

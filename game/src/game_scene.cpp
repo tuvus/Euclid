@@ -16,18 +16,18 @@ Game_Scene::Game_Scene(Card_Game& card_game)
 
     root->pos = {0, 0};
     root->size = {(float) card_game.screen_width, (float) card_game.screen_height};
-    root->style.vertical_alignment = Alignment::Center;
-    root->style.horizontal_alignment = Alignment::Center;
+    root->vertical_alignment = Alignment::Center;
+    root->horizontal_alignment = Alignment::Center;
 
     money_text = new EUI_Text("Money: 0");
-    money_text->style.font_size = 24;
+    money_text->font_size = 24;
     root->Add_Child(money_text);
     auto* button = new EUI_Button("Menu", [&card_game] {
         card_game.Close_Network();
         card_game.set_ui_screen(MENU);
     });
 
-    button->style.padding = {10, 20, 10, 20};
+    button->padding = {10, 20, 10, 20};
     root->Add_Child(button);
 
     unit_data = {LoadTextureFromImage(LoadImage("resources/Arrow.png"))};

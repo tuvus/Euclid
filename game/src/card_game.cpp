@@ -90,8 +90,7 @@ void Card_Game::Update_UI(chrono::milliseconds deltaTime) {
 Card_Game::~Card_Game() {
     delete scene;
     scene = nullptr;
-    if (eui_ctx->default_style.font.has_value())
-        UnloadFont(eui_ctx->default_style.font.value());
+    UnloadFont(eui_ctx->default_font);
 }
 
 void Card_Game::Close_Application() {

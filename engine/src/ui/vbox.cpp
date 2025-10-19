@@ -3,9 +3,9 @@
 #include "ui/eui.h"
 
 void EUI_VBox::Layout() {
-    Alignment main_axis_alignment = style.vertical_alignment;
+    Alignment main_axis_alignment = vertical_alignment;
 
-    float cursor = pos.y + style.padding.top;
+    float cursor = pos.y + padding.top;
     float total_content_height = 0;
     float total_leaf_height = 0;
 
@@ -23,7 +23,7 @@ void EUI_VBox::Layout() {
 
     // calculate total non-container content height
     for (EUI_Element* child : children) {
-        if (child->style.position == Position::Absolute) {
+        if (child->position == Position::Absolute) {
             continue;
         }
         if (child->Is_Container()) {
@@ -39,17 +39,17 @@ void EUI_VBox::Layout() {
         total_gap = gap * (num_layout_children - 1);
 
     if (children.size())
-        default_spacing = (size.y - style.padding.top - style.padding.bottom - total_leaf_height) /
-                          num_containers;
+        default_spacing =
+            (size.y - padding.top - padding.bottom - total_leaf_height) / num_containers;
 
     // place containers
     for (EUI_Element* child : children) {
-        if (child->Get_Effective_Style().position == Position::Absolute) {
+        if (child->position == Position::Absolute) {
             continue;
         }
         if (child->Is_Container()) {
-            child->pos = {pos.x + style.padding.left, cursor};
-            child->size = {size.x - style.padding.left - style.padding.right, default_spacing};
+            child->pos = {pos.x + padding.left, cursor};
+            child->size = {size.x - padding.left - padding.right, default_spacing};
             child->preferred_size = child->size;
             child->Layout();
         }
@@ -58,16 +58,16 @@ void EUI_VBox::Layout() {
     }
 
     // pick starting cursor location
-    cursor = pos.y + style.padding.top;
+    cursor = pos.y + padding.top;
     switch (main_axis_alignment) {
         case Alignment::Center:
             cursor = pos.y + (size.y - total_content_height - total_gap) / 2.0f;
             break;
         case Alignment::End:
-            cursor = pos.y + size.y - total_content_height - total_gap - style.padding.bottom;
+            cursor = pos.y + size.y - total_content_height - total_gap - padding.bottom;
             break;
         case Alignment::Stretch:
-            interval = (size.y - total_content_height - style.padding.top - style.padding.bottom) /
+            interval = (size.y - total_content_height - padding.top - padding.bottom) /
                        (children.size() - 1);
             break;
         case Alignment::Start:
@@ -77,22 +77,22 @@ void EUI_VBox::Layout() {
     for (int i = 0; i < children.size(); i++) {
         EUI_Element* child = children[i];
 
-        if (!child->Is_Container() && child->Get_Effective_Style().position != Position::Absolute) {
+        if (!child->Is_Container() && child->position != Position::Absolute) {
             // clamp to min/max
             float width = std::clamp(child->preferred_size.x, child->min_size.x, child->max_size.x);
             float height =
                 std::clamp(child->preferred_size.y, child->min_size.y, child->max_size.y);
 
-            float x = pos.x + style.padding.left;
+            float x = pos.x + padding.left;
             float y = cursor;
 
             // cross axis alignment
-            switch (style.horizontal_alignment) {
+            switch (horizontal_alignment) {
                 case Alignment::Center:
-                    x = pos.x + (size.x - width + style.padding.left - style.padding.right) / 2.0f;
+                    x = pos.x + (size.x - width + padding.left - padding.right) / 2.0f;
                     break;
                 case Alignment::End:
-                    x = pos.x + (size.x - width - style.padding.right);
+                    x = pos.x + (size.x - width - padding.right);
                     break;
                 case Alignment::Stretch:
                 case Alignment::Start:

@@ -20,7 +20,6 @@ enum class Alignment { Start, Center, End, Stretch };
 enum class Position { Static, Relative, Absolute, Fixed, Sticky };
 
 class EUI_Input;
-class EUI_Style;
 class EUI_Element;
 class EUI_Context;
 
@@ -34,39 +33,12 @@ class EUI_Input {
     int key_pressed;
 };
 
-class EUI_Style {
-  public:
-    // Optional styles are inherited if not explicitly set
-    std::optional<Color> background_color;
-    std::optional<Color> text_color;
-
-    // Units are all px
-    Sides padding = {0};
-
-    Position position = Position::Static;
-    // For relative positioning, the top/right/bottom/left values are relative to the parent
-    float top, right, bottom, left = 0;
-
-    Color border_color = BLACK;
-    float border_radius = 0;
-
-    std::optional<Font> font;
-    std::optional<float> font_size;
-    std::optional<float> font_spacing;
-
-    Alignment horizontal_alignment = Alignment::Start;
-    Alignment vertical_alignment = Alignment::Start;
-    Alignment text_horizontal_alignment = Alignment::Start;
-    Alignment text_vertical_alignment = Alignment::Start;
-};
-
 class EUI_Context {
   private:
     EUI_Element* root = nullptr;
 
   public:
     EUI_Context() {};
-    EUI_Context(EUI_Style default_style);
     ~EUI_Context();
 
     EUI_Input input = {};
@@ -75,33 +47,28 @@ class EUI_Context {
     EUI_Element* active = nullptr;
     EUI_Element* focused = nullptr;
 
+    // default styles
+    Color default_text_color = BLACK;
+
+    Sides default_padding = {0};
+
+    Color default_border_color = BLACK;
+    float default_border_radius = 0;
+
     // default_font_path is needed to correctly load the font after window initialization
     // doing it this way allows the user to not have to load their default font specifically
     // in the start_client method, which was unintuitive. instead, they set the path in
     // the constructor of their application
     // TODO: maybe better way to do this
     std::string default_font_path;
+    Font default_font;
+    float default_font_size = 15;
+    float default_font_spacing = 1;
 
-    EUI_Style default_style = {
-        .text_color = BLACK,
-
-        .padding = {0},
-
-        .border_color = BLACK,
-        .border_radius = 0,
-
-        .font_size = 15,
-        .font_spacing = 1,
-
-        .horizontal_alignment = Alignment::Start,
-        .vertical_alignment = Alignment::Start,
-        .text_horizontal_alignment = Alignment::Start,
-        .text_vertical_alignment = Alignment::Start,
-    };
-
-    // TODO: do something with this
-    float global_scale = 1.0f;
-    float dpi_factor = 1.0f;
+    Alignment default_horizontal_alignment = Alignment::Start;
+    Alignment default_vertical_alignment = Alignment::Start;
+    Alignment default_text_horizontal_alignment = Alignment::Start;
+    Alignment default_text_vertical_alignment = Alignment::Start;
 
     EUI_Element* Get_Root() const { return root; }
     void Set_Root(EUI_Element* new_root);
@@ -132,14 +99,35 @@ class EUI_Element {
     bool is_active = false;
     bool is_deleted = false;
 
-    EUI_Style style;
+    // style attributes
+    // Optional styles are inherited if not explicitly set
+    std::optional<Color> background_color;
+    std::optional<Color> text_color;
+
+    // Units are all px
+    Sides padding = {0};
+
+    Position position = Position::Static;
+    // For relative positioning, the top/right/bottom/left values are relative to the parent
+    float top, right, bottom, left = 0;
+
+    Color border_color = BLACK;
+    float border_radius = 0;
+
+    std::optional<Font> font;
+    std::optional<float> font_size;
+    std::optional<float> font_spacing;
+
+    Alignment horizontal_alignment = Alignment::Start;
+    Alignment vertical_alignment = Alignment::Start;
+    Alignment text_horizontal_alignment = Alignment::Start;
+    Alignment text_vertical_alignment = Alignment::Start;
 
     // Getters for inheritable properties (optionals)
     Color Get_Text_Color() const;
     Font Get_Font() const;
     float Get_Font_Size() const;
     float Get_Font_Spacing() const;
-    EUI_Style Get_Effective_Style() const;
 
     virtual void Set_Context(EUI_Context& ctx);
     virtual void Delete() { is_deleted = true; }
