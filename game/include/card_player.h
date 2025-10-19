@@ -10,4 +10,6 @@ class Card_Player : public Player {
 
     Card_Player(Client_ID client_id, Player_ID player_id, int team)
         : Player(client_id, player_id), team(team), money(10) {}
+
+    Card_Player(Player_ID player_id, int team) : Player(player_id), team(team), money(10) {}
 };

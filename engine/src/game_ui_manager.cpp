@@ -28,8 +28,12 @@ Game_UI_Manager::Game_UI_Manager(Application& application, Game_Manager& game_ma
 
 void Game_UI_Manager::Update_UI(std::chrono::milliseconds delta_time, EUI_Context* eui_ctx) {
     for (auto* new_obj : to_create) {
-        active_ui_objects.emplace(static_cast<Game_Object*>(new_obj),
-                                  new_obj->Create_UI_Object(*this));
+        if (to_delete.contains(new_obj))
+            continue;
+        Object_UI* new_object_ui = new_obj->Create_UI_Object(*this);
+        if (new_object_ui == nullptr)
+            continue;
+        active_ui_objects.emplace(static_cast<Game_Object*>(new_obj), new_object_ui);
     }
     to_create.clear();
 
@@ -64,7 +68,10 @@ void Game_UI_Manager::On_Create_Object(Game_Object* obj) {
 }
 
 void Game_UI_Manager::On_Delete_Object(Game_Object* obj) {
-    to_delete.emplace(obj);
+    if (to_create.contains(obj))
+        to_create.erase(obj);
+    else
+        to_delete.emplace(obj);
 }
 
 Game_UI_Manager* Game_UI_Manager::game_ui_manager_instance = nullptr;

@@ -122,7 +122,7 @@ class EUI_Element {
     EUI_Context* ctx = nullptr;
     EUI_Element* parent = nullptr;
 
-    Vector2 pos, dim = {0};
+    Vector2 pos = {0}, dim = {0};
     Vector2 min_size, max_size, preferred_size;
 
     bool is_visible = true;

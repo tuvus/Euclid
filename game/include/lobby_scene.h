@@ -12,6 +12,7 @@ class Lobby_Scene : public Scene, Network_Events_Receiver {
   private:
     EUI_Text* status_text;
     EUI_Button* start_button;
+    EUI_Button* ai_only_button;
     Card_Game& card_game;
     int player_count;
     // Used on the server to generate player ids
@@ -19,6 +20,7 @@ class Lobby_Scene : public Scene, Network_Events_Receiver {
     vector<Player*> players;
     Player* local_player;
     void Server_Start_Game();
+    void Server_Start_AI_Only();
     void Start_Game(long seed);
 
   public:
