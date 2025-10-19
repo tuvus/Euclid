@@ -1,24 +1,27 @@
-.PHONY: help
-
+.PHONY: help engine game run debug run-debug test clean
 
 ## Self-documenting makefile code thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## Shows the available makefile targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-buildgame: ## Builds the game
-	cd game && make && cd ..
+engine: ## Builds the engine
+	$(MAKE) -C engine
 
-run: buildgame ## build and run the game
-	cd game && make run && cd ..
+game: ## Builds the game
+	$(MAKE) -C game
 
 debug: ## Builds the game with debug flags and address sanitizer
-	cd game && make debug && cd ..
+	$(MAKE) -C game debug
 
-run-debug: debug ## build and run the game in debug mode
-	cd game && make run && cd ..
+run: game ## Build and run the game
+	$(MAKE) -C game run
+
+run-debug: debug ## Build and run the game in debug mode
+	$(MAKE) -C game run
 
 test: ## Runs the GameEngine tests
-	cd engine && make test && cd ..
+	$(MAKE) -C engine test
 
 clean: ## Cleans the build files from both the game engine and game
-	cd engine && make clean && cd ../game && make clean && cd ..
+	$(MAKE) -C engine clean
+	$(MAKE) -C game clean

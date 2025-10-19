@@ -27,6 +27,7 @@ class Game_Manager {
     /* Called on the server from the client to inform the server on its current step */
     void On_Receive_Player_Step_Update(Player_ID player_id, long min_step);
     long next_id = 0;
+    static long max_step_diff;
 
     unordered_map<Obj_ID, Game_Object*> objects;
     vector<Game_Object*> objects_to_delete;

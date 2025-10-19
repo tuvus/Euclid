@@ -1,5 +1,7 @@
 #pragma once
+
 #include "game_object.h"
+#include "ui/eui.h"
 
 class Object_UI {
   public:

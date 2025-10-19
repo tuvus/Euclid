@@ -18,10 +18,9 @@ class Unit_Card : public Card {
     void Play_Card(Card_Player* card_player, Vector2 pos) override {
         Card::Play_Card(card_player, pos);
         for (int i = 0; i < unit_count; i++) {
-            game_manager.Add_Object(
-                new Unit(game_manager, unit_data,
-                         card_player->team == 0 ? game_scene.f_path : game_scene.r_path, 1, i * 10,
-                         card_player->team, .4f, card_player->team ? RED : BLUE));
+            game_manager.Add_Object(new Unit(
+                game_manager, unit_data, game_scene.Get_Team_Path(card_player->team), 1, i * 10,
+                card_player->team, .4f, Game_Scene::Get_Team_Color(card_player->team)));
         }
     }
 

@@ -20,6 +20,11 @@ Lobby_Scene::Lobby_Scene(Card_Game& card_game)
     start_button->style.padding = {10, 20, 10, 20};
     root->Add_Child(start_button);
     start_button->is_visible = card_game.Get_Network()->Is_Server();
+    ai_only_button =
+        new EUI_Button("Start AI Only Game", [this, &card_game]() { Server_Start_AI_Only(); });
+    ai_only_button->style.padding = {10, 20, 10, 20};
+    root->Add_Child(ai_only_button);
+    ai_only_button->is_visible = card_game.Get_Network()->Is_Server();
     auto* leave_button = new EUI_Button("Leave Room", [this, &card_game]() {
         card_game.Close_Network();
         card_game.set_ui_screen(MENU);
@@ -36,6 +41,10 @@ Lobby_Scene::Lobby_Scene(Card_Game& card_game)
             players.emplace_back(new Card_Player(client_id, player_id, 0));
             return RPC_Manager::Rpc_Validator_Result::VALID_CALL_ON_CLIENTS;
         });
+    card_game.Get_Network()->bind_rpc("addaiplayer", [this](Player_ID player_id) {
+        players.emplace_back(new Card_Player(player_id, 0));
+        return RPC_Manager::Rpc_Validator_Result::VALID_CALL_ON_CLIENTS;
+    });
     card_game.Get_Network()->bind_rpc("setplayerid", [this](Player_ID player_id) {
         for (auto& player : players) {
             if (player->player_id != player_id)
@@ -82,6 +91,29 @@ void Lobby_Scene::Server_Start_Game() {
         card_game.Get_Network()->call_rpc(true, "setplayerteam", player->player_id, team);
         team = (team + 1) % 2;
     }
+    // If the teams are unbalanced add an AI
+    if (team == 1) {
+        Player_ID ai_id = player_id_count++;
+        card_game.Get_Network()->call_rpc(true, "addaiplayer", ai_id);
+        card_game.Get_Network()->call_rpc(true, "setplayerteam", ai_id, team);
+    }
+    card_game.Get_Network()->call_rpc(
+        true, "startgame",
+        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch())
+            .count());
+}
+
+void Lobby_Scene::Server_Start_AI_Only() {
+    for (auto* player : players) {
+        card_game.Get_Network()->call_rpc(true, "setplayerteam", player->player_id, -1);
+    }
+    Player_ID ai_id = player_id_count++;
+    card_game.Get_Network()->call_rpc(true, "addaiplayer", ai_id);
+    card_game.Get_Network()->call_rpc(true, "setplayerteam", ai_id, 0);
+    ai_id = player_id_count++;
+    card_game.Get_Network()->call_rpc(true, "addaiplayer", ai_id);
+    card_game.Get_Network()->call_rpc(true, "setplayerteam", ai_id, 1);
+
     card_game.Get_Network()->call_rpc(
         true, "startgame",
         chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch())

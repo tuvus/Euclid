@@ -32,6 +32,11 @@ void Application::Start_Headless() {
 void Application::Start_Client() {
     // Clients can be both host and player or just a player
     InitWindow(screen_width, screen_height, application_name.c_str());
+    if (eui_ctx->default_font_path.empty()) {
+        eui_ctx->default_style.font = GetFontDefault();
+    } else {
+        eui_ctx->default_style.font = LoadFont(eui_ctx->default_font_path.c_str());
+    }
     SetTargetFPS(60);
     SetWindowFocused();
 }
@@ -68,7 +73,9 @@ void Application::Application_Loop() {
         if (network)
             network->Network_Update();
 
-        Update(delta_time);
+        for (int i = 0; i < 1; i++) {
+            Update(delta_time);
+        }
 
         if (client) {
             Update_UI(delta_time);

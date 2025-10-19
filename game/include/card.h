@@ -1,8 +1,10 @@
 #pragma once
+
+#include <raylib.h>
+#include <string>
+
 #include "card_player.h"
 #include "game_object.h"
-
-#include <string>
 
 class Game_Scene;
 struct Card_Data {
@@ -24,6 +26,8 @@ class Card : public Game_Object {
     virtual bool Can_Play_Card(Card_Player* card_player, Vector2 pos);
 
     virtual void Play_Card(Card_Player* card_player, Vector2 pos);
+
+    virtual void Discard_Card(Card_Player* card_player);
 
     Object_UI* Create_UI_Object(Game_UI_Manager& game_ui_manager) override;
 };
