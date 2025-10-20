@@ -15,6 +15,12 @@ typedef struct Sides {
 
 enum class Layout_Model { Horizontal, Vertical };
 
+class Size {
+  public:
+    static constexpr float Fit = -1;
+    static constexpr float Grow = -2;
+};
+
 enum class Alignment { Start, Center, End, Stretch };
 
 enum class Position { Static, Relative, Absolute, Fixed, Sticky };
@@ -90,7 +96,8 @@ class EUI_Element {
     EUI_Context* ctx = nullptr;
     EUI_Element* parent = nullptr;
 
-    Vector2 pos, size = {0};
+    Vector2 pos = {0};
+    Vector2 size = {Size::Fit, Size::Fit};
     Vector2 min_size, max_size, preferred_size;
 
     bool is_visible = true;
