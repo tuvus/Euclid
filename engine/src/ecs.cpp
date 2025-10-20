@@ -41,15 +41,15 @@ std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs, Entity_ID 
         delete entities;
         entities = new_entities;
         for (int i = 0; i < entity_count; i++) {
-            unsigned char* entity = Get_Entity(i);
+            Entity entity = Get_Entity(i);
             Entity_ID e_id = Get_Entity_Data(entity).id;
-            ecs->entities_by_id[e_id] = tuple(tuple(entity, this), i);
+            ecs->entities_by_id[e_id] = tuple(entity, i);
         }
         entity_capacity *= 2;
     }
     unsigned char* ptr = entities + entity_count * entity_type.entity_size;
     std::memset(ptr, 0, entity_type.entity_size);
-    Entity_Component& entity = Get_Entity_Data(ptr);
+    Entity_Component& entity = Get_Entity_Data(tuple(ptr, this));
     entity.id = id;
     entity_count++;
     return std::tuple(ptr, entity_count - 1);
@@ -67,7 +67,7 @@ void Entity_Array::Delete_Entity(ECS* ecs, int index) {
                     entities + (entity_count - 1) * entity_type.entity_size,
                     entity_type.entity_size);
         Entity_ID entity_id = Get_Entity_Data(Get_Entity(index)).id;
-        ecs->entities_by_id[entity_id] = tuple(tuple(Get_Entity(index), this), index);
+        ecs->entities_by_id[entity_id] = tuple(Get_Entity(index), index);
     } else {
         Get_Entity_Data(Get_Entity(index)).id = 0;
     }
@@ -107,7 +107,7 @@ Entity_Type_Iterator::Entity_Type_Iterator(ECS& ecs, Entity_Type* entity_type)
 }
 
 Entity Entity_Type_Iterator::Get_Entity(int pos, int index) {
-    return make_tuple(arrays[pos]->Get_Entity(index), arrays[pos]);
+    return arrays[pos]->Get_Entity(index);
 }
 
 std::tuple<int, int> Entity_Type_Iterator::Next_Entity(int pos, int index) {

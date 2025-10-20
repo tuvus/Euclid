@@ -67,12 +67,13 @@ class Entity_Array {
 
     Entity_Array(ECS& ecs, const std::vector<Component_Type*>& components);
 
-    static Entity_Component& Get_Entity_Data(unsigned char* entity) {
-        return *reinterpret_cast<Entity_Component*>(entity);
+    static Entity_Component& Get_Entity_Data(Entity entity) {
+        return *reinterpret_cast<Entity_Component*>(std::get<0>(entity));
     }
 
     template <typename T>
-    T* Get_Component(unsigned char* entity, Component_Type* component_type) {
+    T* Get_Component(Entity entity_data, Component_Type* component_type) {
+        unsigned char* entity = std::get<0>(entity_data);
         entity += sizeof(Entity_Component);
         for (auto& component : entity_type.components) {
             if (component_type == component)
@@ -92,9 +93,7 @@ class Entity_Array {
 
     void Delete_Entity(ECS* ecs, int index);
 
-    unsigned char* Get_Entity(int index) const {
-        return entities + index * entity_type.entity_size;
-    }
+    Entity Get_Entity(int index) { return tuple(entities + index * entity_type.entity_size, this); }
 };
 
 class System {

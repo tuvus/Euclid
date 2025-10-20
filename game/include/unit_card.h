@@ -12,10 +12,10 @@ Entity_ID Init_Unit_Card(Entity entity, Card_Data* card_data,
                          Unit_Card_Component unit_card_component) {
     Init_Card(entity, *card_data);
     auto* unit_card = std::get<1>(entity)->Get_Component<Unit_Card_Component>(
-        std::get<0>(entity), &Unit_Card_Component::component_type);
+        entity, &Unit_Card_Component::component_type);
     unit_card->unit_count = unit_card_component.unit_count;
     unit_card->unit_texture = unit_card_component.unit_texture;
-    return Entity_Array::Get_Entity_Data(std::get<0>(entity)).id;
+    return Entity_Array::Get_Entity_Data(entity).id;
 }
 
 Entity_Type* Get_Unit_Card_Entity_Type() {

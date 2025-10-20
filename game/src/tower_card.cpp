@@ -2,29 +2,32 @@
 
 #include "game_scene.h"
 
-Tower_Card::Tower_Card(Game_Manager& game_manager, Game_Scene& game_scene, Card_Data& card_data)
-    : Card(game_manager, game_scene, card_data) {
+using namespace std;
+
+bool Can_Play_Tower_Card(Card_Player* card_player, Entity entity, Vector2 pos) {
+    return Can_Play_Card(card_player, entity, pos) &&
+           Can_Place_Tower(entity, card_player->path, pos, 50);
 }
 
-Card* Tower_Card::Clone() {
-    return new Tower_Card(game_manager, game_scene, card_data);
+bool Can_Place_Tower(Entity tower_card, Path* path, Vector2 pos, float min_dist) {
+    for (auto entity : get<1>(tower_card)->ecs.Get_Entities_Of_Type(Get_Tower_Card_Entity_Type())) {
+        auto transform = get<1>(entity)->Get_Component<Transform_Component>(
+            entity, &Transform_Component::component_type);
+        if (Vector2Distance(pos, transform->pos) <= min_dist)
+            return false;
+    }
+    for (auto position : path->positions) {
+        if (Vector2Distance(pos, position) <= min_dist)
+            return false;
+    }
+    return true;
 }
 
-bool Tower_Card::Can_Play_Card(Card_Player* card_player, Vector2 pos) {
-    return Card::Can_Play_Card(card_player, pos) && game_scene.Can_Place_Tower(pos, 50);
-}
-
-void Tower_Card::Play_Card(Card_Player* player, Vector2 pos) {
-    Card::Play_Card(player, pos);
-    auto components =
-        vector{&Transform_Component::component_type, &Tower_Component::component_type};
-    auto entity = game_scene.ecs->Create_Entity(new Entity_Type(components));
-    Init_Tower(game_scene.ecs, entity, Vector2(pos.x, pos.y), 150, player->team, .4f,
+void Play_Tower_Card(Card_Player* player, Entity entity, Vector2 pos) {
+    Play_Card(player, entity, pos);
+    auto tower = get<1>(entity)->ecs.Create_Entity(Get_Tower_Entity_Type());
+    Init_Tower(tower, Vector2(pos.x, pos.y), 150, player->team, .4f,
                Game_Scene::Get_Team_Color(player->team));
-
-    game_manager.Add_Object(new Tower(game_scene.ecs, game_manager, Vector2(pos.x, pos.y), 150,
-                                      player->team, .4f, Game_Scene::Get_Team_Color(player->team),
-                                      Entity_Array::Get_Entity_Data(get<0>(entity)).id));
 }
 
 Component_Type Tower_Card_Component::component_type =

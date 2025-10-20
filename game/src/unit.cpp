@@ -6,16 +6,16 @@
 
 void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, float start_offset, int team,
                Texture2D texture, float scale, Color color) {
-    auto* unit = get<1>(entity)->Get_Component<Unit_Component>(get<0>(entity),
-                                                               &Unit_Component::component_type);
+    auto* unit =
+        get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
-        get<0>(entity), &Transform_Component::component_type);
+        entity, &Transform_Component::component_type);
     unit->path = path;
     unit->speed = speed;
     unit->section = 0;
     unit->team = team;
     unit->spawned = true;
-    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(get<0>(entity)).id, start_offset);
+    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity).id, start_offset);
 }
 
 void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, Entity_ID entity_id,
@@ -47,17 +47,17 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
                                  unit->path->positions[unit->section + 1], unit->lerp);
     transform->rot = unit->path->Get_Rotation_On_Path(unit->section);
 
-    for (auto [entity, entity_array] : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
-        Entity_ID other_id = entity_array->Get_Entity_Data(entity).id;
+    for (auto entity : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
+        Entity_ID other_id = get<1>(entity)->Get_Entity_Data(entity).id;
         if (other_id == entity_id)
             continue;
         Unit_Component* other =
-            entity_array->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
+            get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
 
         if (other->team == unit->team || !other->spawned)
             continue;
 
-        Transform_Component* other_transform = entity_array->Get_Component<Transform_Component>(
+        Transform_Component* other_transform = get<1>(entity)->Get_Component<Transform_Component>(
             entity, &Transform_Component::component_type);
         if (Vector2Distance(transform->pos, other_transform->pos) > 30)
             continue;
@@ -72,11 +72,11 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
 }
 
 void Unit_Update(ECS* ecs, Entity entity) {
-    auto* unit = get<1>(entity)->Get_Component<Unit_Component>(get<0>(entity),
-                                                               &Unit_Component::component_type);
+    auto* unit =
+        get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
-        get<0>(entity), &Transform_Component::component_type);
-    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(get<0>(entity)).id, unit->speed);
+        entity, &Transform_Component::component_type);
+    Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity).id, unit->speed);
 }
 
 Object_UI* Create_Unit_UI(Entity entity, Game_UI_Manager& game_ui_manager) {

@@ -15,10 +15,10 @@ class Card_UI : public Object_UI {
 
     void Update_UI(EUI_Context* ctx, Vector2 pos, float scale) {
         Entity entity = std::get<0>(ecs.entities_by_id[entity_id]);
-        auto* ui = std::get<1>(entity)->Get_Component<UI_Component>(std::get<0>(entity),
-                                                                    &UI_Component::component_type);
+        auto* ui =
+            std::get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
         auto* card = std::get<1>(entity)->Get_Component<Card_Component>(
-            std::get<0>(entity), &Card_Component::component_type);
+            entity, &Card_Component::component_type);
         const float width = ui->texture.width * scale;
         const float height = ui->texture.height * scale;
 

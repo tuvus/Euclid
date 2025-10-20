@@ -4,15 +4,10 @@
 #include "game_manager.h"
 
 #include <algorithm>
-#include <raymath.h>
-
-Deck::Deck(Game_Manager& game_manager, Card_Player* player)
-    : Game_Object(game_manager, Vector2Zero(), 0, 1, WHITE), player(player) {
-}
 
 void Draw_Card(Entity entity, int cards) {
-    auto deck = std::get<1>(entity)->Get_Component<Deck_Component>(std::get<0>(entity),
-                                                                   &Deck_Component::component_type);
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
     for (int i = 0; i < cards; i++) {
         if (deck->deck.empty())
             Shuffle_Discard_Into_Deck(entity);
@@ -25,8 +20,8 @@ void Draw_Card(Entity entity, int cards) {
 }
 
 void Shuffle_Discard_Into_Deck(Entity entity) {
-    auto deck = std::get<1>(entity)->Get_Component<Deck_Component>(std::get<0>(entity),
-                                                                   &Deck_Component::component_type);
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
     for (auto card : deck->discard) {
         deck->deck.emplace_back(card);
     }
@@ -35,8 +30,8 @@ void Shuffle_Discard_Into_Deck(Entity entity) {
 }
 
 void Shuffle_Deck(Entity entity) {
-    auto deck = std::get<1>(entity)->Get_Component<Deck_Component>(std::get<0>(entity),
-                                                                   &Deck_Component::component_type);
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
     std::ranges::shuffle(deck->deck, get<1>(entity)->ecs.random);
 }
 

@@ -1,7 +1,5 @@
 #pragma once
 #include "ecs.h"
-#include "game_object.h"
-#include "player.h"
 
 #include <deque>
 #include <vector>
@@ -19,8 +17,8 @@ struct Deck_Component {
 };
 
 void Init_Deck(Entity entity, Card_Player* player) {
-    auto deck = std::get<1>(entity)->Get_Component<Deck_Component>(std::get<0>(entity),
-                                                                   &Deck_Component::component_type);
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
     deck->player = player;
     deck->deck = std::deque<Entity_ID>();
     deck->hand = std::vector<Entity_ID>();
