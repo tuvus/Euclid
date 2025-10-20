@@ -1,5 +1,4 @@
 #include "card.h"
-
 #include "card_ui.h"
 
 bool Can_Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
@@ -15,7 +14,7 @@ void Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
 }
 
 void Discard_Card(Card_Player* player, Entity entity) {
-    player->deck->Discard_Card(entity);
+    Discard_Deck_Card(player->deck, Entity_Array::Get_Entity_Data(entity).id);
 }
 
 Component_Type Card_Component::component_type = Component_Type{"Card", sizeof(Card_Component)};

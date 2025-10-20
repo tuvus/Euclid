@@ -1,7 +1,6 @@
 #pragma once
 #include "application.h"
 
-#include <algorithm>
 #include <cstring>
 #include <functional>
 #include <memory>
@@ -9,7 +8,6 @@
 #include <random>
 #include <raylib.h>
 #include <stdexcept>
-#include <string.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -70,6 +68,8 @@ class Entity_Array {
     static Entity_Component& Get_Entity_Data(Entity entity) {
         return *reinterpret_cast<Entity_Component*>(std::get<0>(entity));
     }
+
+    static Entity_ID Get_Entity_ID(Entity entity) { return Get_Entity_Data(entity).id; }
 
     template <typename T>
     T* Get_Component(Entity entity_data, Component_Type* component_type) {

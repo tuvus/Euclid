@@ -2,6 +2,8 @@
 
 #include "game_scene.h"
 
+#include <raymath.h>
+
 using namespace std;
 
 bool Can_Play_Tower_Card(Card_Player* card_player, Entity entity, Vector2 pos) {

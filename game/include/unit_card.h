@@ -18,7 +18,7 @@ Entity_ID Init_Unit_Card(Entity entity, Card_Data* card_data,
     return Entity_Array::Get_Entity_Data(entity).id;
 }
 
-Entity_Type* Get_Unit_Card_Entity_Type() {
+inline Entity_Type* Get_Unit_Card_Entity_Type() {
     return new Entity_Type(vector{&UI_Component::component_type, &Card_Component::component_type,
                                   &Unit_Card_Component::component_type});
 }

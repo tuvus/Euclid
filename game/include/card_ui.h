@@ -4,8 +4,6 @@
 #include "game_scene.h"
 #include "game_ui_manager.h"
 
-#include <raymath.h>
-
 class Card_UI : public Object_UI {
   public:
     bool is_hovered = false;

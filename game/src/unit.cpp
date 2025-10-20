@@ -4,6 +4,8 @@
 #include "game_manager.h"
 #include "unit_ui.h"
 
+#include <raymath.h>
+
 void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, float start_offset, int team,
                Texture2D texture, float scale, Color color) {
     auto* unit =

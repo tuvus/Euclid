@@ -1,8 +1,5 @@
 #pragma once
 #include "emath.h"
-#include "game_object.h"
-
-#include "raymath.h"
 #include <vector>
 
 class Path {

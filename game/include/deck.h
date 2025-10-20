@@ -28,6 +28,10 @@ void Init_Deck(Entity entity, Card_Player* player) {
 void Draw_Card(Entity entity, int cards = 1);
 void Shuffle_Discard_Into_Deck(Entity entity);
 void Shuffle_Deck(Entity entity);
-void Discard_Card(Entity entity, Entity_ID);
+void Discard_Deck_Card(Entity entity, Entity_ID);
+
+Entity_Type* Get_Deck_Entity_Type() {
+    return new Entity_Type(vector{&Deck_Component::component_type});
+}
 
 Object_UI* Create_Deck_UI(Entity entity, Game_UI_Manager& game_ui_manager);

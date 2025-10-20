@@ -1,6 +1,5 @@
 #pragma once
 #include "ecs.h"
-#include "game_object.h"
 #include "game_ui_manager.h"
 #include "path.h"
 

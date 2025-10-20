@@ -7,54 +7,77 @@
 #include <random>
 #include <raymath.h>
 
-Base::Base(Game_Manager& game_manager, Card_Player& card_player, Vector2 pos, Path* path,
-           int base_income_speed, int max_health)
-    : Game_Object(game_manager, pos, 0, 1, WHITE), card_player(card_player), path(path),
-      time_until_income(base_income_speed), health(max_health) {
+using namespace std;
+
+void Init_Base(Entity entity, Card_Player& card_player, Vector2 pos, Path* path,
+               int base_income_speed, int max_health) {
+    auto transform = get<1>(entity)->Get_Component<Transform_Component>(
+        entity, &Transform_Component::component_type);
+    auto base =
+        get<1>(entity)->Get_Component<Base_Component>(entity, &Base_Component::component_type);
+    transform->pos = pos;
+    transform->rot = 0;
+    transform->scale = 1;
+    base->card_player = card_player;
+    base->path = path;
+    base->base_income_speed = base_income_speed;
+    base->max_health = max_health;
+    base->health = max_health;
+    base->time_until_income = 0;
 }
 
-void Base::Update() {
-    if (--time_until_income == 0) {
-        card_player.money++;
-        time_until_income = 40;
+void Update_Base(ECS* ecs, Entity entity) {
+    auto base =
+        get<1>(entity)->Get_Component<Base_Component>(entity, &Base_Component::component_type);
+    if (--base->time_until_income == 0) {
+        base->card_player.money++;
+        base->time_until_income = 40;
     }
 
-    if (card_player.deck->hand.empty()) {
-        card_player.deck->Draw_Card(3);
+    if (base->card_player.Get_Deck()->hand.empty()) {
+        Draw_Card(base->card_player.deck, 3);
     }
 
-    if (card_player.ai && !card_player.deck->hand.empty()) {
-        std::uniform_int_distribution<int> hand_dist(0, card_player.deck->hand.size() - 1);
-        int card_to_play = hand_dist(game_manager.random);
-        Card* card = card_player.deck->hand[card_to_play];
-        if (Tower_Card* tower_card = dynamic_cast<Tower_Card*>(card)) {
+    if (base->card_player.ai && !base->card_player.Get_Deck()->hand.empty()) {
+        std::uniform_int_distribution<int> hand_dist(0,
+                                                     base->card_player.Get_Deck()->hand.size() - 1);
+        int card_to_play = hand_dist(ecs->random);
+        Entity card_entity =
+            get<0>(ecs->entities_by_id[base->card_player.Get_Deck()->hand[card_to_play]]);
+        auto card =
+            get<1>(card_entity)
+                ->Get_Component<Card_Component>(card_entity, &Card_Component::component_type);
+        if (get<1>(card_entity)->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
             int i = 0;
-            for (auto pos : path->positions) {
+            for (auto pos : base->path->positions) {
                 i++;
                 static uniform_int_distribution<int> tiny_offset(-20, 20);
-                Vector2 r_pos = Vector2(pos.x + 50 + abs(tiny_offset(game_manager.random)),
-                                        pos.y + tiny_offset(game_manager.random));
-                if (tower_card->Can_Play_Card(&card_player, r_pos)) {
-                    tower_card->Play_Card(&card_player, r_pos);
+                Vector2 r_pos = Vector2(pos.x + 50 + abs(tiny_offset(ecs->random)),
+                                        pos.y + tiny_offset(ecs->random));
+                if (Can_Play_Card(&base->card_player, card_entity, r_pos)) {
+                    Play_Card(&base->card_player, card_entity, r_pos);
                     break;
                 }
-                Vector2 l_pos = Vector2(pos.x - 50 - abs(tiny_offset(game_manager.random)),
-                                        pos.y + tiny_offset(game_manager.random));
-                if (tower_card->Can_Play_Card(&card_player, l_pos)) {
-                    tower_card->Play_Card(&card_player, l_pos);
+                Vector2 l_pos = Vector2(pos.x - 50 - abs(tiny_offset(ecs->random)),
+                                        pos.y + tiny_offset(ecs->random));
+                if (Can_Play_Card(&base->card_player, card_entity, l_pos)) {
+                    Play_Card(&base->card_player, card_entity, l_pos);
                     break;
                 }
             }
 
             // If we couldn't play the card due to lack of open positions discard it
-            if (card_player.deck->hand.size() > card_to_play &&
-                card_player.deck->hand[card_to_play] == card &&
-                card_player.money >= card->card_data.cost) {
-                tower_card->Discard_Card(&card_player);
+            if (base->card_player.Get_Deck()->hand.size() > card_to_play &&
+                base->card_player.Get_Deck()->hand[card_to_play] ==
+                    Entity_Array::Get_Entity_Data(card_entity).id &&
+                base->card_player.money >= card->card_data->cost) {
+                Discard_Card(&base->card_player, card_entity);
             }
 
-        } else if (card->Can_Play_Card(&card_player, Vector2Zero())) {
-            card->Play_Card(&card_player, Vector2Zero());
+        } else if (Can_Play_Card(&base->card_player, card_entity, Vector2Zero())) {
+            Play_Card(&base->card_player, card_entity, Vector2Zero());
         }
     }
 }
+
+Component_Type Base_Component::component_type = Component_Type{"Base", sizeof(Base_Component)};

@@ -5,6 +5,7 @@
 #include "unit.h"
 
 #include <climits>
+#include <raymath.h>
 
 void Init_Tower(Entity entity, Vector2 pos, float range, int team, float scale, Color color) {
     auto* tower =

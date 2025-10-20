@@ -23,7 +23,7 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     ECS* ecs;
     Path* f_path;
     Path* r_path;
-    Card* active_card;
+    Entity active_card;
 
     Game_Scene(Card_Game& card_game);
 
@@ -45,9 +45,7 @@ class Game_Scene : public Scene, Network_Events_Receiver {
 
     void On_Client_Disconnected(Client_ID) override {}
 
-    void Activate_Card(Card* card);
-
-    bool Can_Place_Tower(Vector2 pos, float min_dist) const;
+    void Activate_Card(Entity card);
 
     Path* Get_Team_Path(int team) const;
 

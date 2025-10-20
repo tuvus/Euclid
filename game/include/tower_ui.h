@@ -1,7 +1,6 @@
 #pragma once
 #include "game_object_ui.h"
 #include "game_ui_manager.h"
-#include "tower.h"
 
 class Tower_UI : public Object_UI {
   public:

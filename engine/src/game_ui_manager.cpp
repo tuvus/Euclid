@@ -1,5 +1,4 @@
 #include "game_ui_manager.h"
-
 #include "game_object_ui.h"
 
 Game_UI_Manager::Game_UI_Manager(Application& application, ECS& ecs)
@@ -23,8 +22,8 @@ void Game_UI_Manager::Update_UI(std::chrono::milliseconds delta_time, EUI_Contex
     for (auto id : to_create) {
         if (to_delete.contains(id))
             continue;
-        Object_UI* new_object_ui =
-            get<2>(ecs.entities_by_id[id])->entity_type.ui_creation_function();
+        Entity entity = get<0>(ecs.entities_by_id[id]);
+        Object_UI* new_object_ui = get<1>(entity)->entity_type.ui_creation_function(entity, *this);
         if (new_object_ui == nullptr)
             continue;
         active_ui_objects.emplace(id, new_object_ui);

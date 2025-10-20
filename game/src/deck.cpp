@@ -1,7 +1,5 @@
 #include "deck.h"
-
 #include "deck_ui.h"
-#include "game_manager.h"
 
 #include <algorithm>
 
@@ -35,16 +33,16 @@ void Shuffle_Deck(Entity entity) {
     std::ranges::shuffle(deck->deck, get<1>(entity)->ecs.random);
 }
 
-void Discard_Card(Entity entity, Entity_ID card) {
-    auto deck = std::get<1>(entity)->Get_Component<Deck_Component>(std::get<0>(entity),
-                                                                   &Deck_Component::component_type);
+void Discard_Deck_Card(Entity entity, Entity_ID card) {
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
     deck->hand.erase(ranges::find(deck->hand, card));
     deck->discard.emplace_back(card);
 }
 
 Object_UI* Create_Deck_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
-    auto deck = std::get<1>(entity)->Get_Component<Deck_Component>(std::get<0>(entity),
-                                                                   &Deck_Component::component_type);
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
     return new Deck_UI(entity, game_ui_manager, deck->player);
 }
 
