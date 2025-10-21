@@ -1,6 +1,12 @@
 #include "card.h"
 #include "card_ui.h"
 
+void Init_Card(Entity entity, Card_Data& card_data) {
+    auto* card_component =
+        std::get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
+    card_component->card_data = &card_data;
+}
+
 bool Can_Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
     auto* card =
         get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);

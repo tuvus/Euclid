@@ -20,11 +20,7 @@ struct Card_Component {
     Card_Data* card_data;
 };
 
-void Init_Card(Entity entity, Card_Data& card_data) {
-    auto* card_component =
-        std::get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
-    card_component->card_data = &card_data;
-}
+void Init_Card(Entity entity, Card_Data& card_data);
 
 bool Can_Play_Card(Card_Player*, Entity, Vector2);
 

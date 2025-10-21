@@ -18,7 +18,4 @@ void Init_Base(Entity entity, Card_Player& card_player, Vector2 pos, Path* path,
 
 void Update_Base(ECS* ecs, Entity entity);
 
-Entity_Type* Get_Base_Entity_Type() {
-    return new Entity_Type(
-        vector{&Transform_Component::component_type, &Base_Component::component_type});
-}
+Entity_Type* Get_Base_Entity_Type();

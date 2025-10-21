@@ -24,10 +24,6 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
 
 void Unit_Update(ECS* ecs, Entity entity);
 
-Entity_Type* Get_Unit_Entity_Type() {
-    return new Entity_Type(vector{&UI_Component::component_type,
-                                  &Transform_Component::component_type,
-                                  &Unit_Component::component_type});
-}
+Entity_Type* Get_Unit_Entity_Type();
 
 Object_UI* Create_Unit_UI(Entity entity, Game_UI_Manager& game_ui_manager);

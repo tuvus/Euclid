@@ -85,4 +85,10 @@ Object_UI* Create_Unit_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
     return new Unit_UI(entity, game_ui_manager);
 }
 
+Entity_Type* Get_Unit_Entity_Type() {
+    return new Entity_Type(vector{&UI_Component::component_type,
+                                  &Transform_Component::component_type,
+                                  &Unit_Component::component_type});
+}
+
 Component_Type Unit_Component::component_type = Component_Type{"Unit", sizeof(Unit_Component)};

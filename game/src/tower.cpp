@@ -71,4 +71,10 @@ Object_UI* Create_Tower_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
     return new Tower_UI(entity, game_ui_manager);
 }
 
+Entity_Type* Get_Tower_Entity_Type() {
+    return new Entity_Type(vector{&UI_Component::component_type,
+                                  &Transform_Component::component_type,
+                                  &Tower_Component::component_type});
+}
+
 Component_Type Tower_Component::component_type = Component_Type{"Tower", sizeof(Tower_Component)};

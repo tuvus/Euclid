@@ -6,6 +6,18 @@
 
 using namespace std;
 
+Entity_ID Init_Tower_Card(Entity entity, Card_Data* card_data,
+                          Tower_Card_Component tower_card_component) {
+    Init_Card(entity, *card_data);
+    auto* tower_card = std::get<1>(entity)->Get_Component<Tower_Card_Component>(
+        entity, &Tower_Card_Component::component_type);
+    tower_card->team = tower_card_component.team;
+    tower_card->spawned = true;
+    tower_card->reload = tower_card_component.reload;
+    tower_card->range = tower_card_component.range;
+    return Entity_Array::Get_Entity_Data(entity).id;
+}
+
 bool Can_Play_Tower_Card(Card_Player* card_player, Entity entity, Vector2 pos) {
     return Can_Play_Card(card_player, entity, pos) &&
            Can_Place_Tower(entity, card_player->path, pos, 50);
@@ -30,6 +42,11 @@ void Play_Tower_Card(Card_Player* player, Entity entity, Vector2 pos) {
     auto tower = get<1>(entity)->ecs.Create_Entity(Get_Tower_Entity_Type());
     Init_Tower(tower, Vector2(pos.x, pos.y), 150, player->team, .4f,
                Game_Scene::Get_Team_Color(player->team));
+}
+
+Entity_Type* Get_Tower_Card_Entity_Type() {
+    return new Entity_Type(vector{&UI_Component::component_type, &Card_Component::component_type,
+                                  &Tower_Card_Component::component_type});
 }
 
 Component_Type Tower_Card_Component::component_type =

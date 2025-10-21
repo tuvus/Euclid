@@ -14,10 +14,6 @@ void Init_Tower(Entity entity, Vector2 pos, float range, int team, float scale, 
 
 void Tower_Update(ECS* ecs, Entity entity);
 
-Entity_Type* Get_Tower_Entity_Type() {
-    return new Entity_Type(vector{&UI_Component::component_type,
-                                  &Transform_Component::component_type,
-                                  &Tower_Component::component_type});
-}
+Entity_Type* Get_Tower_Entity_Type();
 
 Object_UI* Create_Tower_UI(Entity entity, Game_UI_Manager& game_ui_manager);

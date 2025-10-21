@@ -1,6 +1,5 @@
 #pragma once
 
-#include "card.h"
 #include "card_game.h"
 #include "game_manager.h"
 #include "game_ui_manager.h"
@@ -8,6 +7,7 @@
 #include "scene.h"
 #include "ui/eui.h"
 
+struct Card_Data;
 class Game_Scene : public Scene, Network_Events_Receiver {
   private:
     Card_Game& card_game;
