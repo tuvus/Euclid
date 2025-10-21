@@ -33,9 +33,9 @@ void Application::Start_Client() {
     // Clients can be both host and player or just a player
     InitWindow(screen_width, screen_height, application_name.c_str());
     if (eui_ctx->default_font_path.empty()) {
-        eui_ctx->default_style.font = GetFontDefault();
+        eui_ctx->default_font = GetFontDefault();
     } else {
-        eui_ctx->default_style.font = LoadFont(eui_ctx->default_font_path.c_str());
+        eui_ctx->default_font = LoadFont(eui_ctx->default_font_path.c_str());
     }
     SetTargetFPS(60);
     SetWindowFocused();
