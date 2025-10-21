@@ -1,6 +1,7 @@
 #include "game_scene.h"
 
 #include "base.h"
+#include "card.h"
 #include "card_player.h"
 #include "card_ui.h"
 #include "tower.h"
