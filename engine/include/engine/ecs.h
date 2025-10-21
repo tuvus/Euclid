@@ -63,7 +63,7 @@ class Entity_Array {
     int entity_capacity;
     ECS& ecs;
 
-    Entity_Array(ECS& ecs, const std::vector<Component_Type*>& components);
+    Entity_Array(ECS& ecs, Entity_Type entity_type);
 
     static Entity_Component& Get_Entity_Data(Entity entity) {
         return *reinterpret_cast<Entity_Component*>(std::get<0>(entity));
@@ -146,7 +146,7 @@ class ECS {
 
     void Update();
 
-    Entity_Type*
+    Entity_Array*
     Create_Entity_Type(std::vector<Component_Type*> components,
                        std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function);
 

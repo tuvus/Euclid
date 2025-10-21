@@ -10,10 +10,10 @@ struct Base_Component {
     int health;
     int max_health;
     Path* path;
-    Card_Player& card_player;
+    Card_Player* card_player;
 };
 
-void Init_Base(Entity entity, Card_Player& card_player, Vector2 pos, Path* path,
+void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, Path* path,
                int base_income_speed, int max_health);
 
 void Update_Base(ECS* ecs, Entity entity);

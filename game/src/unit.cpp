@@ -7,7 +7,7 @@
 #include <raymath.h>
 
 void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, float start_offset, int team,
-               Texture2D texture, float scale, Color color) {
+               Texture2D* texture, float scale, Color color) {
     auto* unit =
         get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(

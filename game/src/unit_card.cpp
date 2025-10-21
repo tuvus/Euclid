@@ -16,7 +16,7 @@ Entity_ID Init_Unit_Card(Entity entity, Card_Data* card_data,
 
 void Play_Card(Entity entity, Card_Player* card_player, Vector2 pos) {
     Play_Card(card_player, entity, pos);
-    auto unit_card = get<1>(entity)->Get_Component<Unit_Card_Component>(
+    auto* unit_card = get<1>(entity)->Get_Component<Unit_Card_Component>(
         entity, &Unit_Card_Component::component_type);
     for (int i = 0; i < unit_card->unit_count; i++) {
         auto components =

@@ -26,8 +26,8 @@ bool Entity_Type::Is_Entity_Strictly_Of_type(Entity_Type* other) const {
     return Is_Entity_Of_Type(other);
 }
 
-Entity_Array::Entity_Array(ECS& ecs, const std::vector<Component_Type*>& components)
-    : ecs(ecs), entity_type(Entity_Type(components)), entity_count(0) {
+Entity_Array::Entity_Array(ECS& ecs, Entity_Type entity_type)
+    : ecs(ecs), entity_type(Entity_Type(entity_type)), entity_count(0) {
     entity_capacity = 10;
     entities = new unsigned char[entity_type.entity_size * entity_capacity];
 }
@@ -152,10 +152,13 @@ void ECS::Update() {
     to_delete.clear();
 }
 
-Entity_Type*
+Entity_Array*
 ECS::Create_Entity_Type(std::vector<Component_Type*> components,
                         std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function) {
-    return new Entity_Type(components, ui_creation_function);
+    auto* new_array = new Entity_Array(
+        *this, Entity_Type(std::move(components), std::move(ui_creation_function)));
+    entity_components.emplace(new_array);
+    return new_array;
 }
 
 Entity ECS::Create_Entity(Entity_Type* entity_type) {

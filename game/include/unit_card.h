@@ -4,7 +4,7 @@
 struct Unit_Card_Component {
     static Component_Type component_type;
     int unit_count;
-    Texture2D& unit_texture;
+    Texture2D* unit_texture;
 };
 
 Entity_ID Init_Unit_Card(Entity entity, Card_Data* card_data,
