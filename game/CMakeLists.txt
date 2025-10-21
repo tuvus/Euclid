@@ -38,7 +38,6 @@ set(Headers
         include/card_ui.h
         include/tower_card.h
         include/base.h
-        include/unit_component.h
 )
 
 add_executable(game ${Sources} ${Headers})

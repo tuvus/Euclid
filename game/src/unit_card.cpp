@@ -11,8 +11,8 @@ void Play_Card(Entity entity, Card_Player* card_player, Vector2 pos) {
         auto components =
             vector{&Transform_Component::component_type, &Unit_Component::component_type};
         auto unit = get<1>(entity)->ecs.Create_Entity(new Entity_Type(components));
-        Init_Unit(&get<1>(entity)->ecs, unit, card_player->path, 1, i * 10, card_player->team, .4f,
-                  Game_Scene::Get_Team_Color(card_player->team));
+        Init_Unit(&get<1>(entity)->ecs, unit, card_player->path, 1, i * 10, card_player->team,
+                  unit_card->unit_texture, .4f, Game_Scene::Get_Team_Color(card_player->team));
     }
 }
 

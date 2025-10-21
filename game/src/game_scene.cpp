@@ -47,12 +47,8 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
     ecs = new ECS(application, seed);
-    auto unit_components =
-        vector{&Transform_Component::component_type, &Unit_Component::component_type};
-    ecs->Register_System(new System(new Entity_Type(unit_components), Unit_Update));
-    auto tower_components =
-        vector{&Transform_Component::component_type, &Tower_Component::component_type};
-    ecs->Register_System(new System(new Entity_Type(tower_components), Tower_Update));
+    ecs->Register_System(new System(Get_Unit_Entity_Type(), Unit_Update));
+    ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update));
 
     vector<Vector2> positions = vector<Vector2>();
     static uniform_int_distribution<int> start_dist(-200, 200);
@@ -84,10 +80,11 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
             // Check if the card is in the hand
             if (ranges::find(player->Get_Deck()->hand, entity_id) == player->Get_Deck()->hand.end())
                 return RPC_Manager::INVALID;
-            // if (!card->Can_Play_Card(player, Vector2(x, y)))
-            // return RPC_Manager::INVALID;
+            Entity card = get<0>(ecs->entities_by_id[entity_id]);
+            if (!Can_Play_Card(player, card, Vector2(x, y)))
+                return RPC_Manager::INVALID;
 
-            // card->Play_Card(player, Vector2(x, y));
+            Play_Card(player, card, Vector2(x, y));
             return RPC_Manager::VALID_CALL_ON_CLIENTS;
         });
     card_game.Get_Network()->bind_rpc("discard", [this](Player_ID player_id, Entity_ID entity_id) {
@@ -96,7 +93,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         if (ranges::find(player->Get_Deck()->hand, entity_id) == player->Get_Deck()->hand.end())
             return RPC_Manager::INVALID;
 
-        // card->Discard_Card(player);
+        Discard_Card(player, get<0>(ecs->entities_by_id[entity_id]));
         return RPC_Manager::VALID_CALL_ON_CLIENTS;
     });
 
