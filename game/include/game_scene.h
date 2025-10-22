@@ -24,7 +24,6 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     ECS* ecs;
     Path* f_path;
     Path* r_path;
-    Entity active_card;
 
     Game_Scene(Card_Game& card_game);
 
@@ -45,8 +44,6 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     void On_Client_Connected(Client_ID) override {}
 
     void On_Client_Disconnected(Client_ID) override {}
-
-    void Activate_Card(Entity card);
 
     Path* Get_Team_Path(int team) const;
 

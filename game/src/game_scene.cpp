@@ -12,8 +12,7 @@
 #include <raymath.h>
 
 Game_Scene::Game_Scene(Card_Game& card_game)
-    : Scene(card_game), card_game(card_game), active_card(tuple(nullptr, nullptr)),
-      time_until_income(0) {
+    : Scene(card_game), card_game(card_game), time_until_income(0) {
     EUI_HBox* root = new EUI_HBox();
     root_elem = root;
 
@@ -177,36 +176,43 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
     game_ui_manager->Update_UI(delta_time, card_game.eui_ctx);
 
     Card_Player* local_player = static_cast<Card_Player*>(game_manager->local_player);
-    if (get<0>(active_card) != nullptr) {
+    if (get<0>(local_player->active_card) != nullptr) {
         auto mouse_pos = card_game.eui_ctx->input.mouse_position;
         auto world_pos = GetScreenToWorld2D(mouse_pos, game_ui_manager->camera);
-        if (get<1>(active_card)->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
-            if (Can_Place_Tower(active_card, local_player->path, world_pos, 50))
+        if (get<1>(local_player->active_card)
+                ->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
+            if (Can_Place_Tower(local_player->active_card, local_player->path, world_pos, 50))
                 DrawCircle(mouse_pos.x, mouse_pos.y, 75, ColorAlpha(LIGHTGRAY, .3f));
             DrawCircle(mouse_pos.x, mouse_pos.y, 20, local_player->team ? RED : BLUE);
 
             if (!card_game.eui_ctx->input.left_mouse_down) {
                 // If the cursor is still over the card, cancel
                 if (!static_cast<Card_UI*>(
-                         game_ui_manager
-                             ->active_ui_objects[Entity_Array::Get_Entity_ID(active_card)])
+                         game_ui_manager->active_ui_objects[Entity_Array::Get_Entity_ID(
+                             local_player->active_card)])
                          ->is_hovered &&
-                    Can_Play_Card(local_player, active_card, Vector2(world_pos.x, world_pos.y)))
+                    Can_Play_Card(local_player, local_player->active_card,
+                                  Vector2(world_pos.x, world_pos.y)))
                     this->card_game.Get_Network()->call_game_rpc(
                         "playcard", local_player->player_id,
-                        Entity_Array::Get_Entity_ID(active_card), world_pos.x, world_pos.y);
-                active_card = tuple(nullptr, nullptr);
+                        Entity_Array::Get_Entity_ID(local_player->active_card), world_pos.x,
+                        world_pos.y);
+                local_player->active_card = tuple<unsigned char*, Entity_Array*>(nullptr, nullptr);
             }
-        } else if (get<0>(active_card) != nullptr && !card_game.eui_ctx->input.left_mouse_down) {
+        } else if (get<0>(local_player->active_card) != nullptr &&
+                   !card_game.eui_ctx->input.left_mouse_down) {
             // If the cursor is still over the card, cancel
             if (!static_cast<Card_UI*>(
-                     game_ui_manager->active_ui_objects[Entity_Array::Get_Entity_ID(active_card)])
+                     game_ui_manager->active_ui_objects[Entity_Array::Get_Entity_ID(
+                         local_player->active_card)])
                      ->is_hovered &&
-                Can_Play_Card(local_player, active_card, Vector2(world_pos.x, world_pos.y)))
+                Can_Play_Card(local_player, local_player->active_card,
+                              Vector2(world_pos.x, world_pos.y)))
                 this->card_game.Get_Network()->call_game_rpc(
-                    "playcard", local_player->player_id, Entity_Array::Get_Entity_ID(active_card),
-                    world_pos.x, world_pos.y);
-            active_card = tuple(nullptr, nullptr);
+                    "playcard", local_player->player_id,
+                    Entity_Array::Get_Entity_ID(local_player->active_card), world_pos.x,
+                    world_pos.y);
+            local_player->active_card = tuple<unsigned char*, Entity_Array*>(nullptr, nullptr);
         }
     }
 
@@ -228,10 +234,6 @@ void Game_Scene::On_Disconnected() {
 void Game_Scene::On_Server_Stop() {
     card_game.set_ui_screen(MENU);
     card_game.Close_Network();
-}
-
-void Game_Scene::Activate_Card(Entity card) {
-    active_card = card;
 }
 
 Path* Game_Scene::Get_Team_Path(int team) const {

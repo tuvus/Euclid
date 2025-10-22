@@ -9,9 +9,11 @@ class Card_Player : public Player {
     int money;
     Entity deck;
     Path* path;
+    Entity active_card;
 
     Card_Player(Client_ID client_id, Player_ID player_id, int team)
-        : Player(client_id, player_id), team(team), money(10), path(nullptr) {}
+        : Player(client_id, player_id), team(team), money(10), path(nullptr),
+          active_card(tuple(nullptr, nullptr)) {}
 
     Card_Player(Player_ID player_id, int team)
         : Player(player_id), team(team), money(10), path(nullptr) {}

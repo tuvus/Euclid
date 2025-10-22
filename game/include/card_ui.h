@@ -4,6 +4,8 @@
 #include "game_scene.h"
 #include "game_ui_manager.h"
 
+#include <raymath.h>
+
 class Card_UI : public Object_UI {
   public:
     bool is_hovered = false;
@@ -20,21 +22,22 @@ class Card_UI : public Object_UI {
         const float width = ui->texture->width * scale;
         const float height = ui->texture->height * scale;
 
+        Card_Player* local_player =
+            static_cast<Card_Player*>(game_ui_manager.game_manager.local_player);
         // Check for pointer events
-        // is_hovered = CheckCollisionPointRec(ctx->input.mouse_position,
-        // {pos.x, pos.y - height, width, height}) &&
-        // Can_Play_Card(entity,
-        // static_cast<Card_Player*>(game_ui_manager.game_manager.local_player),
-        // Vector2Zero());
-        // if (is_hovered && ctx->input.left_mouse_pressed) {
-        // object->game_scene.Activate_Card(object);
-        // }
+        is_hovered = CheckCollisionPointRec(ctx->input.mouse_position,
+                                            {pos.x, pos.y - height, width, height}) &&
+                     Can_Play_Card(local_player, entity, Vector2Zero());
+        if (is_hovered && ctx->input.left_mouse_pressed) {
+            local_player->active_card = entity;
+        }
 
-        // const Color color = (is_hovered && ->game_scene.active_card == nullptr) ||
-        // object->game_scene.active_card == object
-        // ? GRAY
-        // : BLACK;
-        const Color color = BLACK;
+        const Color color = (is_hovered && get<0>(local_player->active_card) == nullptr) ||
+                                    (get<0>(local_player->active_card) != nullptr &&
+                                     Entity_Array::Get_Entity_ID(local_player->active_card) ==
+                                         Entity_Array::Get_Entity_ID(entity))
+                                ? GRAY
+                                : BLACK;
 
         // Draw the card
         game_ui_manager.DrawScreenImage(

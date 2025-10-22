@@ -24,8 +24,7 @@ class Deck_UI : public Object_UI {
             auto* ui_component =
                 get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
             Card_UI* card_ui = static_cast<Card_UI*>(game_ui_manager.active_ui_objects[entity_id]);
-            float selected_offset =
-                card_player->Get_Deck()->game_scene->active_card == entity ? -40 : 0;
+            float selected_offset = card_player->active_card == entity ? -40 : 0;
             card_ui->Update_UI(
                 ctx,
                 Vector2(x_pos, game_ui_manager.game_manager.application.screen_height - 10 +
