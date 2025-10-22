@@ -16,6 +16,7 @@ void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* te
     auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
     transform->pos = pos;
     transform->rot = 0;
+    transform->scale = 1;
     tower->range = range;
     tower->team = team;
     ui->texture = texture;

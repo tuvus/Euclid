@@ -18,6 +18,7 @@ void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, float start_off
     unit->section = 0;
     unit->team = team;
     unit->spawned = true;
+    transform->scale = 1;
     ui->texture = texture;
     ui->scale = scale;
     ui->color = color;
