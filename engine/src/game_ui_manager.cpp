@@ -3,10 +3,11 @@
 
 Game_UI_Manager::Game_UI_Manager(Application& application, ECS& ecs, Game_Manager& game_manager)
     : application(application), ecs(ecs), game_manager(game_manager), camera{0} {
-    camera.target = {static_cast<float>(application.screen_width) / 2,
-                     static_cast<float>(application.screen_height) / 2};
-    camera.offset = {static_cast<float>(application.screen_width) / 2,
-                     static_cast<float>(application.screen_height) / 2};
+    // centers camera on the middle of the screen
+    Vector2 center = {static_cast<float>(application.screen_width) / 2,
+                      static_cast<float>(application.screen_height) / 2};
+    camera.target = center;
+    camera.offset = center;
     camera.rotation = 0;
     camera.zoom = 1.0f;
     active_ui_objects = unordered_map<Entity_ID, Object_UI*>();

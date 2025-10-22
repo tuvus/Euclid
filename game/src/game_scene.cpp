@@ -1,9 +1,10 @@
-#include "game_scene.h"
+#include <raylib.h>
 
 #include "base.h"
 #include "card.h"
 #include "card_player.h"
 #include "card_ui.h"
+#include "game_scene.h"
 #include "tower.h"
 #include "tower_card.h"
 #include "unit.h"
@@ -230,6 +231,15 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
 void Game_Scene::Update(std::chrono::milliseconds) {
     ecs->Update();
     game_manager->Update();
+
+    if (IsKeyDown(KEY_A))
+        game_ui_manager->camera.offset.x += 10;
+    if (IsKeyDown(KEY_D))
+        game_ui_manager->camera.offset.x -= 10;
+    if (IsKeyDown(KEY_W))
+        game_ui_manager->camera.offset.y += 10;
+    if (IsKeyDown(KEY_S))
+        game_ui_manager->camera.offset.y -= 10;
 }
 
 void Game_Scene::On_Disconnected() {

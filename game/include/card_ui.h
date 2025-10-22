@@ -1,4 +1,7 @@
 #pragma once
+
+#include <raylib.h>
+
 #include "card.h"
 #include "game_object_ui.h"
 #include "game_scene.h"
@@ -42,6 +45,7 @@ class Card_UI : public Object_UI {
         // Draw the card
         game_ui_manager.DrawScreenImage(
             *ui->texture, Vector2(pos.x + width / 2, pos.y - height / 2), 0, scale, ui->color);
+        const Font font = LoadFont("resources/Seagram.ttf");
         DrawText(card->card_data->name.c_str(), pos.x + 5, pos.y - height + 10, 20, color);
         DrawText(to_string(card->card_data->cost).c_str(), pos.x + width - 25, pos.y - height + 45,
                  20, color);

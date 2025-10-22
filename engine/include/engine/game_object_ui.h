@@ -1,4 +1,7 @@
 #pragma once
+
+
+#include "ui/eui.h"
 #include "ecs.h"
 
 class Object_UI {

@@ -79,6 +79,13 @@ class EUI_Context {
     EUI_Element* active = nullptr;
     EUI_Element* focused = nullptr;
 
+    // default_font_path is needed to correctly load the font after window initialization
+    // doing it this way allows the user to not have to load their default font specifically
+    // in the start_client method, which was unintuitive. instead, they set the path in
+    // the constructor of their application
+    // TODO: maybe better way to do this
+    std::string default_font_path;
+
     EUI_Style default_style = {
         .text_color = BLACK,
 
@@ -88,7 +95,6 @@ class EUI_Context {
         .border_color = BLACK,
         .border_radius = 0,
 
-        .font = GetFontDefault(),
         .font_size = 15,
         .font_spacing = 1,
 
