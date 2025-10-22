@@ -82,10 +82,13 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
             if (ranges::find(player->Get_Deck()->hand, entity_id) == player->Get_Deck()->hand.end())
                 return RPC_Manager::INVALID;
             Entity card = get<0>(ecs->entities_by_id[entity_id]);
-            if (!Can_Play_Card(player, card, Vector2(x, y)))
+            auto* card_component =
+                get<1>(card)->Get_Component<Card_Component>(card, &Card_Component::component_type);
+
+            if (!card_component->card_data->can_play_card(player, card, Vector2(x, y)))
                 return RPC_Manager::INVALID;
 
-            Play_Card(player, card, Vector2(x, y));
+            card_component->card_data->play_card(player, card, Vector2(x, y));
             return RPC_Manager::VALID_CALL_ON_CLIENTS;
         });
     card_game.Get_Network()->bind_rpc("discard", [this](Player_ID player_id, Entity_ID entity_id) {
@@ -106,14 +109,18 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ecs->Create_Entity_Type(Get_Base_Entity_Type()->components, nullptr);
 
     card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
-    card_datas.emplace_back(
-        new Card_Data{card_texture, "Send Units", "Sends 7 units to the opponent.", 5});
-    card_datas.emplace_back(
-        new Card_Data{card_texture, "Send Units", "Sends 11 units to the opponent.", 8});
-    card_datas.emplace_back(
-        new Card_Data{card_texture, "Send Units", "Sends 18 units to the opponent.", 12});
-    card_datas.emplace_back(
-        new Card_Data{card_texture, "Tower", "Places a tower that shoots opposing units.", 15});
+    card_datas.emplace_back(new Card_Data{card_texture, "Send Units",
+                                          "Sends 7 units to the opponent.", 5, Can_Play_Card,
+                                          Play_Unit_Card, Discard_Card});
+    card_datas.emplace_back(new Card_Data{card_texture, "Send Units",
+                                          "Sends 11 units to the opponent.", 8, Can_Play_Card,
+                                          Play_Unit_Card, Discard_Card});
+    card_datas.emplace_back(new Card_Data{card_texture, "Send Units",
+                                          "Sends 18 units to the opponent.", 12, Can_Play_Card,
+                                          Play_Unit_Card, Discard_Card});
+    card_datas.emplace_back(new Card_Data{card_texture, "Tower",
+                                          "Places a tower that shoots opposing units.", 15,
+                                          Can_Play_Tower_Card, Play_Tower_Card, Discard_Card});
 
     vector<Entity_ID> starting_cards{};
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
@@ -129,8 +136,8 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
                                                card_datas[2], {18, &unit_texture}, &card_texture, 1,
                                                WHITE));
     starting_cards.emplace_back(Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()),
-                                                card_datas[3], {0, true, 1, 90}, &card_texture, 1,
-                                                WHITE));
+                                                card_datas[3], {&tower_texture, 0, true, 1, 90},
+                                                &card_texture, 1, WHITE));
 
     for (auto player : game_manager->players) {
         Card_Player* card_player = static_cast<Card_Player*>(player);
@@ -172,7 +179,6 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
     }
     EndMode2D();
 
-    // Draw arrows
     game_ui_manager->Update_UI(delta_time, card_game.eui_ctx);
 
     Card_Player* local_player = static_cast<Card_Player*>(game_manager->local_player);

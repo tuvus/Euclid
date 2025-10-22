@@ -16,7 +16,7 @@ void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* te
     auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
     transform->pos = pos;
     transform->rot = 0;
-    transform->scale = 1;
+    transform->scale = .4;
     tower->range = range;
     tower->team = team;
     ui->texture = texture;
@@ -38,13 +38,9 @@ void Tower_Update(ECS* ecs, Entity entity) {
     Vector2 home = Vector2(tower->team == 0 ? ecs->application.screen_height : 0,
                            ecs->application.screen_width / 2);
 
-    auto components = vector<Component_Type*>();
-    components.emplace_back(&Transform_Component::component_type);
-    components.emplace_back(&Unit_Component::component_type);
-
     tuple<Entity, Transform_Component*, Unit_Component*, float> closest_unit =
         make_tuple(Entity{}, nullptr, nullptr, INT_MAX);
-    for (auto entity : ecs->Get_Entities_Of_Type(new Entity_Type(components))) {
+    for (auto entity : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
         Entity_ID other_id = get<1>(entity)->Get_Entity_Data(entity).id;
         if (other_id == entity_id)
             continue;

@@ -1,7 +1,6 @@
 #pragma once
 #include "card.h"
 #include "path.h"
-#include "tower.h"
 
 struct Tower_Card_Component {
     static Component_Type component_type;

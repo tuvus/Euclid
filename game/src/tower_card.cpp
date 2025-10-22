@@ -1,6 +1,7 @@
 #include "tower_card.h"
 
 #include "game_scene.h"
+#include "tower.h"
 
 #include <raymath.h>
 
@@ -12,6 +13,7 @@ Entity_ID Init_Tower_Card(Entity entity, Card_Data* card_data,
     Init_Card(entity, *card_data, texture, scale, color);
     auto* tower_card = std::get<1>(entity)->Get_Component<Tower_Card_Component>(
         entity, &Tower_Card_Component::component_type);
+    tower_card->tower_texture = tower_card_component.tower_texture;
     tower_card->team = tower_card_component.team;
     tower_card->spawned = true;
     tower_card->reload = tower_card_component.reload;
@@ -25,7 +27,7 @@ bool Can_Play_Tower_Card(Card_Player* card_player, Entity entity, Vector2 pos) {
 }
 
 bool Can_Place_Tower(Entity tower_card, Path* path, Vector2 pos, float min_dist) {
-    for (auto entity : get<1>(tower_card)->ecs.Get_Entities_Of_Type(Get_Tower_Card_Entity_Type())) {
+    for (auto entity : get<1>(tower_card)->ecs.Get_Entities_Of_Type(Get_Tower_Entity_Type())) {
         auto transform = get<1>(entity)->Get_Component<Transform_Component>(
             entity, &Transform_Component::component_type);
         if (Vector2Distance(pos, transform->pos) <= min_dist)

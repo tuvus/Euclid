@@ -21,6 +21,7 @@ void Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
     auto* card =
         get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
     player->money -= card->card_data->cost;
+    Discard_Card(player, entity);
 }
 
 void Discard_Card(Card_Player* player, Entity entity) {
