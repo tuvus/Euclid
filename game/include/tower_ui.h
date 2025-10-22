@@ -13,7 +13,7 @@ class Tower_UI : public Object_UI {
             entity, &Transform_Component::component_type);
         auto* ui =
             std::get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
-        game_ui_manager.DrawImage(ui->texture, transform->pos, transform->rot, transform->scale,
+        game_ui_manager.DrawImage(*ui->texture, transform->pos, transform->rot, transform->scale,
                                   ui->color);
     }
 };

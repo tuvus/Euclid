@@ -10,7 +10,8 @@ struct Tower_Component {
     float range;
 };
 
-void Init_Tower(Entity entity, Vector2 pos, float range, int team, float scale, Color color);
+void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* texture, float scale,
+                Color color);
 
 void Tower_Update(ECS* ecs, Entity entity);
 

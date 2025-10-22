@@ -20,7 +20,7 @@ struct Card_Component {
     Card_Data* card_data;
 };
 
-void Init_Card(Entity entity, Card_Data& card_data);
+void Init_Card(Entity entity, Card_Data& card_data, Texture2D* texture, float scale, Color color);
 
 bool Can_Play_Card(Card_Player*, Entity, Vector2);
 

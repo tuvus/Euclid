@@ -50,6 +50,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ecs = new ECS(application, seed);
     ecs->Register_System(new System(Get_Unit_Entity_Type(), Unit_Update));
     ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update));
+    ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update));
 
     vector<Vector2> positions = vector<Vector2>();
     static uniform_int_distribution<int> start_dist(-200, 200);
@@ -71,7 +72,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ranges::reverse(reversed);
     r_path = new Path(reversed);
 
-    game_ui_manager = make_unique<Game_UI_Manager>(card_game, *ecs);
+    game_ui_manager = make_unique<Game_UI_Manager>(card_game, *ecs, *game_manager);
     if (static_cast<Card_Player*>(game_manager->local_player)->team == 1) {
         game_ui_manager->camera.rotation = 180;
     }
@@ -105,7 +106,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ecs->Create_Entity_Type(Get_Tower_Card_Entity_Type()->components, Create_Card_UI);
     ecs->Create_Entity_Type(Get_Base_Entity_Type()->components, nullptr);
 
-    Texture2D card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
+    card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
     card_datas.emplace_back(
         new Card_Data{card_texture, "Send Units", "Sends 7 units to the opponent.", 5});
     card_datas.emplace_back(
@@ -117,15 +118,20 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
 
     vector<Entity_ID> starting_cards{};
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[0], {7, &unit_texture}));
+                                               card_datas[0], {7, &unit_texture}, &card_texture, 1,
+                                               WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[0], {7, &unit_texture}));
+                                               card_datas[0], {7, &unit_texture}, &card_texture, 1,
+                                               WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[1], {11, &unit_texture}));
+                                               card_datas[1], {11, &unit_texture}, &card_texture, 1,
+                                               WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[2], {18, &unit_texture}));
+                                               card_datas[2], {18, &unit_texture}, &card_texture, 1,
+                                               WHITE));
     starting_cards.emplace_back(Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()),
-                                                card_datas[3], {0, true, 1, 90}));
+                                                card_datas[3], {0, true, 1, 90}, &card_texture, 1,
+                                                WHITE));
 
     for (auto player : game_manager->players) {
         Card_Player* card_player = static_cast<Card_Player*>(player);
@@ -134,7 +140,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         card_player->path = Get_Team_Path(card_player->team);
 
         auto deck = ecs->Create_Entity(Get_Deck_Entity_Type());
-        Init_Deck(deck, card_player);
+        Init_Deck(deck, card_player, this);
         card_player->deck = deck;
         for (auto& card : starting_cards) {
             card_player->Get_Deck()->deck.emplace_back(

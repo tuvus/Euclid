@@ -5,6 +5,7 @@
 
 struct Tower_Card_Component {
     static Component_Type component_type;
+    Texture2D* tower_texture;
     int team;
     bool spawned;
     int reload;
@@ -12,7 +13,8 @@ struct Tower_Card_Component {
 };
 
 Entity_ID Init_Tower_Card(Entity entity, Card_Data* card_data,
-                          Tower_Card_Component tower_card_component);
+                          Tower_Card_Component tower_card_component, Texture2D* texture,
+                          float scale, Color color);
 
 bool Can_Play_Tower_Card(Card_Player* card_player, Entity entity, Vector2 pos);
 

@@ -17,8 +17,8 @@ class Card_UI : public Object_UI {
             std::get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
         auto* card = std::get<1>(entity)->Get_Component<Card_Component>(
             entity, &Card_Component::component_type);
-        const float width = ui->texture.width * scale;
-        const float height = ui->texture.height * scale;
+        const float width = ui->texture->width * scale;
+        const float height = ui->texture->height * scale;
 
         // Check for pointer events
         // is_hovered = CheckCollisionPointRec(ctx->input.mouse_position,
@@ -36,8 +36,8 @@ class Card_UI : public Object_UI {
         // : BLACK;
 
         // Draw the card
-        game_ui_manager.DrawScreenImage(ui->texture, Vector2(pos.x + width / 2, pos.y - height / 2),
-                                        0, scale, ui->color);
+        game_ui_manager.DrawScreenImage(
+            *ui->texture, Vector2(pos.x + width / 2, pos.y - height / 2), 0, scale, ui->color);
         DrawText(card->card_data->name.c_str(), pos.x + 5, pos.y - height + 10, 20, ui->color);
         DrawText(to_string(card->card_data->cost).c_str(), pos.x + width - 25, pos.y - height + 45,
                  20, ui->color);

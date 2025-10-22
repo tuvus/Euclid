@@ -12,11 +12,15 @@ void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, float start_off
         get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
         entity, &Transform_Component::component_type);
+    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
     unit->path = path;
     unit->speed = speed;
     unit->section = 0;
     unit->team = team;
     unit->spawned = true;
+    ui->texture = texture;
+    ui->scale = scale;
+    ui->color = color;
     Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity).id, start_offset);
 }
 

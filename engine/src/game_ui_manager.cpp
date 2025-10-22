@@ -1,9 +1,8 @@
 #include "game_ui_manager.h"
 #include "game_object_ui.h"
 
-Game_UI_Manager::Game_UI_Manager(Application& application, ECS& ecs)
-    : application(application), ecs(ecs) {
-    camera = {0};
+Game_UI_Manager::Game_UI_Manager(Application& application, ECS& ecs, Game_Manager& game_manager)
+    : application(application), ecs(ecs), game_manager(game_manager), camera{0} {
     camera.target = {static_cast<float>(application.screen_width) / 2,
                      static_cast<float>(application.screen_height) / 2};
     camera.offset = {static_cast<float>(application.screen_width) / 2,
@@ -15,7 +14,7 @@ Game_UI_Manager::Game_UI_Manager(Application& application, ECS& ecs)
     to_delete = unordered_set<Entity_ID>();
     game_ui_manager_instance = this;
     ecs.on_add_entity = [](Entity_ID id) { game_ui_manager_instance->On_Create_Object(id); };
-    ecs.on_add_entity = [](Entity_ID id) { game_ui_manager_instance->On_Delete_Object(id); };
+    ecs.on_delete_entity = [](Entity_ID id) { game_ui_manager_instance->On_Delete_Object(id); };
 }
 
 void Game_UI_Manager::Update_UI(std::chrono::milliseconds delta_time, EUI_Context* eui_ctx) {
@@ -23,7 +22,10 @@ void Game_UI_Manager::Update_UI(std::chrono::milliseconds delta_time, EUI_Contex
         if (to_delete.contains(id))
             continue;
         Entity entity = get<0>(ecs.entities_by_id[id]);
-        Object_UI* new_object_ui = get<1>(entity)->entity_type.ui_creation_function(entity, *this);
+        Entity_Type* entity_type = &get<1>(entity)->entity_type;
+        if (entity_type->ui_creation_function == nullptr)
+            continue;
+        Object_UI* new_object_ui = entity_type->ui_creation_function(entity, *this);
         if (new_object_ui == nullptr)
             continue;
         active_ui_objects.emplace(id, new_object_ui);

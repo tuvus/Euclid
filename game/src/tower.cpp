@@ -7,15 +7,20 @@
 #include <climits>
 #include <raymath.h>
 
-void Init_Tower(Entity entity, Vector2 pos, float range, int team, float scale, Color color) {
+void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* texture, float scale,
+                Color color) {
     auto* tower =
         get<1>(entity)->Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
         entity, &Transform_Component::component_type);
+    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
     transform->pos = pos;
     transform->rot = 0;
     tower->range = range;
     tower->team = team;
+    ui->texture = texture;
+    ui->scale = scale;
+    ui->color = color;
 }
 
 void Tower_Update(ECS* ecs, Entity entity) {

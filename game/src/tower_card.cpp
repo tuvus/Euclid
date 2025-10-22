@@ -7,8 +7,9 @@
 using namespace std;
 
 Entity_ID Init_Tower_Card(Entity entity, Card_Data* card_data,
-                          Tower_Card_Component tower_card_component) {
-    Init_Card(entity, *card_data);
+                          Tower_Card_Component tower_card_component, Texture2D* texture,
+                          float scale, Color color) {
+    Init_Card(entity, *card_data, texture, scale, color);
     auto* tower_card = std::get<1>(entity)->Get_Component<Tower_Card_Component>(
         entity, &Tower_Card_Component::component_type);
     tower_card->team = tower_card_component.team;
@@ -39,9 +40,11 @@ bool Can_Place_Tower(Entity tower_card, Path* path, Vector2 pos, float min_dist)
 
 void Play_Tower_Card(Card_Player* player, Entity entity, Vector2 pos) {
     Play_Card(player, entity, pos);
+    auto* tower_card = std::get<1>(entity)->Get_Component<Tower_Card_Component>(
+        entity, &Tower_Card_Component::component_type);
     auto tower = get<1>(entity)->ecs.Create_Entity(Get_Tower_Entity_Type());
-    Init_Tower(tower, Vector2(pos.x, pos.y), 150, player->team, .4f,
-               Game_Scene::Get_Team_Color(player->team));
+    Init_Tower(tower, Vector2(pos.x, pos.y), tower_card->range, player->team,
+               tower_card->tower_texture, .4f, Game_Scene::Get_Team_Color(player->team));
 }
 
 Entity_Type* Get_Tower_Card_Entity_Type() {

@@ -3,6 +3,7 @@
 #include "card_player.h"
 #include "path.h"
 #include "tower_card.h"
+#include "unit_card.h"
 
 #include <random>
 #include <raymath.h>
@@ -26,10 +27,10 @@ void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, Path* path,
     base->time_until_income = 0;
 }
 
-void Update_Base(ECS* ecs, Entity entity) {
+void Base_Update(ECS* ecs, Entity entity) {
     auto base =
         get<1>(entity)->Get_Component<Base_Component>(entity, &Base_Component::component_type);
-    if (--base->time_until_income == 0) {
+    if (--base->time_until_income <= 0) {
         base->card_player->money++;
         base->time_until_income = 40;
     }
@@ -44,6 +45,8 @@ void Update_Base(ECS* ecs, Entity entity) {
         int card_to_play = hand_dist(ecs->random);
         Entity card_entity =
             get<0>(ecs->entities_by_id[base->card_player->Get_Deck()->hand[card_to_play]]);
+        if (get<0>(card_entity) == nullptr)
+            return;
         auto card =
             get<1>(card_entity)
                 ->Get_Component<Card_Component>(card_entity, &Card_Component::component_type);
@@ -55,13 +58,13 @@ void Update_Base(ECS* ecs, Entity entity) {
                 Vector2 r_pos = Vector2(pos.x + 50 + abs(tiny_offset(ecs->random)),
                                         pos.y + tiny_offset(ecs->random));
                 if (Can_Play_Card(base->card_player, card_entity, r_pos)) {
-                    Play_Card(base->card_player, card_entity, r_pos);
+                    Play_Tower_Card(base->card_player, card_entity, r_pos);
                     break;
                 }
                 Vector2 l_pos = Vector2(pos.x - 50 - abs(tiny_offset(ecs->random)),
                                         pos.y + tiny_offset(ecs->random));
                 if (Can_Play_Card(base->card_player, card_entity, l_pos)) {
-                    Play_Card(base->card_player, card_entity, l_pos);
+                    Play_Tower_Card(base->card_player, card_entity, l_pos);
                     break;
                 }
             }
@@ -75,7 +78,7 @@ void Update_Base(ECS* ecs, Entity entity) {
             }
 
         } else if (Can_Play_Card(base->card_player, card_entity, Vector2Zero())) {
-            Play_Card(base->card_player, card_entity, Vector2Zero());
+            Play_Unit_Card(base->card_player, card_entity, Vector2Zero());
         }
     }
 }

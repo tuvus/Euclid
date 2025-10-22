@@ -4,6 +4,7 @@
 #include <deque>
 #include <vector>
 
+class Game_Scene;
 class Deck_UI;
 class Card;
 class Card_Player;
@@ -11,12 +12,13 @@ class Card_Player;
 struct Deck_Component {
     static Component_Type component_type;
     Card_Player* player;
+    Game_Scene* game_scene;
     std::deque<Entity_ID> deck;
     std::vector<Entity_ID> hand;
     std::vector<Entity_ID> discard;
 };
 
-void Init_Deck(Entity entity, Card_Player* player);
+void Init_Deck(Entity entity, Card_Player* player, Game_Scene* game_scene);
 
 void Draw_Card(Entity entity, int cards = 1);
 void Shuffle_Discard_Into_Deck(Entity entity);

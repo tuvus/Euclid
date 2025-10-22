@@ -16,6 +16,6 @@ struct Base_Component {
 void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, Path* path,
                int base_income_speed, int max_health);
 
-void Update_Base(ECS* ecs, Entity entity);
+void Base_Update(ECS* ecs, Entity entity);
 
 Entity_Type* Get_Base_Entity_Type();

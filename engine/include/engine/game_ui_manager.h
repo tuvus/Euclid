@@ -8,7 +8,7 @@ class Object_UI;
 
 struct UI_Component {
     static Component_Type component_type;
-    Texture2D texture;
+    Texture2D* texture;
     float scale;
     Color color;
 };
@@ -25,11 +25,12 @@ class Game_UI_Manager {
   public:
     Application& application;
     ECS& ecs;
+    Game_Manager& game_manager;
     std::unordered_map<Entity_ID, Object_UI*> active_ui_objects;
 
     Camera2D camera;
 
-    Game_UI_Manager(Application& application, ECS& ecs);
+    Game_UI_Manager(Application& application, ECS& ecs, Game_Manager& game_manager);
 
     void Update_UI(std::chrono::milliseconds delta_time, EUI_Context* eui_ctx);
 

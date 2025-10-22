@@ -3,13 +3,14 @@
 
 #include <algorithm>
 
-void Init_Deck(Entity entity, Card_Player* player) {
+void Init_Deck(Entity entity, Card_Player* player, Game_Scene* game_scene) {
     auto deck =
         std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
     deck->player = player;
     deck->deck = std::deque<Entity_ID>();
     deck->hand = std::vector<Entity_ID>();
     deck->discard = std::vector<Entity_ID>();
+    deck->game_scene = game_scene;
 }
 
 void Draw_Card(Entity entity, int cards) {

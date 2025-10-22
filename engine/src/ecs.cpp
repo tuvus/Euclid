@@ -139,6 +139,11 @@ ECS::ECS(Application& application, long seed) : application(application) {
 }
 
 void ECS::Update() {
+    for (Entity_ID entity_id : to_create) {
+        if (on_add_entity != nullptr)
+            on_add_entity(entity_id);
+    }
+    to_create.clear();
     for (auto system : systems) {
         Apply_Function_To_Entities(system->entity_type, system->function);
     }
@@ -148,6 +153,8 @@ void ECS::Update() {
         auto [entity, index] = entities_by_id[entity_id];
         entities_by_id.erase(entity_id);
         get<1>(entity)->Delete_Entity(this, index);
+        if (on_delete_entity)
+            on_delete_entity(entity_id);
     }
     to_delete.clear();
 }
@@ -175,22 +182,22 @@ Entity ECS::Create_Entity(Entity_Type* entity_type) {
     Entity_ID id = next_id++;
     auto [entity, index] = e_array->Create_Entity(this, id);
     entities_by_id.emplace(id, tuple(tuple(entity, e_array), index));
-    if (on_add_entity != nullptr)
-        on_add_entity(id);
+    to_create.emplace_back(id);
     return tuple(entity, e_array);
 }
 
-std::tuple<unsigned char*, Entity_Array*> ECS::Copy_Entity(Entity_ID entity_id) {
+Entity ECS::Copy_Entity(Entity_ID entity_id) {
     auto [old_entity, old_entity_index] = entities_by_id[entity_id];
-    auto [new_entity, new_entity_index] = get<1>(old_entity)->Create_Entity(this, next_id++);
+    Entity_ID id = next_id++;
+    auto [new_entity, new_entity_index] = get<1>(old_entity)->Create_Entity(this, id);
     get<1>(old_entity)->Copy_Entity(old_entity_index, new_entity_index);
+    entities_by_id.emplace(id, tuple(tuple(new_entity, get<1>(old_entity)), new_entity_index));
+    to_create.emplace_back(id);
     return make_tuple(new_entity, get<1>(old_entity));
 }
 
 void ECS::Delete_Entity(Entity_ID entity_id) {
     to_delete.emplace_back(entity_id);
-    if (on_delete_entity)
-        on_delete_entity(entity_id);
 }
 
 void ECS::Apply_Function_To_Entities(Entity_Type* entity_type,

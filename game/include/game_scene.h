@@ -17,6 +17,7 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     int time_until_income;
     Texture2D unit_texture;
     Texture2D tower_texture;
+    Texture2D card_texture;
     vector<Card_Data*> card_datas;
 
   public:
