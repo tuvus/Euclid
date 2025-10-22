@@ -57,14 +57,14 @@ void Base_Update(ECS* ecs, Entity entity) {
                 static uniform_int_distribution<int> tiny_offset(-20, 20);
                 Vector2 r_pos = Vector2(pos.x + 50 + abs(tiny_offset(ecs->random)),
                                         pos.y + tiny_offset(ecs->random));
-                if (Can_Play_Card(base->card_player, card_entity, r_pos)) {
-                    Play_Tower_Card(base->card_player, card_entity, r_pos);
+                if (card->card_data->can_play_card(base->card_player, card_entity, r_pos)) {
+                    card->card_data->play_card(base->card_player, card_entity, r_pos);
                     break;
                 }
                 Vector2 l_pos = Vector2(pos.x - 50 - abs(tiny_offset(ecs->random)),
                                         pos.y + tiny_offset(ecs->random));
-                if (Can_Play_Card(base->card_player, card_entity, l_pos)) {
-                    Play_Tower_Card(base->card_player, card_entity, l_pos);
+                if (card->card_data->can_play_card(base->card_player, card_entity, l_pos)) {
+                    card->card_data->play_card(base->card_player, card_entity, l_pos);
                     break;
                 }
             }
@@ -74,11 +74,11 @@ void Base_Update(ECS* ecs, Entity entity) {
                 base->card_player->Get_Deck()->hand[card_to_play] ==
                     Entity_Array::Get_Entity_Data(card_entity).id &&
                 base->card_player->money >= card->card_data->cost) {
-                Discard_Card(base->card_player, card_entity);
+                card->card_data->discard_card(base->card_player, card_entity);
             }
 
-        } else if (Can_Play_Card(base->card_player, card_entity, Vector2Zero())) {
-            Play_Unit_Card(base->card_player, card_entity, Vector2Zero());
+        } else if (card->card_data->can_play_card(base->card_player, card_entity, Vector2Zero())) {
+            card->card_data->play_card(base->card_player, card_entity, Vector2Zero());
         }
     }
 }
