@@ -17,8 +17,9 @@ enum class Layout_Model { Horizontal, Vertical };
 
 class Size {
   public:
-    static constexpr float Fit = -1;
-    static constexpr float Grow = -2;
+    static constexpr float Fit() { return -1; };
+    // TODO: add ratio to grow sizing
+    static constexpr float Grow() { return -2; };
 };
 
 enum class Alignment { Start, Center, End, Stretch };
