@@ -31,6 +31,7 @@ void Application::Start_Headless() {
 
 void Application::Start_Client() {
     // Clients can be both host and player or just a player
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screen_width, screen_height, application_name.c_str());
     if (eui_ctx->default_font_path.empty()) {
         eui_ctx->default_style.font = GetFontDefault();

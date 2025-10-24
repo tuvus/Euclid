@@ -8,7 +8,7 @@ Lobby_Scene::Lobby_Scene(Card_Game& card_game)
     auto* root = new EUI_VBox();
     root_elem = root;
     root->pos = {0, 0};
-    root->dim = {SCREEN_WIDTH, SCREEN_HEIGHT};
+    root->dim = {float(GetScreenWidth()), float(GetScreenHeight())};
     root->style.vertical_alignment = Alignment::Center;
     root->style.horizontal_alignment = Alignment::Center;
     root->gap = 20;

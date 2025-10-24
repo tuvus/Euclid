@@ -11,8 +11,8 @@ using namespace std;
 
 #define GRID_W 16
 #define GRID_H 9
-#define SCREEN_WIDTH 1920
-#define SCREEN_HEIGHT 1080
+#define DEFAULT_SCREEN_WIDTH 1280
+#define DEFAULT_SCREEN_HEIGHT 720
 #define TITLE_FONT_SIZE 24
 
 enum SCREEN { MENU, LOBBY, GAME };
@@ -30,7 +30,8 @@ class Card_Game : public Application {
     void Start_Client() override;
 
   public:
-    Card_Game(bool client) : Application("CARD GAME", client, SCREEN_WIDTH, SCREEN_HEIGHT) {
+    Card_Game(bool client)
+        : Application("CARD GAME", client, DEFAULT_SCREEN_WIDTH, DEFAULT_SCREEN_HEIGHT) {
         scene = nullptr;
         eui_ctx->default_font_path = "resources/Seagram.ttf";
     }
