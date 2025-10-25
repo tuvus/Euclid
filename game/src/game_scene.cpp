@@ -11,7 +11,7 @@
 
 Game_Scene::Game_Scene(Card_Game& card_game)
     : Scene(card_game), card_game(card_game), active_card(nullptr), time_until_income(0) {
-    EUI_HBox* root = new EUI_HBox();
+    EUI_Box* root = new EUI_Box();
     root_elem = root;
 
     root->pos = {0, 0};

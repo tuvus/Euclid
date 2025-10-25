@@ -28,8 +28,11 @@ void EUI_Context::Begin_Frame() {
 void EUI_Context::End_Frame() {
 }
 void EUI_Context::Perform_Layout() {
-    if (root)
-        root->Layout();
+    if (root) {
+        root->Size();
+        root->Grow();
+        root->Place();
+    }
 }
 void EUI_Context::Handle_Input() {
     if (root)

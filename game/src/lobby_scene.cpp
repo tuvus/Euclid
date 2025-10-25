@@ -1,11 +1,10 @@
 #include "lobby_scene.h"
-
 #include "card_player.h"
 #include "game_scene.h"
 
 Lobby_Scene::Lobby_Scene(Card_Game& card_game)
     : Scene(card_game), card_game(card_game), player_id_count(0), player_count(0) {
-    auto* root = new EUI_VBox();
+    auto* root = new EUI_Box(true);
     root_elem = root;
     root->pos = {0, 0};
     root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};

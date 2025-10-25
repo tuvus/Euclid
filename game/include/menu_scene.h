@@ -6,7 +6,7 @@
 class Menu_Scene : public Scene {
   public:
     Menu_Scene(Card_Game& card_game) : Scene(card_game) {
-        EUI_VBox* root = new EUI_VBox();
+        EUI_Box* root = new EUI_Box(true);
         root_elem = root;
         root->pos = {0, 0};
         root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};

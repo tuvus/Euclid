@@ -12,18 +12,30 @@ EUI_Text::EUI_Text(const std::string& text) : text(text) {
     text_vertical_alignment = Alignment::Start;
 }
 
-void EUI_Text::Layout() {
+void EUI_Text::Size() {
     Vector2 text_size =
         MeasureTextEx(Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
 
-    // calculate preferred size
-    float width = std::max(text_size.x + padding.left + padding.right, preferred_size.x);
-    float height = std::max(text_size.y + padding.top + padding.bottom, preferred_size.y);
-    preferred_size = {width, height};
+    // min size is text and padding
+    min_size = {text_size.x + padding.left + padding.right,
+                text_size.y + padding.top + padding.bottom};
 
-    min_size = {text_size.x, text_size.y};
+    // set size to min size or fixed set size only if its larger
+    if (size.x != Size::Grow()) {
+        size.x = std::max(min_size.x, size.x);
+    }
+    if (size.y != Size::Grow()) {
+        size.y = std::max(min_size.y, size.y);
+    };
+
     // TODO: what should this be...
     max_size = {9999, 9999};
+}
+
+void EUI_Text::Grow() {
+}
+
+void EUI_Text::Place() {
 }
 
 void EUI_Text::Handle_Input() {
@@ -81,6 +93,9 @@ void EUI_Text::Set_Text(const std::string& text) {
     this->text = text;
 
     // recalculate size
-    if (ctx && parent)
-        parent->Layout();
+    if (ctx && parent) {
+        parent->Size();
+        parent->Grow();
+        parent->Place();
+    }
 }

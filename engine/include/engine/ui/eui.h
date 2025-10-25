@@ -98,7 +98,7 @@ class EUI_Element {
     EUI_Element* parent = nullptr;
 
     Vector2 pos = {0};
-    Vector2 size = {Size::Fit, Size::Fit};
+    Vector2 size = {Size::Fit(), Size::Fit()};
     Vector2 min_size, max_size, preferred_size;
 
     bool is_visible = true;
@@ -140,20 +140,26 @@ class EUI_Element {
     virtual void Set_Context(EUI_Context& ctx);
     virtual void Delete() { is_deleted = true; }
 
-    virtual void Layout() = 0;
+    // layout
+    virtual void Size() = 0;
+    virtual void Grow() = 0;
+    virtual void Place() = 0;
+
     virtual void Handle_Input() = 0;
     virtual void Render() = 0;
 
     virtual bool Is_Container() const { return false; };
 };
 
-class EUI_Container : public EUI_Element {
+class EUI_Box : public EUI_Element {
   protected:
-    EUI_Container(Layout_Model lm) : layout_model(lm) {}
     std::vector<EUI_Element*> children;
 
   public:
-    ~EUI_Container() override;
+    EUI_Box() : layout_model(Layout_Model::Horizontal) {}
+    EUI_Box(bool vertical)
+        : layout_model(vertical ? Layout_Model::Vertical : Layout_Model::Horizontal) {}
+    ~EUI_Box() override;
 
     Layout_Model layout_model;
 
@@ -165,25 +171,14 @@ class EUI_Container : public EUI_Element {
     void Set_Context(EUI_Context& ctx) override;
     void Delete() override;
 
-    virtual void Layout() override = 0;
+    void Size() override;
+    void Grow() override;
+    void Place() override;
+
     void Handle_Input() override;
     void Render() override;
 
     bool Is_Container() const override { return true; }
-};
-
-class EUI_VBox : public EUI_Container {
-  public:
-    EUI_VBox() : EUI_Container(Layout_Model::Vertical) {}
-
-    void Layout() override;
-};
-
-class EUI_HBox : public EUI_Container {
-  public:
-    EUI_HBox() : EUI_Container(Layout_Model::Horizontal) {}
-
-    void Layout() override;
 };
 
 class EUI_Text : public EUI_Element {
@@ -195,7 +190,10 @@ class EUI_Text : public EUI_Element {
 
     Vector2 text_pos;
 
-    void Layout() override;
+    void Size() override;
+    void Grow() override;
+    void Place() override;
+
     void Handle_Input() override;
     void Render() override;
 
