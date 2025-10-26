@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, Path* path,
+void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, vector<Path*> paths,
                int base_income_speed, int max_health) {
     auto transform = get<1>(entity)->Get_Component<Transform_Component>(
         entity, &Transform_Component::component_type);
@@ -20,7 +20,7 @@ void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, Path* path,
     transform->rot = 0;
     transform->scale = 1;
     base->card_player = card_player;
-    base->path = path;
+    base->paths = paths;
     base->base_income_speed = base_income_speed;
     base->max_health = max_health;
     base->health = max_health;
@@ -51,35 +51,49 @@ void Base_Update(ECS* ecs, Entity entity) {
             get<1>(card_entity)
                 ->Get_Component<Card_Component>(card_entity, &Card_Component::component_type);
         if (get<1>(card_entity)->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
-            int i = 0;
-            for (auto pos : base->path->positions) {
-                i++;
-                static uniform_int_distribution<int> tiny_offset(-20, 20);
-                Vector2 r_pos = Vector2(pos.x + 50 + abs(tiny_offset(ecs->random)),
-                                        pos.y + tiny_offset(ecs->random));
-                if (card->card_data->can_play_card(base->card_player, card_entity, r_pos)) {
-                    card->card_data->play_card(base->card_player, card_entity, r_pos);
-                    break;
-                }
-                Vector2 l_pos = Vector2(pos.x - 50 - abs(tiny_offset(ecs->random)),
-                                        pos.y + tiny_offset(ecs->random));
-                if (card->card_data->can_play_card(base->card_player, card_entity, l_pos)) {
-                    card->card_data->play_card(base->card_player, card_entity, l_pos);
-                    break;
-                }
-            }
-
-            // If we couldn't play the card due to lack of open positions discard it
-            if (base->card_player->Get_Deck()->hand.size() > card_to_play &&
-                base->card_player->Get_Deck()->hand[card_to_play] ==
-                    Entity_Array::Get_Entity_Data(card_entity).id &&
-                base->card_player->money >= card->card_data->cost) {
-                card->card_data->discard_card(base->card_player, card_entity);
-            }
-
+            Try_Placing_Tower(ecs, card_to_play, card_entity, card, base);
         } else if (card->card_data->can_play_card(base->card_player, card_entity, Vector2Zero())) {
-            card->card_data->play_card(base->card_player, card_entity, Vector2Zero());
+            static uniform_int_distribution<int> path_selector(0, INT_MAX);
+            Vector2 pos =
+                base->paths[path_selector(ecs->random) % base->paths.size()]->positions[0];
+            card->card_data->play_card(base->card_player, card_entity, pos);
         }
+    }
+}
+
+void Try_Placing_Tower(ECS* ecs, int card_index, Entity card_entity, Card_Component* card,
+                       Base_Component* base) {
+    int max_path_length = 0;
+    for (auto path1 : base->paths) {
+        max_path_length = max(max_path_length, static_cast<int>(path1->positions.size()));
+    }
+    for (int i = 0; i < max_path_length; i++) {
+        for (auto path : base->paths) {
+            if (path->positions.size() <= i)
+                continue;
+            Vector2 pos = path->positions[i];
+            static uniform_int_distribution<int> tiny_offset(-20, 20);
+            Vector2 r_pos = Vector2(pos.x + 50 + abs(tiny_offset(ecs->random)),
+                                    pos.y + tiny_offset(ecs->random));
+            if (card->card_data->can_play_card(base->card_player, card_entity, r_pos)) {
+                card->card_data->play_card(base->card_player, card_entity, r_pos);
+                return;
+            }
+            Vector2 l_pos = Vector2(pos.x - 50 - abs(tiny_offset(ecs->random)),
+                                    pos.y + tiny_offset(ecs->random));
+            if (card->card_data->can_play_card(base->card_player, card_entity, l_pos)) {
+                card->card_data->play_card(base->card_player, card_entity, l_pos);
+                return;
+            }
+        }
+    }
+
+    // If we couldn't play the card due to lack of open positions discard it
+    if (base->card_player->Get_Deck()->hand.size() > card_index &&
+        base->card_player->Get_Deck()->hand[card_index] ==
+            Entity_Array::Get_Entity_Data(card_entity).id &&
+        base->card_player->money >= card->card_data->cost) {
+        card->card_data->discard_card(base->card_player, card_entity);
     }
 }
 

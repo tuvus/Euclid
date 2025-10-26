@@ -43,7 +43,8 @@ Game_Scene::~Game_Scene() {
             static_cast<Network_Events_Receiver*>(this));
 }
 
-void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long seed) {
+void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long seed,
+                             int num_paths) {
     ranges::sort(players, [](Player* a, Player* b) { return a->player_id <= b->player_id; });
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
@@ -52,25 +53,31 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update));
     ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update));
 
-    vector<Vector2> positions = vector<Vector2>();
-    static uniform_int_distribution<int> start_dist(-200, 200);
-    positions.emplace_back(start_dist(game_manager->random) + card_game.screen_width / 2,
-                           card_game.screen_height - 80);
+    for (int p = 0; p < 5; p++) {
+        int pathx_offset = ((p + 1) / 2) * 220;
+        if (p % 2 == 1)
+            pathx_offset *= -1;
+        vector<Vector2> positions = vector<Vector2>();
+        static uniform_int_distribution<int> start_dist(-80, 80);
+        positions.emplace_back(start_dist(game_manager->random) + pathx_offset,
+                               card_game.screen_height - 80);
+        while (positions[positions.size() - 1].y > 80) {
+            Vector2 prev_pos = positions[positions.size() - 1];
+            prev_pos.x -= pathx_offset;
+            static uniform_int_distribution<int> move_dist(-40, 40);
+            int new_x = max(min((int) prev_pos.x + move_dist(game_manager->random), 100), 0);
+            static uniform_int_distribution<int> forward_dist(20, 40);
+            positions.emplace_back(new_x + pathx_offset,
+                                   prev_pos.y - forward_dist(game_manager->random));
+        }
 
-    while (positions[positions.size() - 1].y > 80) {
-        Vector2 prev_pos = positions[positions.size() - 1];
-        static uniform_int_distribution<int> move_dist(-40, 40);
-        int new_x = max(min((int) prev_pos.x + move_dist(game_manager->random),
-                            static_cast<int>(card_game.screen_width - 100)),
-                        100);
-        static uniform_int_distribution<int> forward_dist(20, 40);
-        positions.emplace_back(new_x, prev_pos.y - forward_dist(game_manager->random));
+        auto f_path = new Path(positions);
+        vector<Vector2> reversed = vector<Vector2>(positions);
+        ranges::reverse(reversed);
+        auto r_path = new Path(reversed);
+        f_paths.emplace_back(f_path);
+        r_paths.emplace_back(r_path);
     }
-
-    f_path = new Path(positions);
-    vector<Vector2> reversed = vector<Vector2>(positions);
-    ranges::reverse(reversed);
-    r_path = new Path(reversed);
 
     game_ui_manager = make_unique<Game_UI_Manager>(card_game, *ecs, *game_manager);
     if (static_cast<Card_Player*>(game_manager->local_player)->team == 1) {
@@ -144,7 +151,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         Card_Player* card_player = static_cast<Card_Player*>(player);
         if (card_player->team == -1)
             continue;
-        card_player->path = Get_Team_Path(card_player->team);
+        card_player->paths = Get_Team_Paths(card_player->team);
 
         auto deck = ecs->Create_Entity(Get_Deck_Entity_Type());
         Init_Deck(deck, card_player, this);
@@ -156,8 +163,8 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         Shuffle_Deck(card_player->deck);
         Draw_Card(card_player->deck, 3);
         Entity base = ecs->Create_Entity(Get_Base_Entity_Type());
-        Init_Base(base, card_player, Get_Team_Path(card_player->team)->positions[0],
-                  Get_Team_Path(card_player->team), 20, 100);
+        Init_Base(base, card_player, Get_Team_Paths(card_player->team)[0]->positions[0],
+                  Get_Team_Paths(card_player->team), 20, 100);
     }
 
     for (Entity_ID starting_card : starting_cards) {
@@ -171,12 +178,14 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
 void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
     BeginMode2D(game_ui_manager->camera);
     // Visualize path
-    Vector2 past_pos = Vector2One() * -1;
-    for (const auto& pos : f_path->positions) {
-        if (past_pos != Vector2One() * -1)
-            DrawLineEx(past_pos, pos, 40, DARKGRAY);
-        DrawCircle(pos.x, pos.y, 20, DARKGRAY);
-        past_pos = pos;
+    for (auto f_path : f_paths) {
+        Vector2 past_pos = Vector2One() * -1;
+        for (const auto& pos : f_path->positions) {
+            if (past_pos != Vector2One() * -1)
+                DrawLineEx(past_pos, pos, 40, DARKGRAY);
+            DrawCircle(pos.x, pos.y, 20, DARKGRAY);
+            past_pos = pos;
+        }
     }
     EndMode2D();
 
@@ -188,7 +197,7 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
         auto world_pos = GetScreenToWorld2D(mouse_pos, game_ui_manager->camera);
         if (get<1>(local_player->active_card)
                 ->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
-            if (Can_Place_Tower(local_player->active_card, local_player->path, world_pos, 50))
+            if (Can_Place_Tower(local_player->active_card, local_player->paths, world_pos, 50))
                 DrawCircle(mouse_pos.x, mouse_pos.y, 75, ColorAlpha(LIGHTGRAY, .3f));
             DrawCircle(mouse_pos.x, mouse_pos.y, 20, local_player->team ? RED : BLUE);
 
@@ -252,8 +261,8 @@ void Game_Scene::On_Server_Stop() {
     card_game.Close_Network();
 }
 
-Path* Game_Scene::Get_Team_Path(int team) const {
-    return team == 0 ? f_path : r_path;
+vector<Path*> Game_Scene::Get_Team_Paths(int team) const {
+    return team == 0 ? f_paths : r_paths;
 }
 
 Color Game_Scene::Get_Team_Color(int team) {

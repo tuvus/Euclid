@@ -39,7 +39,7 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
         float new_dist_to_move = dist_to_move - dist * (1 - unit->lerp);
         unit->lerp += dist_to_move / dist;
         dist_to_move = new_dist_to_move;
-        if (unit->lerp > 1) {
+        if (unit->lerp >= 1) {
             unit->lerp = 0;
             unit->section++;
         }

@@ -8,6 +8,7 @@ Game_UI_Manager::Game_UI_Manager(Application& application, ECS& ecs, Game_Manage
                       static_cast<float>(application.screen_height) / 2};
     camera.target = center;
     camera.offset = center;
+    camera.target.x = 0;
     camera.rotation = 0;
     camera.zoom = 1.0f;
     active_ui_objects = unordered_map<Entity_ID, Object_UI*>();

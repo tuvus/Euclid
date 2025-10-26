@@ -17,7 +17,7 @@ Entity_ID Init_Tower_Card(Entity entity, Card_Data* card_data,
 
 bool Can_Play_Tower_Card(Card_Player* card_player, Entity entity, Vector2 pos);
 
-bool Can_Place_Tower(Entity tower_card, Path* path, Vector2 pos, float min_dist);
+bool Can_Place_Tower(Entity tower_card, vector<Path*> path, Vector2 pos, float min_dist);
 
 void Play_Tower_Card(Card_Player* card_player, Entity entity, Vector2 pos);
 

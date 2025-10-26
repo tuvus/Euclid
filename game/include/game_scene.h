@@ -22,13 +22,13 @@ class Game_Scene : public Scene, Network_Events_Receiver {
 
   public:
     ECS* ecs;
-    Path* f_path;
-    Path* r_path;
+    vector<Path*> f_paths;
+    vector<Path*> r_paths;
 
     Game_Scene(Card_Game& card_game);
 
     ~Game_Scene() override;
-    void Setup_Scene(vector<Player*> players, Player* local_player, long seed);
+    void Setup_Scene(vector<Player*> players, Player* local_player, long seed, int num_paths);
 
     void Update_UI(chrono::milliseconds) override;
     void Update(std::chrono::milliseconds) override;
@@ -45,7 +45,7 @@ class Game_Scene : public Scene, Network_Events_Receiver {
 
     void On_Client_Disconnected(Client_ID) override {}
 
-    Path* Get_Team_Path(int team) const;
+    vector<Path*> Get_Team_Paths(int team) const;
 
     static Color Get_Team_Color(int team);
 };

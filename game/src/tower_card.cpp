@@ -23,19 +23,21 @@ Entity_ID Init_Tower_Card(Entity entity, Card_Data* card_data,
 
 bool Can_Play_Tower_Card(Card_Player* card_player, Entity entity, Vector2 pos) {
     return Can_Play_Card(card_player, entity, pos) &&
-           Can_Place_Tower(entity, card_player->path, pos, 50);
+           Can_Place_Tower(entity, card_player->paths, pos, 50);
 }
 
-bool Can_Place_Tower(Entity tower_card, Path* path, Vector2 pos, float min_dist) {
-    for (auto entity : get<1>(tower_card)->ecs.Get_Entities_Of_Type(Get_Tower_Entity_Type())) {
-        auto transform = get<1>(entity)->Get_Component<Transform_Component>(
-            entity, &Transform_Component::component_type);
-        if (Vector2Distance(pos, transform->pos) <= min_dist)
-            return false;
-    }
-    for (auto position : path->positions) {
-        if (Vector2Distance(pos, position) <= min_dist)
-            return false;
+bool Can_Place_Tower(Entity tower_card, vector<Path*> paths, Vector2 pos, float min_dist) {
+    for (auto path : paths) {
+        for (auto entity : get<1>(tower_card)->ecs.Get_Entities_Of_Type(Get_Tower_Entity_Type())) {
+            auto transform = get<1>(entity)->Get_Component<Transform_Component>(
+                entity, &Transform_Component::component_type);
+            if (Vector2Distance(pos, transform->pos) <= min_dist)
+                return false;
+        }
+        for (auto position : path->positions) {
+            if (Vector2Distance(pos, position) <= min_dist)
+                return false;
+        }
     }
     return true;
 }
