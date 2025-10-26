@@ -130,7 +130,7 @@ class Entity_Type_Iterator {
 };
 
 class ECS {
-    std::vector<Entity_ID> to_create;
+    std::unordered_set<Entity_ID> to_create;
     std::vector<Entity_ID> to_delete;
 
   public:
