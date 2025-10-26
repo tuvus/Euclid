@@ -53,7 +53,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update));
     ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update));
 
-    for (int p = 0; p < 5; p++) {
+    for (int p = 0; p < num_paths; p++) {
         int pathx_offset = ((p + 1) / 2) * 220;
         if (p % 2 == 1)
             pathx_offset *= -1;
@@ -176,6 +176,15 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
 }
 
 void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
+    if (IsKeyDown(KEY_A))
+        game_ui_manager->camera.offset.x += 10;
+    if (IsKeyDown(KEY_D))
+        game_ui_manager->camera.offset.x -= 10;
+    if (IsKeyDown(KEY_W))
+        game_ui_manager->camera.offset.y += 10;
+    if (IsKeyDown(KEY_S))
+        game_ui_manager->camera.offset.y -= 10;
+
     BeginMode2D(game_ui_manager->camera);
     // Visualize path
     for (auto f_path : f_paths) {
@@ -240,15 +249,6 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
 void Game_Scene::Update(std::chrono::milliseconds) {
     ecs->Update();
     game_manager->Update();
-
-    if (IsKeyDown(KEY_A))
-        game_ui_manager->camera.offset.x += 10;
-    if (IsKeyDown(KEY_D))
-        game_ui_manager->camera.offset.x -= 10;
-    if (IsKeyDown(KEY_W))
-        game_ui_manager->camera.offset.y += 10;
-    if (IsKeyDown(KEY_S))
-        game_ui_manager->camera.offset.y -= 10;
 }
 
 void Game_Scene::On_Disconnected() {
