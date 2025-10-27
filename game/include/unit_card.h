@@ -4,6 +4,7 @@
 struct Unit_Card_Component {
     static Component_Type component_type;
     int unit_count;
+    float unit_speed;
     Texture2D* unit_texture;
 };
 

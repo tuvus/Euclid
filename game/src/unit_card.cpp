@@ -13,6 +13,7 @@ Entity_ID Init_Unit_Card(Entity entity, Card_Data* card_data,
     auto* unit_card = std::get<1>(entity)->Get_Component<Unit_Card_Component>(
         entity, &Unit_Card_Component::component_type);
     unit_card->unit_count = unit_card_component.unit_count;
+    unit_card->unit_speed = unit_card_component.unit_speed;
     unit_card->unit_texture = unit_card_component.unit_texture;
 
     return Entity_Array::Get_Entity_Data(entity).id;
@@ -35,8 +36,9 @@ void Play_Unit_Card(Card_Player* card_player, Entity entity, Vector2 pos) {
     }
     for (int i = 0; i < unit_card->unit_count; i++) {
         auto unit = get<1>(entity)->ecs.Create_Entity(Get_Unit_Entity_Type());
-        Init_Unit(&get<1>(entity)->ecs, unit, path, 1, i * 10, card_player->team,
-                  unit_card->unit_texture, .4f, Game_Scene::Get_Team_Color(card_player->team));
+        Init_Unit(&get<1>(entity)->ecs, unit, path, unit_card->unit_speed, i * 10,
+                  card_player->team, unit_card->unit_texture, .4f,
+                  Game_Scene::Get_Team_Color(card_player->team));
     }
 }
 

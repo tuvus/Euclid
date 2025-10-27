@@ -132,17 +132,17 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
 
     vector<Entity_ID> starting_cards{};
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[0], {7, &unit_texture}, &card_texture, 1,
-                                               WHITE));
+                                               card_datas[0], {7, 1.3f, &unit_texture},
+                                               &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[0], {7, &unit_texture}, &card_texture, 1,
-                                               WHITE));
+                                               card_datas[0], {7, 1.3f, &unit_texture},
+                                               &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[1], {11, &unit_texture}, &card_texture, 1,
-                                               WHITE));
+                                               card_datas[1], {11, 1, &unit_texture}, &card_texture,
+                                               1, WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[2], {18, &unit_texture}, &card_texture, 1,
-                                               WHITE));
+                                               card_datas[2], {18, .8f, &unit_texture},
+                                               &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()),
                                                 card_datas[3], {&tower_texture, 0, true, 1, 90},
                                                 &card_texture, 1, WHITE));
@@ -231,6 +231,8 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
                         game_ui_manager->active_ui_objects[Entity_Array::Get_Entity_ID(
                             local_player->active_card)])
                         ->is_hovered) {
+            // If a unit card is being held over the field, we should highlight the path that
+            // the units would be played on
             Path* path = nullptr;
             float closest_point = numeric_limits<float>::max();
             for (auto path1 : f_paths) {
