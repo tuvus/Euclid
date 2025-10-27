@@ -1,17 +1,18 @@
 #pragma once
 #include "ecs.h"
-#include "game_ui_manager.h"
 
 struct Tower_Component {
     static Component_Type component_type;
     int team;
     bool spawned;
-    int reload;
+    int reload_speed;
+    int reload_time;
     float range;
+    int damage;
 };
 
-void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* texture, float scale,
-                Color color);
+void Init_Tower(Entity entity, Vector2 pos, int reload_speed, float range, int damage, int team,
+                Texture2D* texture, float scale, Color color);
 
 void Tower_Update(ECS* ecs, Entity entity);
 

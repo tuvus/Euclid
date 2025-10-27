@@ -8,6 +8,7 @@ struct Tower_Card_Component {
     int team;
     bool spawned;
     int reload;
+    int damage;
     float range;
 };
 

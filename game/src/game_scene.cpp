@@ -143,9 +143,9 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
                                                card_datas[2], {18, .8f, 10, 1, &unit_texture},
                                                &card_texture, 1, WHITE));
-    starting_cards.emplace_back(Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()),
-                                                card_datas[3], {&tower_texture, 0, true, 1, 90},
-                                                &card_texture, 1, WHITE));
+    starting_cards.emplace_back(
+        Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()), card_datas[3],
+                        {&tower_texture, 0, true, 30, 2, 120}, &card_texture, 1, WHITE));
 
     for (auto player : game_manager->players) {
         Card_Player* card_player = static_cast<Card_Player*>(player);
@@ -193,8 +193,13 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
         auto world_pos = GetScreenToWorld2D(mouse_pos, game_ui_manager->camera);
         if (get<1>(local_player->active_card)
                 ->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
+            auto* tower_card_component =
+                get<1>(local_player->active_card)
+                    ->Get_Component<Tower_Card_Component>(local_player->active_card,
+                                                          &Tower_Card_Component::component_type);
             if (Can_Place_Tower(local_player->active_card, local_player->paths, world_pos, 50))
-                DrawCircle(mouse_pos.x, mouse_pos.y, 75, ColorAlpha(LIGHTGRAY, .3f));
+                DrawCircle(mouse_pos.x, mouse_pos.y, tower_card_component->range,
+                           ColorAlpha(LIGHTGRAY, .3f));
             DrawCircle(mouse_pos.x, mouse_pos.y, 20, local_player->team ? RED : BLUE);
 
             if (!card_game.eui_ctx->input.left_mouse_down) {

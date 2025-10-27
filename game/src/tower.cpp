@@ -7,8 +7,8 @@
 #include <climits>
 #include <raymath.h>
 
-void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* texture, float scale,
-                Color color) {
+void Init_Tower(Entity entity, Vector2 pos, int reload_speed, float range, int damage, int team,
+                Texture2D* texture, float scale, Color color) {
     auto* tower =
         get<1>(entity)->Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
@@ -17,8 +17,10 @@ void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* te
     transform->pos = pos;
     transform->rot = 0;
     transform->scale = .4;
+    tower->reload_speed = reload_speed;
     tower->range = range;
     tower->team = team;
+    tower->damage = damage;
     ui->texture = texture;
     ui->scale = scale;
     ui->color = color;
@@ -27,9 +29,9 @@ void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* te
 void Tower_Update(ECS* ecs, Entity entity) {
     auto* tower =
         get<1>(entity)->Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
-    if (tower->reload > 0)
-        tower->reload--;
-    if (tower->reload > 0)
+    if (tower->reload_time > 0)
+        tower->reload_time--;
+    if (tower->reload_time > 0)
         return;
 
     Entity_ID entity_id = Entity_Array::Get_Entity_Data(entity).id;
@@ -63,9 +65,13 @@ void Tower_Update(ECS* ecs, Entity entity) {
         return;
 
     // Fire
-    get<2>(closest_unit)->spawned = false;
-    ecs->Delete_Entity(Entity_Array::Get_Entity_Data(get<0>(closest_unit)).id);
-    tower->reload = 100;
+    get<2>(closest_unit)->health -= tower->damage;
+    if (get<2>(closest_unit)->health <= 0) {
+        get<2>(closest_unit)->spawned = false;
+        ecs->Delete_Entity(Entity_Array::Get_Entity_Data(get<0>(closest_unit)).id);
+    }
+
+    tower->reload_time = tower->reload_speed;
     transform->rot = Get_Rotation_From_Positions(transform->pos, get<1>(closest_unit)->pos);
 }
 
