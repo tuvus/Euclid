@@ -185,20 +185,7 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
     if (IsKeyDown(KEY_S))
         game_ui_manager->camera.offset.y -= 10;
 
-    BeginMode2D(game_ui_manager->camera);
-    // Visualize path
-    for (auto f_path : f_paths) {
-        Vector2 past_pos = Vector2One() * -1;
-        for (const auto& pos : f_path->positions) {
-            if (past_pos != Vector2One() * -1)
-                DrawLineEx(past_pos, pos, 40, DARKGRAY);
-            DrawCircle(pos.x, pos.y, 20, DARKGRAY);
-            past_pos = pos;
-        }
-    }
-    EndMode2D();
-
-    game_ui_manager->Update_UI(delta_time, card_game.eui_ctx);
+    Path* selected_path = nullptr;
 
     Card_Player* local_player = static_cast<Card_Player*>(game_manager->local_player);
     if (get<0>(local_player->active_card) != nullptr) {
@@ -238,8 +225,50 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
                     Entity_Array::Get_Entity_ID(local_player->active_card), world_pos.x,
                     world_pos.y);
             local_player->active_card = tuple<unsigned char*, Entity_Array*>(nullptr, nullptr);
+        } else if (get<1>(local_player->active_card)
+                       ->entity_type.Is_Entity_Of_Type(Get_Unit_Card_Entity_Type()) &&
+                   !static_cast<Card_UI*>(
+                        game_ui_manager->active_ui_objects[Entity_Array::Get_Entity_ID(
+                            local_player->active_card)])
+                        ->is_hovered) {
+            Path* path = nullptr;
+            float closest_point = numeric_limits<float>::max();
+            for (auto path1 : f_paths) {
+                for (auto position : path1->positions) {
+                    float dist = Vector2Distance(world_pos, position);
+                    if (dist >= closest_point)
+                        continue;
+                    path = path1;
+                    closest_point = dist;
+                }
+            }
+            selected_path = path;
         }
     }
+
+    BeginMode2D(game_ui_manager->camera);
+    // Visualize path
+    for (auto f_path : f_paths) {
+        Vector2 past_pos = Vector2One() * -1;
+        if (selected_path == f_path) {
+            for (const auto& pos : f_path->positions) {
+                if (past_pos != Vector2One() * -1)
+                    DrawLineEx(past_pos, pos, 60, LIGHTGRAY);
+                DrawCircle(pos.x, pos.y, 30, LIGHTGRAY);
+                past_pos = pos;
+            }
+            past_pos = Vector2One() * -1;
+        }
+        for (const auto& pos : f_path->positions) {
+            if (past_pos != Vector2One() * -1)
+                DrawLineEx(past_pos, pos, 40, DARKGRAY);
+            DrawCircle(pos.x, pos.y, 20, DARKGRAY);
+            past_pos = pos;
+        }
+    }
+    EndMode2D();
+
+    game_ui_manager->Update_UI(delta_time, card_game.eui_ctx);
 
     money_text->Set_Text("Money: " + to_string(local_player->money));
 

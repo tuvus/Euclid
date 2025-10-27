@@ -73,7 +73,7 @@ void Application::Application_Loop() {
         if (network)
             network->Network_Update();
 
-        for (int i = 0; i < 30; i++) {
+        for (int i = 0; i < 1; i++) {
             Update(delta_time);
         }
 
