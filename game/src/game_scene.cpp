@@ -132,16 +132,16 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
 
     vector<Entity_ID> starting_cards{};
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[0], {7, 1.3f, &unit_texture},
+                                               card_datas[0], {7, 1.3f, 3, 2, &unit_texture},
                                                &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[0], {7, 1.3f, &unit_texture},
+                                               card_datas[0], {7, 1.3f, 3, 2, &unit_texture},
                                                &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[1], {11, 1, &unit_texture}, &card_texture,
-                                               1, WHITE));
+                                               card_datas[1], {11, 1, 8, 1, &unit_texture},
+                                               &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
-                                               card_datas[2], {18, .8f, &unit_texture},
+                                               card_datas[2], {18, .8f, 10, 1, &unit_texture},
                                                &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()),
                                                 card_datas[3], {&tower_texture, 0, true, 1, 90},

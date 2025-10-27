@@ -12,12 +12,15 @@ struct Unit_Component {
     // 0 means the start position and 1 means the end position of the segment on the path
     float lerp;
     float speed;
+    int health;
+    int damage;
+    float bump_back;
     int team;
     bool spawned;
 };
 
-void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, float start_offset, int team,
-               Texture2D* texture, float scale, Color color);
+void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, int health, int damage,
+               float start_offset, int team, Texture2D* texture, float scale, Color color);
 
 void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, Entity_ID entity_id,
                float dist_to_move);

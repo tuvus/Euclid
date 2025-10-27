@@ -5,6 +5,8 @@ struct Unit_Card_Component {
     static Component_Type component_type;
     int unit_count;
     float unit_speed;
+    int unit_health;
+    int unit_damage;
     Texture2D* unit_texture;
 };
 
