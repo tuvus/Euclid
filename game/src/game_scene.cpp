@@ -188,16 +188,17 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
     Path* selected_path = nullptr;
 
     Card_Player* local_player = static_cast<Card_Player*>(game_manager->local_player);
+    auto mouse_pos = card_game.eui_ctx->input.mouse_position;
+    auto world_mouse_pos = GetScreenToWorld2D(mouse_pos, game_ui_manager->camera);
     if (get<0>(local_player->active_card) != nullptr) {
-        auto mouse_pos = card_game.eui_ctx->input.mouse_position;
-        auto world_pos = GetScreenToWorld2D(mouse_pos, game_ui_manager->camera);
         if (get<1>(local_player->active_card)
                 ->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
             auto* tower_card_component =
                 get<1>(local_player->active_card)
                     ->Get_Component<Tower_Card_Component>(local_player->active_card,
                                                           &Tower_Card_Component::component_type);
-            if (Can_Place_Tower(local_player->active_card, local_player->paths, world_pos, 50))
+            if (Can_Place_Tower(local_player->active_card, local_player->paths, world_mouse_pos,
+                                50))
                 DrawCircle(mouse_pos.x, mouse_pos.y, tower_card_component->range,
                            ColorAlpha(LIGHTGRAY, .3f));
             DrawCircle(mouse_pos.x, mouse_pos.y, 20, local_player->team ? RED : BLUE);
@@ -209,11 +210,11 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
                              local_player->active_card)])
                          ->is_hovered &&
                     Can_Play_Card(local_player, local_player->active_card,
-                                  Vector2(world_pos.x, world_pos.y)))
+                                  Vector2(world_mouse_pos.x, world_mouse_pos.y)))
                     this->card_game.Get_Network()->call_game_rpc(
                         "playcard", local_player->player_id,
-                        Entity_Array::Get_Entity_ID(local_player->active_card), world_pos.x,
-                        world_pos.y);
+                        Entity_Array::Get_Entity_ID(local_player->active_card), world_mouse_pos.x,
+                        world_mouse_pos.y);
                 local_player->active_card = tuple<unsigned char*, Entity_Array*>(nullptr, nullptr);
             }
         } else if (get<0>(local_player->active_card) != nullptr &&
@@ -224,11 +225,11 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
                          local_player->active_card)])
                      ->is_hovered &&
                 Can_Play_Card(local_player, local_player->active_card,
-                              Vector2(world_pos.x, world_pos.y)))
+                              Vector2(world_mouse_pos.x, world_mouse_pos.y)))
                 this->card_game.Get_Network()->call_game_rpc(
                     "playcard", local_player->player_id,
-                    Entity_Array::Get_Entity_ID(local_player->active_card), world_pos.x,
-                    world_pos.y);
+                    Entity_Array::Get_Entity_ID(local_player->active_card), world_mouse_pos.x,
+                    world_mouse_pos.y);
             local_player->active_card = tuple<unsigned char*, Entity_Array*>(nullptr, nullptr);
         } else if (get<1>(local_player->active_card)
                        ->entity_type.Is_Entity_Of_Type(Get_Unit_Card_Entity_Type()) &&
@@ -242,7 +243,7 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
             float closest_point = numeric_limits<float>::max();
             for (auto path1 : f_paths) {
                 for (auto position : path1->positions) {
-                    float dist = Vector2Distance(world_pos, position);
+                    float dist = Vector2Distance(world_mouse_pos, position);
                     if (dist >= closest_point)
                         continue;
                     path = path1;
@@ -250,6 +251,20 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
                 }
             }
             selected_path = path;
+        }
+    } else {
+        for (auto entity : ecs->Get_Entities_Of_Type(Get_Tower_Entity_Type())) {
+            auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
+                entity, &Transform_Component::component_type);
+            if (Vector2Distance(transform->pos, world_mouse_pos) > 20)
+                continue;
+            auto* tower = get<1>(entity)->Get_Component<Tower_Component>(
+                entity, &Tower_Component::component_type);
+            BeginMode2D(game_ui_manager->camera);
+            DrawCircle(transform->pos.x, transform->pos.y, tower->range,
+                       ColorAlpha(LIGHTGRAY, .3f));
+            EndMode2D();
+            break;
         }
     }
 
