@@ -2,24 +2,21 @@
 #include "card_ui.h"
 
 void Init_Card(Entity entity, Card_Data& card_data, Texture2D* texture, float scale, Color color) {
-    auto* card_component =
-        get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
+    auto* card_component = get<1>(entity)->Get_Component<Card_Component>(entity);
     card_component->card_data = &card_data;
-    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
+    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity);
     ui->texture = texture;
     ui->scale = scale;
     ui->color = color;
 }
 
 bool Can_Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
-    auto* card =
-        get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
+    auto* card = get<1>(entity)->Get_Component<Card_Component>(entity);
     return player->money >= card->card_data->cost;
 }
 
 void Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
-    auto* card =
-        get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
+    auto* card = get<1>(entity)->Get_Component<Card_Component>(entity);
     player->money -= card->card_data->cost;
     Discard_Card(player, entity);
 }

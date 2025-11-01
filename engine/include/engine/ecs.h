@@ -72,7 +72,8 @@ class Entity_Array {
     static Entity_ID Get_Entity_ID(Entity entity) { return Get_Entity_Data(entity).id; }
 
     template <typename T>
-    T* Get_Component(Entity entity_data, Component_Type* component_type) {
+    T* Get_Component(Entity entity_data) {
+        Component_Type* component_type = &T::component_type;
         unsigned char* entity = std::get<0>(entity_data);
         entity += sizeof(Entity_Component);
         for (auto& component : entity_type.components) {

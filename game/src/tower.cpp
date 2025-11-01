@@ -9,11 +9,9 @@
 
 void Init_Tower(Entity entity, Vector2 pos, int reload_speed, float range, int damage, int team,
                 Texture2D* texture, float scale, Color color) {
-    auto* tower =
-        get<1>(entity)->Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
-    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
-        entity, &Transform_Component::component_type);
-    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
+    auto* tower = get<1>(entity)->Get_Component<Tower_Component>(entity);
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
+    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity);
     transform->pos = pos;
     transform->rot = 0;
     transform->scale = .4;
@@ -27,16 +25,14 @@ void Init_Tower(Entity entity, Vector2 pos, int reload_speed, float range, int d
 }
 
 void Tower_Update(ECS* ecs, Entity entity) {
-    auto* tower =
-        get<1>(entity)->Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
+    auto* tower = get<1>(entity)->Get_Component<Tower_Component>(entity);
     if (tower->reload_time > 0)
         tower->reload_time--;
     if (tower->reload_time > 0)
         return;
 
     Entity_ID entity_id = Entity_Array::Get_Entity_Data(entity).id;
-    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
-        entity, &Transform_Component::component_type);
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
     Vector2 home = Vector2(tower->team == 0 ? ecs->application.screen_height : 0,
                            ecs->application.screen_width / 2);
 
@@ -46,12 +42,11 @@ void Tower_Update(ECS* ecs, Entity entity) {
         Entity_ID other_id = get<1>(entity)->Get_Entity_Data(entity).id;
         if (other_id == entity_id)
             continue;
-        Unit_Component* unit =
-            get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
+        Unit_Component* unit = get<1>(entity)->Get_Component<Unit_Component>(entity);
         if (unit->team == tower->team || !unit->spawned)
             continue;
-        Transform_Component* other_transform = get<1>(entity)->Get_Component<Transform_Component>(
-            entity, &Transform_Component::component_type);
+        Transform_Component* other_transform =
+            get<1>(entity)->Get_Component<Transform_Component>(entity);
         if (Vector2Distance(transform->pos, other_transform->pos) > tower->range)
             continue;
         float new_dist = Vector2Distance(other_transform->pos, home);

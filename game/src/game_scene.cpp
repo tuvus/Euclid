@@ -90,8 +90,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
             if (ranges::find(player->Get_Deck()->hand, entity_id) == player->Get_Deck()->hand.end())
                 return RPC_Manager::INVALID;
             Entity card = get<0>(ecs->entities_by_id[entity_id]);
-            auto* card_component =
-                get<1>(card)->Get_Component<Card_Component>(card, &Card_Component::component_type);
+            auto* card_component = get<1>(card)->Get_Component<Card_Component>(card);
 
             if (!card_component->card_data->can_play_card(player, card, Vector2(x, y)))
                 return RPC_Manager::INVALID;
@@ -195,8 +194,7 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
                 ->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
             auto* tower_card_component =
                 get<1>(local_player->active_card)
-                    ->Get_Component<Tower_Card_Component>(local_player->active_card,
-                                                          &Tower_Card_Component::component_type);
+                    ->Get_Component<Tower_Card_Component>(local_player->active_card);
             if (Can_Place_Tower(local_player->active_card, local_player->paths, world_mouse_pos,
                                 50))
                 DrawCircle(mouse_pos.x, mouse_pos.y, tower_card_component->range,
@@ -254,12 +252,10 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
         }
     } else {
         for (auto entity : ecs->Get_Entities_Of_Type(Get_Tower_Entity_Type())) {
-            auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
-                entity, &Transform_Component::component_type);
+            auto* transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
             if (Vector2Distance(transform->pos, world_mouse_pos) > 20)
                 continue;
-            auto* tower = get<1>(entity)->Get_Component<Tower_Component>(
-                entity, &Tower_Component::component_type);
+            auto* tower = get<1>(entity)->Get_Component<Tower_Component>(entity);
             BeginMode2D(game_ui_manager->camera);
             DrawCircle(transform->pos.x, transform->pos.y, tower->range,
                        ColorAlpha(LIGHTGRAY, .3f));

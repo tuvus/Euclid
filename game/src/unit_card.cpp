@@ -10,8 +10,7 @@ Entity_ID Init_Unit_Card(Entity entity, Card_Data* card_data,
                          Unit_Card_Component unit_card_component, Texture2D* texture, float scale,
                          Color color) {
     Init_Card(entity, *card_data, texture, scale, color);
-    auto* unit_card = std::get<1>(entity)->Get_Component<Unit_Card_Component>(
-        entity, &Unit_Card_Component::component_type);
+    auto* unit_card = std::get<1>(entity)->Get_Component<Unit_Card_Component>(entity);
     unit_card->unit_count = unit_card_component.unit_count;
     unit_card->unit_speed = unit_card_component.unit_speed;
     unit_card->unit_health = unit_card_component.unit_health;
@@ -23,8 +22,7 @@ Entity_ID Init_Unit_Card(Entity entity, Card_Data* card_data,
 
 void Play_Unit_Card(Card_Player* card_player, Entity entity, Vector2 pos) {
     Play_Card(card_player, entity, pos);
-    auto* unit_card = get<1>(entity)->Get_Component<Unit_Card_Component>(
-        entity, &Unit_Card_Component::component_type);
+    auto* unit_card = get<1>(entity)->Get_Component<Unit_Card_Component>(entity);
     Path* path = nullptr;
     float closest_point = numeric_limits<float>::max();
     for (auto path1 : card_player->paths) {

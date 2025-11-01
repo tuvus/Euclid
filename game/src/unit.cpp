@@ -8,11 +8,9 @@
 
 void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, int health, int damage,
                float start_offset, int team, Texture2D* texture, float scale, Color color) {
-    auto* unit =
-        get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
-    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
-        entity, &Transform_Component::component_type);
-    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
+    auto* unit = get<1>(entity)->Get_Component<Unit_Component>(entity);
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
+    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity);
     unit->path = path;
     unit->speed = speed;
     unit->health = health;
@@ -82,14 +80,13 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
         Entity_ID other_id = get<1>(entity)->Get_Entity_Data(entity).id;
         if (other_id == entity_id)
             continue;
-        Unit_Component* other =
-            get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
+        Unit_Component* other = get<1>(entity)->Get_Component<Unit_Component>(entity);
 
         if (other->team == unit->team || !other->spawned)
             continue;
 
-        Transform_Component* other_transform = get<1>(entity)->Get_Component<Transform_Component>(
-            entity, &Transform_Component::component_type);
+        Transform_Component* other_transform =
+            get<1>(entity)->Get_Component<Transform_Component>(entity);
         if (Vector2Distance(transform->pos, other_transform->pos) > 30)
             continue;
 
@@ -113,10 +110,8 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
 }
 
 void Unit_Update(ECS* ecs, Entity entity) {
-    auto* unit =
-        get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
-    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
-        entity, &Transform_Component::component_type);
+    auto* unit = get<1>(entity)->Get_Component<Unit_Component>(entity);
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
     if (unit->bump_back > 0.000001) {
         float bump = min(unit->bump_back, 3.0f);
         Move_Unit(ecs, unit, transform, Entity_Array::Get_Entity_Data(entity).id, -bump);

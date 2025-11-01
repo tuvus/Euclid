@@ -12,10 +12,8 @@ using namespace std;
 
 void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, vector<Path*> paths,
                int base_income_speed, int max_health) {
-    auto transform = get<1>(entity)->Get_Component<Transform_Component>(
-        entity, &Transform_Component::component_type);
-    auto base =
-        get<1>(entity)->Get_Component<Base_Component>(entity, &Base_Component::component_type);
+    auto transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
+    auto base = get<1>(entity)->Get_Component<Base_Component>(entity);
     transform->pos = pos;
     transform->rot = 0;
     transform->scale = 1;
@@ -28,8 +26,7 @@ void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, vector<Path
 }
 
 void Base_Update(ECS* ecs, Entity entity) {
-    auto base =
-        get<1>(entity)->Get_Component<Base_Component>(entity, &Base_Component::component_type);
+    auto base = get<1>(entity)->Get_Component<Base_Component>(entity);
     if (--base->time_until_income <= 0) {
         base->card_player->money++;
         base->time_until_income = 40;
@@ -47,9 +44,7 @@ void Base_Update(ECS* ecs, Entity entity) {
             get<0>(ecs->entities_by_id[base->card_player->Get_Deck()->hand[card_to_play]]);
         if (get<0>(card_entity) == nullptr)
             return;
-        auto card =
-            get<1>(card_entity)
-                ->Get_Component<Card_Component>(card_entity, &Card_Component::component_type);
+        auto card = get<1>(card_entity)->Get_Component<Card_Component>(card_entity);
         if (get<1>(card_entity)->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
             Try_Placing_Tower(ecs, card_to_play, card_entity, card, base);
         } else if (card->card_data->can_play_card(base->card_player, card_entity, Vector2Zero())) {

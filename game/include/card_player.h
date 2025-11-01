@@ -18,7 +18,5 @@ class Card_Player : public Player {
     Card_Player(Player_ID player_id, int team)
         : Player(player_id), team(team), money(10), paths(vector<Path*>{}) {}
 
-    Deck_Component* Get_Deck() {
-        return get<1>(deck)->Get_Component<Deck_Component>(deck, &Deck_Component::component_type);
-    }
+    Deck_Component* Get_Deck() { return get<1>(deck)->Get_Component<Deck_Component>(deck); }
 };

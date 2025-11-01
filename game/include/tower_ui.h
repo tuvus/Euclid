@@ -9,10 +9,8 @@ class Tower_UI : public Object_UI {
 
     void Update_UI(EUI_Context* ctx) override {
         Entity entity = std::get<0>(ecs.entities_by_id[entity_id]);
-        auto* transform = std::get<1>(entity)->Get_Component<Transform_Component>(
-            entity, &Transform_Component::component_type);
-        auto* ui =
-            std::get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
+        auto* transform = std::get<1>(entity)->Get_Component<Transform_Component>(entity);
+        auto* ui = std::get<1>(entity)->Get_Component<UI_Component>(entity);
         game_ui_manager.DrawImage(*ui->texture, transform->pos, transform->rot, transform->scale,
                                   ui->color);
     }
