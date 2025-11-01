@@ -17,7 +17,7 @@ void Card_Game::resize_update() {
 void Card_Game::set_ui_screen(SCREEN new_screen) {
     if (scene != nullptr)
         to_delete.emplace_back(scene);
-    scene = sceens[new_screen]();
+    scene = scenes[new_screen]();
     // will panic if eui_ctx is null, shouldn't ever happen so let it crash
     // TODO: this should probably be in the engine
     eui_ctx->Set_Root(scene->Get_Root());
@@ -27,9 +27,9 @@ void Card_Game::set_ui_screen(SCREEN new_screen) {
 void Card_Game::Start_Client() {
     Application::Start_Client();
 
-    sceens.insert({MENU, [this]() -> Scene* { return new Menu_Scene(*this); }});
-    sceens.insert({LOBBY, [this]() -> Scene* { return new Lobby_Scene(*this); }});
-    sceens.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
+    scenes.insert({MENU, [this]() -> Scene* { return new Menu_Scene(*this); }});
+    scenes.insert({LOBBY, [this]() -> Scene* { return new Lobby_Scene(*this); }});
+    scenes.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
 
     set_ui_screen(MENU);
 

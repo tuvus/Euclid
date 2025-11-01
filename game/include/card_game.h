@@ -11,8 +11,8 @@ using namespace std;
 
 #define GRID_W 16
 #define GRID_H 9
-#define SCREEN_WIDTH 1920
-#define SCREEN_HEIGHT 1080
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
 #define TITLE_FONT_SIZE 24
 
 enum SCREEN { MENU, LOBBY, GAME };
@@ -44,5 +44,5 @@ class Card_Game : public Application {
     void Close_Application() override;
 
     Scene* scene;
-    std::unordered_map<SCREEN, std::function<Scene*()>> sceens;
+    std::unordered_map<SCREEN, std::function<Scene*()>> scenes;
 };
