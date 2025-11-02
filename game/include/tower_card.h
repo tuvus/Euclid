@@ -10,6 +10,8 @@ struct Tower_Card_Component {
     int reload;
     int damage;
     float range;
+    float projectile_speed;
+    Texture2D* projectile_texture;
 };
 
 Entity_ID Init_Tower_Card(Entity entity, Card_Data* card_data,

@@ -5,6 +5,8 @@
 #include "card_player.h"
 #include "card_ui.h"
 #include "game_scene.h"
+
+#include "projectile.h"
 #include "tower.h"
 #include "tower_card.h"
 #include "unit.h"
@@ -52,6 +54,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ecs->Register_System(new System(Get_Unit_Entity_Type(), Unit_Update));
     ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update));
     ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update));
+    ecs->Register_System(new System(Get_Projectile_Entity_Type(), Projectile_Update));
 
     for (int p = 0; p < num_paths; p++) {
         int pathx_offset = ((p + 1) / 2) * 220;
@@ -114,6 +117,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ecs->Create_Entity_Type(Get_Unit_Card_Entity_Type()->components, Create_Card_UI);
     ecs->Create_Entity_Type(Get_Tower_Card_Entity_Type()->components, Create_Card_UI);
     ecs->Create_Entity_Type(Get_Base_Entity_Type()->components, nullptr);
+    ecs->Create_Entity_Type(Get_Projectile_Entity_Type()->components, Create_Projectile_UI);
 
     card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
     card_datas.emplace_back(new Card_Data{card_texture, "Send Units",
@@ -142,9 +146,9 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
                                                card_datas[2], {18, .8f, 10, 1, &unit_texture},
                                                &card_texture, 1, WHITE));
-    starting_cards.emplace_back(
-        Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()), card_datas[3],
-                        {&tower_texture, 0, true, 30, 2, 120}, &card_texture, 1, WHITE));
+    starting_cards.emplace_back(Init_Tower_Card(
+        ecs->Create_Entity(Get_Tower_Card_Entity_Type()), card_datas[3],
+        {&tower_texture, 0, true, 30, 2, 120, 5, &unit_texture}, &card_texture, 1, WHITE));
 
     for (auto player : game_manager->players) {
         Card_Player* card_player = static_cast<Card_Player*>(player);

@@ -18,6 +18,7 @@ set(Sources
         src/base.cpp
         src/tower_card.cpp
         src/unit_card.cpp
+        src/projectile.cpp
 )
 
 set(Headers
@@ -39,6 +40,7 @@ set(Headers
         include/tower_card.h
         include/base.h
         include/projectile.h
+        include/projectile_ui.h
 )
 
 add_executable(game ${Sources} ${Headers})

@@ -18,6 +18,8 @@ Entity_ID Init_Tower_Card(Entity entity, Card_Data* card_data,
     tower_card->reload = tower_card_component.reload;
     tower_card->damage = tower_card_component.damage;
     tower_card->range = tower_card_component.range;
+    tower_card->projectile_speed = tower_card_component.projectile_speed;
+    tower_card->projectile_texture = tower_card_component.projectile_texture;
     return Entity_Array::Get_Entity_Data(entity).id;
 }
 
@@ -43,11 +45,10 @@ bool Can_Place_Tower(Entity tower_card, vector<Path*> paths, Vector2 pos, float 
 
 void Play_Tower_Card(Card_Player* player, Entity entity, Vector2 pos) {
     Play_Card(player, entity, pos);
-    auto* tower_card = std::get<1>(entity)->Get_Component<Tower_Card_Component>(entity);
+    auto* tower_card = get<1>(entity)->Get_Component<Tower_Card_Component>(entity);
     auto tower = get<1>(entity)->ecs.Create_Entity(Get_Tower_Entity_Type());
-    Init_Tower(tower, Vector2(pos.x, pos.y), tower_card->reload, tower_card->range,
-               tower_card->damage, player->team, tower_card->tower_texture, .4f,
-               Game_Scene::Get_Team_Color(player->team));
+    Init_Tower(tower, Vector2(pos.x, pos.y), player->team, *tower_card, tower_card->tower_texture,
+               .4f, Game_Scene::Get_Team_Color(player->team));
 }
 
 Entity_Type* Get_Tower_Card_Entity_Type() {
