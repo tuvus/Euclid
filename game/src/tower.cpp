@@ -37,7 +37,7 @@ void Tower_Update(ECS* ecs, Entity entity) {
 
     Entity_ID entity_id = Entity_Array::Get_Entity_Data(entity).id;
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
-    Vector2 home = Vector2(0, tower->team == 0 ? ecs->application.screen_height : 0);
+    Vector2 home = Vector2(0, tower->team == 0 ? 1000 : 0);
 
     tuple<Entity, Transform_Component*, Unit_Component*, float> closest_unit =
         make_tuple(Entity{}, nullptr, nullptr, INT_MAX);

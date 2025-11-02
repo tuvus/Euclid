@@ -63,8 +63,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
             pathx_offset *= -1;
         vector<Vector2> positions = vector<Vector2>();
         static uniform_int_distribution<int> start_dist(-80, 80);
-        positions.emplace_back(start_dist(game_manager->random) + pathx_offset,
-                               card_game.screen_height - 80);
+        positions.emplace_back(start_dist(game_manager->random) + pathx_offset, 1000 - 80);
         while (positions[positions.size() - 1].y > 80) {
             Vector2 prev_pos = positions[positions.size() - 1];
             prev_pos.x -= pathx_offset;
