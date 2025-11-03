@@ -54,8 +54,8 @@ void EUI_Box::Size() {
                 children_main_size += child->size.x;
                 max_child_cross_size = std::max(max_child_cross_size, child->size.y);
             } else {
-                children_main_size = std::max(children_main_size, child->size.x);
-                max_child_cross_size += child->size.y;
+                children_main_size += child->size.y;
+                max_child_cross_size = std::max(max_child_cross_size, child->size.x);
             }
         }
     }
@@ -92,7 +92,7 @@ void EUI_Box::Grow() {
     std::vector<EUI_Element*> growable;
     for (EUI_Element* child : children) {
         if (!child->is_visible) {
-            return;
+            continue;
         }
 
         if (layout_model == Layout_Model::Horizontal) {
@@ -112,11 +112,11 @@ void EUI_Box::Grow() {
         return;
     }
 
-    float gap = children.size() < 2 ? 0 : (children.size() - 1) * gap;
+    float total_gap = children.size() < 2 ? 0 : (children.size() - 1) * gap;
     if (layout_model == Layout_Model::Horizontal) {
-        remaining_width -= gap;
+        remaining_width -= total_gap;
     } else {
-        remaining_height -= gap;
+        remaining_height -= total_gap;
     }
 
     // GROW CHILDREN
