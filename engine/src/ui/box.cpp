@@ -64,10 +64,10 @@ void EUI_Box::Size() {
         if (child->is_visible) {
             child->Size();
             if (layout_model == Layout_Model::Horizontal) {
-                children_main_size += child->size.x;
+                children_main_size += child->size.x != Size::Grow() ? child->size.x : 0;
                 max_child_cross_size = std::max(max_child_cross_size, child->size.y);
             } else {
-                children_main_size += child->size.y;
+                children_main_size += child->size.y != Size::Grow() ? child->size.y : 0;
                 max_child_cross_size = std::max(max_child_cross_size, child->size.x);
             }
         }
@@ -100,27 +100,6 @@ void EUI_Box::Grow() {
               << "' before=(" << size.x << ", " << size.y << ")" << std::endl;
     layout_depth++;
 
-    if (parent == nullptr) {
-        std::cout << get_indent() << "Root element, no grow calculation" << std::endl;
-        for (EUI_Element* child : children) {
-            if (child->is_visible) {
-                child->Grow();
-            }
-        }
-        layout_depth--;
-        return;
-    }
-
-    // FIRST: Resolve this box's own Grow() sentinels (so we have concrete size to work with)
-    if (size.x == Size::Grow()) {
-        size.x = parent->size.x - parent->padding.left - parent->padding.right;
-        std::cout << get_indent() << "Resolved own X growth to " << size.x << std::endl;
-    }
-    if (size.y == Size::Grow()) {
-        size.y = parent->size.y - parent->padding.top - parent->padding.bottom;
-        std::cout << get_indent() << "Resolved own Y growth to " << size.y << std::endl;
-    }
-
     // CALCULATE REMAINING SPACE within THIS box to distribute to children
     float remaining_width = size.x - padding.left - padding.right;
     float remaining_height = size.y - padding.top - padding.bottom;
@@ -129,6 +108,9 @@ void EUI_Box::Grow() {
         if (!child->is_visible) {
             continue;
         }
+
+        std::cout << get_indent() << "Child " << child->id << " size=(" << child->size.x << ", "
+                  << child->size.y << ")" << std::endl;
 
         if (layout_model == Layout_Model::Horizontal) {
             if (child->size.x == Size::Grow()) {
@@ -152,6 +134,11 @@ void EUI_Box::Grow() {
 
     if (growable.size() == 0) {
         std::cout << get_indent() << "No growable children, skipping distribution" << std::endl;
+        for (EUI_Element* child : children) {
+            if (child->is_visible) {
+                child->Grow();
+            }
+        }
         layout_depth--;
         return;
     }
@@ -183,7 +170,7 @@ void EUI_Box::Grow() {
 
     // GROW CHILDREN
     if (layout_model == Layout_Model::Horizontal) {
-        while (remaining_width > 0) {
+        while (!growable.empty() && remaining_width > 0) {
             float smallest = growable[0]->size.x;
             float second_smallest = INFINITY;
             float width_to_add = remaining_width;
@@ -209,7 +196,7 @@ void EUI_Box::Grow() {
             }
         }
     } else {
-        while (remaining_height > 0) {
+        while (!growable.empty() && remaining_height > 0) {
             float smallest = growable[0]->size.y;
             float second_smallest = INFINITY;
             float height_to_add = remaining_height;
@@ -238,6 +225,14 @@ void EUI_Box::Grow() {
 
     for (auto* child : children) {
         if (child->is_visible) {
+            // cross-axis grow
+            if (child->size.y == Size::Grow() && layout_model == Layout_Model::Horizontal) {
+                child->size.y = remaining_height;
+            }
+            if (child->size.x == Size::Grow() && layout_model == Layout_Model::Vertical) {
+                child->size.x = remaining_width;
+            }
+            // propagate grow to children
             child->Grow();
         }
     }

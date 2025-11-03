@@ -127,6 +127,7 @@ class Test_Scene : public Scene {
     // Test 4: Mixed alignments with nesting
     EUI_Element* Test_Mixed_Alignments() {
         EUI_Box* root = new EUI_Box(true);
+        root->main_axis_alignment = Alignment::Center;
         root->cross_axis_alignment = Alignment::Center;
         root->gap = 15;
 
@@ -183,22 +184,28 @@ class Test_Scene : public Scene {
     // Test 5: Complex nested layout with grow
     EUI_Element* Test_Complex_Nested() {
         EUI_Box* root = new EUI_Box(true);
+        root->id = "root";
+        root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
         root->gap = 10;
         root->padding = {10, 10, 10, 10};
 
         // Header
         EUI_Box* header = Create_Box("Header (Centered)", DARKBLUE, {Size::Grow(), 60});
+        header->id = "header";
         header->main_axis_alignment = Alignment::Center;
 
         // Content area with sidebar
         EUI_Box* content = Create_Box("", DARKGRAY, {Size::Grow(), Size::Grow()});
+        content->id = "content";
         content->gap = 10;
 
         EUI_Box* sidebar = Create_Box("Sidebar\n(Fixed)", PURPLE, {200, Size::Grow()});
+        sidebar->id = "sidebar";
         sidebar->cross_axis_alignment = Alignment::Start;
 
         EUI_Box* main_area =
             Create_Box("", GRAY, {Size::Grow(), Size::Grow()}, Layout_Model::Vertical);
+        main_area->id = "main_area";
         main_area->gap = 10;
 
         main_area->Add_Child(Create_Box("Content 1 (Grow)", GREEN, {Size::Grow(), Size::Grow()}));
@@ -209,6 +216,7 @@ class Test_Scene : public Scene {
 
         // Footer
         EUI_Box* footer = Create_Box("Footer (End Aligned)", DARKGREEN, {Size::Grow(), 50});
+        footer->id = "footer";
         footer->main_axis_alignment = Alignment::End;
 
         root->Add_Child(header);
