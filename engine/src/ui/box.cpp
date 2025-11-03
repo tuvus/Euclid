@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "ui/eui.h"
 
@@ -76,6 +77,116 @@ void EUI_Box::Size() {
 }
 
 void EUI_Box::Grow() {
+    if (parent == nullptr) {
+        for (EUI_Element* child : children) {
+            if (child->is_visible) {
+                child->Grow();
+            }
+        }
+        return;
+    }
+
+    // CALCULATE REMAINING SPACE
+    float remaining_width = parent->size.x - parent->padding.left - parent->padding.right;
+    float remaining_height = parent->size.y - parent->padding.top - parent->padding.bottom;
+    std::vector<EUI_Element*> growable;
+    for (EUI_Element* child : children) {
+        if (!child->is_visible) {
+            return;
+        }
+
+        if (layout_model == Layout_Model::Horizontal) {
+            if (child->size.x == Size::Grow()) {
+                growable.push_back(child);
+            }
+            remaining_width -= child->size.x;
+        } else {
+            if (child->size.y == Size::Grow()) {
+                growable.push_back(child);
+            }
+            remaining_height -= child->size.y;
+        }
+    }
+
+    if (growable.size() == 0) {
+        return;
+    }
+
+    float gap = children.size() < 2 ? 0 : (children.size() - 1) * gap;
+    if (layout_model == Layout_Model::Horizontal) {
+        remaining_width -= gap;
+    } else {
+        remaining_height -= gap;
+    }
+
+    // GROW CHILDREN
+    if (layout_model == Layout_Model::Horizontal) {
+        while (remaining_width > 0) {
+            float smallest = growable[0]->size.x;
+            float second_smallest = INFINITY;
+            float width_to_add = remaining_width;
+
+            for (EUI_Element* child : growable) {
+                if (child->size.x < smallest) {
+                    second_smallest = smallest;
+                    smallest = child->size.x;
+                }
+                if (child->size.x > smallest) {
+                    second_smallest = std::min(second_smallest, child->size.x);
+                    width_to_add = second_smallest - smallest;
+                }
+            }
+
+            width_to_add = std::min(width_to_add, remaining_width / growable.size());
+
+            for (EUI_Element* child : growable) {
+                if (child->size.x == smallest) {
+                    child->size.x += width_to_add;
+                    remaining_width -= width_to_add;
+                }
+            }
+        }
+
+        if (size.y == Size::Grow()) {
+            size.y = parent->size.y - parent->padding.top - parent->padding.bottom;
+        }
+    } else {
+        while (remaining_height > 0) {
+            float smallest = growable[0]->size.y;
+            float second_smallest = INFINITY;
+            float height_to_add = remaining_height;
+
+            for (EUI_Element* child : growable) {
+                if (child->size.y < smallest) {
+                    second_smallest = smallest;
+                    smallest = child->size.y;
+                }
+                if (child->size.y > smallest) {
+                    second_smallest = std::min(second_smallest, child->size.y);
+                    height_to_add = second_smallest - smallest;
+                }
+            }
+
+            height_to_add = std::min(height_to_add, remaining_height / growable.size());
+
+            for (EUI_Element* child : growable) {
+                if (child->size.y == smallest) {
+                    child->size.y += height_to_add;
+                    remaining_height -= height_to_add;
+                }
+            }
+        }
+
+        if (size.x == Size::Grow()) {
+            size.x = parent->size.x - parent->padding.left - parent->padding.right;
+        }
+    }
+
+    for (auto* child : children) {
+        if (child->is_visible) {
+            child->Grow();
+        }
+    }
 }
 
 void EUI_Box::Place() {

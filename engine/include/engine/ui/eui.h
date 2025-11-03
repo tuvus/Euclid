@@ -156,9 +156,15 @@ class EUI_Box : public EUI_Element {
     std::vector<EUI_Element*> children;
 
   public:
-    EUI_Box() : layout_model(Layout_Model::Horizontal) {}
+    EUI_Box() : layout_model(Layout_Model::Horizontal) {
+        /*border_radius = 3;*/
+        /*border_color = RED;*/
+    }
     EUI_Box(bool vertical)
-        : layout_model(vertical ? Layout_Model::Vertical : Layout_Model::Horizontal) {}
+        : layout_model(vertical ? Layout_Model::Vertical : Layout_Model::Horizontal) {
+        /*border_radius = 3;*/
+        /*border_color = RED;*/
+    }
     ~EUI_Box() override;
 
     Layout_Model layout_model;
@@ -190,8 +196,11 @@ class EUI_Text : public EUI_Element {
 
     Vector2 text_pos;
 
+    // Fit size bottom up
     void Size() override;
+    // Expand grow containers top down
     void Grow() override;
+    // Place elements top down
     void Place() override;
 
     void Handle_Input() override;

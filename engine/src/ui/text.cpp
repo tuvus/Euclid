@@ -28,6 +28,11 @@ void EUI_Text::Size() {
         size.y = std::max(min_size.y, size.y);
     };
 
+    /*if (parent.layout_model == Layout_Model::Horizontal) {*/
+    /*    parent.width += element*/
+    /*} else {*/
+    /*}*/
+
     // TODO: what should this be...
     max_size = {9999, 9999};
 }
