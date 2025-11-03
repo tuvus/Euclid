@@ -10,8 +10,8 @@ class Menu_Scene : public Scene {
         root_elem = root;
         root->pos = {0, 0};
         root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
-        root->vertical_alignment = Alignment::Center;
-        root->horizontal_alignment = Alignment::Center;
+        root->main_axis_alignment = Alignment::Center;
+        root->cross_axis_alignment = Alignment::Center;
         root->gap = 20;
 
         auto* title = new EUI_Text("Game Title!");

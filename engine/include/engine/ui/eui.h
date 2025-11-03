@@ -126,10 +126,10 @@ class EUI_Element {
     std::optional<float> font_size;
     std::optional<float> font_spacing;
 
-    Alignment horizontal_alignment = Alignment::Start;
-    Alignment vertical_alignment = Alignment::Start;
-    Alignment text_horizontal_alignment = Alignment::Start;
-    Alignment text_vertical_alignment = Alignment::Start;
+    // Main axis = layout direction (X for HBox, Y for VBox)
+    // Cross axis = perpendicular to layout direction (Y for HBox, X for VBox)
+    Alignment main_axis_alignment = Alignment::Start;
+    Alignment cross_axis_alignment = Alignment::Start;
 
     // Getters for inheritable properties (optionals)
     Color Get_Text_Color() const;

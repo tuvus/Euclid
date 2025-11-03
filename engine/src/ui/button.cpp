@@ -5,9 +5,6 @@ EUI_Button::EUI_Button(const std::string& text, std::function<void()> on_click)
     // default button styles
     border_radius = 1;
     border_color = BLACK;
-
-    text_horizontal_alignment = Alignment::Center;
-    text_vertical_alignment = Alignment::Center;
 }
 
 void EUI_Button::Handle_Input() {

@@ -14,10 +14,9 @@ Game_Scene::Game_Scene(Card_Game& card_game)
     EUI_Box* root = new EUI_Box();
     root_elem = root;
 
-    root->pos = {0, 0};
-    root->size = {(float) card_game.screen_width, (float) card_game.screen_height};
-    root->vertical_alignment = Alignment::Center;
-    root->horizontal_alignment = Alignment::Center;
+    root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
+    root->main_axis_alignment = Alignment::Center;
+    root->gap = 20;
 
     money_text = new EUI_Text("Money: 0");
     money_text->font_size = 24;

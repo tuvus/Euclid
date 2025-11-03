@@ -24,8 +24,8 @@ class Test_Scene : public Scene {
 
         if (!label.empty()) {
             EUI_Text* text = new EUI_Text(label);
-            text->text_horizontal_alignment = Alignment::Center;
-            text->text_vertical_alignment = Alignment::Center;
+            text->main_axis_alignment = Alignment::Center;
+            text->cross_axis_alignment = Alignment::Center;
             text->text_color = WHITE;
             text->font_size = 16;
             box->Add_Child(text);
@@ -37,8 +37,8 @@ class Test_Scene : public Scene {
     // Test 1: Basic grow sizing with padding
     EUI_Element* Test_Grow_Sizing() {
         EUI_Box* root = new EUI_Box();
-        root->horizontal_alignment = Alignment::Center;
-        root->vertical_alignment = Alignment::Center;
+        root->main_axis_alignment = Alignment::Center;
+        root->cross_axis_alignment = Alignment::Center;
         root->gap = 20;
 
         EUI_Box* box1 = Create_Box("Fixed Size (600x300)", BLUE, {600, 300});
@@ -50,7 +50,7 @@ class Test_Scene : public Scene {
 
         EUI_Text* grow_text = new EUI_Text("Grow Text");
         grow_text->size = {Size::Grow(), Size::Fit()};
-        grow_text->text_horizontal_alignment = Alignment::Center;
+        grow_text->cross_axis_alignment = Alignment::Center;
         grow_text->text_color = YELLOW;
         grow_text->background_color = Color{0, 0, 0, 100};
         grow_box->Add_Child(grow_text);
@@ -65,14 +65,14 @@ class Test_Scene : public Scene {
     // Test 2: Center alignment on both axes
     EUI_Element* Test_Center_Alignment() {
         EUI_Box* root = new EUI_Box();
-        root->horizontal_alignment = Alignment::Center;
-        root->vertical_alignment = Alignment::Center;
+        root->main_axis_alignment = Alignment::Center;
+        root->cross_axis_alignment = Alignment::Center;
         root->gap = 20;
 
         // Horizontal centering test
         EUI_Box* hbox = Create_Box("", DARKGRAY, {800, 200});
-        hbox->horizontal_alignment = Alignment::Center; // Center children horizontally
-        hbox->vertical_alignment = Alignment::Center;   // Center children vertically
+        hbox->main_axis_alignment = Alignment::Center;  // Center children horizontally
+        hbox->cross_axis_alignment = Alignment::Center; // Center children vertically
         hbox->gap = 10;
 
         hbox->Add_Child(Create_Box("Box 1", RED, {100, 100}));
@@ -81,8 +81,8 @@ class Test_Scene : public Scene {
 
         // Vertical centering test
         EUI_Box* vbox = Create_Box("", DARKGRAY, {200, 600}, Layout_Model::Vertical);
-        vbox->horizontal_alignment = Alignment::Center; // Center children horizontally
-        vbox->vertical_alignment = Alignment::Center;   // Center children vertically
+        vbox->cross_axis_alignment = Alignment::Center; // Center children horizontally
+        vbox->main_axis_alignment = Alignment::Center;  // Center children vertically
         vbox->gap = 10;
 
         vbox->Add_Child(Create_Box("Box A", ORANGE, {100, 100}));
@@ -98,13 +98,13 @@ class Test_Scene : public Scene {
     // Test 3: End alignment
     EUI_Element* Test_End_Alignment() {
         EUI_Box* root = new EUI_Box(true); // Vertical
-        root->horizontal_alignment = Alignment::Center;
-        root->vertical_alignment = Alignment::Center;
+        root->cross_axis_alignment = Alignment::Center;
+        root->main_axis_alignment = Alignment::Center;
         root->gap = 30;
 
         // Horizontal end alignment
         EUI_Box* hbox = Create_Box("", DARKGRAY, {800, 150});
-        hbox->horizontal_alignment = Alignment::End; // Align children to end (right)
+        hbox->main_axis_alignment = Alignment::End; // Align children to end (right)
         hbox->gap = 10;
 
         hbox->Add_Child(Create_Box("Right 1", RED, {120, 80}));
@@ -112,7 +112,7 @@ class Test_Scene : public Scene {
 
         // Vertical end alignment
         EUI_Box* vbox = Create_Box("", DARKGRAY, {200, 500}, Layout_Model::Vertical);
-        vbox->vertical_alignment = Alignment::End; // Align children to end (bottom)
+        vbox->main_axis_alignment = Alignment::End; // Align children to end (bottom)
         vbox->gap = 10;
 
         vbox->Add_Child(Create_Box("Bottom 1", ORANGE, {150, 80}));
@@ -127,7 +127,7 @@ class Test_Scene : public Scene {
     // Test 4: Mixed alignments with nesting
     EUI_Element* Test_Mixed_Alignments() {
         EUI_Box* root = new EUI_Box(true);
-        root->horizontal_alignment = Alignment::Center;
+        root->cross_axis_alignment = Alignment::Center;
         root->gap = 15;
 
         // Top row: Start, Center, End
@@ -135,19 +135,19 @@ class Test_Scene : public Scene {
         row1->gap = 20;
 
         EUI_Box* col_start = Create_Box("", BLUE, {250, 130}, Layout_Model::Vertical);
-        col_start->vertical_alignment = Alignment::Start;
+        col_start->main_axis_alignment = Alignment::Start;
         col_start->gap = 5;
         col_start->Add_Child(Create_Box("Start", WHITE, {80, 30}));
         col_start->Add_Child(Create_Box("Aligned", WHITE, {80, 30}));
 
         EUI_Box* col_center = Create_Box("", GREEN, {250, 130}, Layout_Model::Vertical);
-        col_center->vertical_alignment = Alignment::Center;
+        col_center->main_axis_alignment = Alignment::Center;
         col_center->gap = 5;
         col_center->Add_Child(Create_Box("Center", WHITE, {80, 30}));
         col_center->Add_Child(Create_Box("Aligned", WHITE, {80, 30}));
 
         EUI_Box* col_end = Create_Box("", RED, {250, 130}, Layout_Model::Vertical);
-        col_end->vertical_alignment = Alignment::End;
+        col_end->main_axis_alignment = Alignment::End;
         col_end->gap = 5;
         col_end->Add_Child(Create_Box("End", WHITE, {80, 30}));
         col_end->Add_Child(Create_Box("Aligned", WHITE, {80, 30}));
@@ -161,14 +161,14 @@ class Test_Scene : public Scene {
         row2->gap = 15;
 
         EUI_Box* tall = Create_Box("Tall\nBox", ORANGE, {150, 150});
-        tall->vertical_alignment = Alignment::Start;
+        tall->cross_axis_alignment = Alignment::Start;
 
         EUI_Box* medium = Create_Box("Medium", PURPLE, {Size::Grow(), 100});
-        medium->vertical_alignment = Alignment::Center;
-        medium->horizontal_alignment = Alignment::Center;
+        medium->cross_axis_alignment = Alignment::Center;
+        medium->main_axis_alignment = Alignment::Center;
 
         EUI_Box* small = Create_Box("Small", PINK, {150, 60});
-        small->vertical_alignment = Alignment::End;
+        small->cross_axis_alignment = Alignment::End;
 
         row2->Add_Child(tall);
         row2->Add_Child(medium);
@@ -188,14 +188,14 @@ class Test_Scene : public Scene {
 
         // Header
         EUI_Box* header = Create_Box("Header (Centered)", DARKBLUE, {Size::Grow(), 60});
-        header->horizontal_alignment = Alignment::Center;
+        header->main_axis_alignment = Alignment::Center;
 
         // Content area with sidebar
         EUI_Box* content = Create_Box("", DARKGRAY, {Size::Grow(), Size::Grow()});
         content->gap = 10;
 
         EUI_Box* sidebar = Create_Box("Sidebar\n(Fixed)", PURPLE, {200, Size::Grow()});
-        sidebar->vertical_alignment = Alignment::Start;
+        sidebar->cross_axis_alignment = Alignment::Start;
 
         EUI_Box* main_area =
             Create_Box("", GRAY, {Size::Grow(), Size::Grow()}, Layout_Model::Vertical);
@@ -209,7 +209,7 @@ class Test_Scene : public Scene {
 
         // Footer
         EUI_Box* footer = Create_Box("Footer (End Aligned)", DARKGREEN, {Size::Grow(), 50});
-        footer->horizontal_alignment = Alignment::End;
+        footer->main_axis_alignment = Alignment::End;
 
         root->Add_Child(header);
         root->Add_Child(content);

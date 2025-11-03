@@ -12,11 +12,6 @@ static std::string get_indent() {
 EUI_Text::EUI_Text(const std::string& text) : text(text) {
     // default styles
     border_radius = 0;
-
-    horizontal_alignment = Alignment::Start;
-    vertical_alignment = Alignment::Start;
-    text_horizontal_alignment = Alignment::Start;
-    text_vertical_alignment = Alignment::Start;
 }
 
 void EUI_Text::Size() {
@@ -43,11 +38,13 @@ void EUI_Text::Size() {
 
     layout_depth--;
     std::cout << get_indent() << "  → text_size=(" << text_size.x << ", " << text_size.y
-              << ") size=(" << size.x << ", " << size.y << ") min=(" << min_size.x << ", " << min_size.y << ")" << std::endl;
+              << ") size=(" << size.x << ", " << size.y << ") min=(" << min_size.x << ", "
+              << min_size.y << ")" << std::endl;
 }
 
 void EUI_Text::Grow() {
-    std::cout << get_indent() << "[GROW] Text '" << text << "' before=(" << size.x << ", " << size.y << ")" << std::endl;
+    std::cout << get_indent() << "[GROW] Text '" << text << "' before=(" << size.x << ", " << size.y
+              << ")" << std::endl;
     layout_depth++;
 
     if (!parent) {
@@ -82,7 +79,7 @@ void EUI_Text::Place() {
         MeasureTextEx(Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
 
     // Vertical alignment
-    switch (text_vertical_alignment) {
+    switch (main_axis_alignment) {
         case Alignment::Center:
             text_pos.y = pos.y + (size.y - text_size.y + padding.top - padding.bottom) / 2.0f;
             break;
@@ -96,7 +93,7 @@ void EUI_Text::Place() {
     }
 
     // Horizontal alignment
-    switch (text_horizontal_alignment) {
+    switch (cross_axis_alignment) {
         case Alignment::Center:
             text_pos.x = pos.x + (size.x - text_size.x + padding.left - padding.right) / 2.0f;
             break;
@@ -110,7 +107,8 @@ void EUI_Text::Place() {
     }
 
     layout_depth--;
-    std::cout << get_indent() << "  → text_pos=(" << text_pos.x << ", " << text_pos.y << ")" << std::endl;
+    std::cout << get_indent() << "  → text_pos=(" << text_pos.x << ", " << text_pos.y << ")"
+              << std::endl;
 }
 
 void EUI_Text::Handle_Input() {
