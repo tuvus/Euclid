@@ -3,6 +3,7 @@
 #include "game_scene.h"
 #include "lobby_scene.h"
 #include "menu_scene.h"
+#include "test_scene.h"
 
 void Card_Game::resize_update() {
     auto root = scene->Get_Root();
@@ -30,8 +31,9 @@ void Card_Game::Start_Client() {
     scenes.insert({MENU, [this]() -> Scene* { return new Menu_Scene(*this); }});
     scenes.insert({LOBBY, [this]() -> Scene* { return new Lobby_Scene(*this); }});
     scenes.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
+    scenes.insert({TEST, [this]() -> Scene* { return new Test_Scene(*this); }});
 
-    set_ui_screen(MENU);
+    set_ui_screen(TEST);
 
     resize_update();
 }

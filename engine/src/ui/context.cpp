@@ -1,3 +1,4 @@
+#include <iostream>
 #include "ui/eui.h"
 
 /* EUI_Context Implementations */
@@ -29,9 +30,13 @@ void EUI_Context::End_Frame() {
 }
 void EUI_Context::Perform_Layout() {
     if (root) {
+        std::cout << "\n========== LAYOUT PASS 1: SIZE (Bottom-Up) ==========" << std::endl;
         root->Size();
+        std::cout << "\n========== LAYOUT PASS 2: GROW (Top-Down) ==========" << std::endl;
         root->Grow();
+        std::cout << "\n========== LAYOUT PASS 3: PLACE (Top-Down) ==========" << std::endl;
         root->Place();
+        std::cout << "\n========== LAYOUT COMPLETE ==========\n" << std::endl;
     }
 }
 void EUI_Context::Handle_Input() {
