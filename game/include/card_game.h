@@ -15,7 +15,7 @@ using namespace std;
 #define SCREEN_HEIGHT 720
 #define TITLE_FONT_SIZE 24
 
-enum SCREEN { MENU, LOBBY, GAME };
+enum SCREEN { MENU, LOBBY, GAME, TEST };
 
 typedef struct Tile {
     Color color;
