@@ -1,19 +1,21 @@
 #pragma once
-#include "game_object.h"
+#include "ecs.h"
 
 class Path;
 class Card_Player;
-class Base : public Game_Object {
-  public:
+struct Base_Component {
+    static Component_Type component_type;
+    int base_income_speed;
     int time_until_income;
     int health;
+    int max_health;
     Path* path;
-    Card_Player& card_player;
-
-    Base(Game_Manager& game_manager, Card_Player& card_player, Vector2 pos, Path* path,
-         int base_income_speed, int max_health);
-
-    void Update() override;
-
-    Object_UI* Create_UI_Object(Game_UI_Manager& game_ui_manager) override { return nullptr; }
+    Card_Player* card_player;
 };
+
+void Init_Base(Entity entity, Card_Player* card_player, Vector2 pos, Path* path,
+               int base_income_speed, int max_health);
+
+void Base_Update(ECS* ecs, Entity entity);
+
+Entity_Type* Get_Base_Entity_Type();

@@ -17,6 +17,7 @@ set(Sources
         src/card.cpp
         src/base.cpp
         src/tower_card.cpp
+        src/unit_card.cpp
 )
 
 set(Headers
