@@ -43,30 +43,7 @@ void EUI_Text::Size() {
 }
 
 void EUI_Text::Grow() {
-    std::cout << get_indent() << "[GROW] Text '" << text << "' before=(" << size.x << ", " << size.y
-              << ")" << std::endl;
-    layout_depth++;
-
-    if (!parent) {
-        std::cout << get_indent() << "No parent, skipping grow" << std::endl;
-        layout_depth--;
-        return;
-    }
-
-    // Grow to fill parent's available space (minus padding)
-    // If main-axis was marked as Grow(), parent's distribution logic already set the size
-    // If cross-axis is marked as Grow(), we handle it here
-    if (size.x == Size::Grow()) {
-        size.x = parent->size.x - parent->padding.left - parent->padding.right;
-        std::cout << get_indent() << "Growing X to " << size.x << std::endl;
-    }
-    if (size.y == Size::Grow()) {
-        size.y = parent->size.y - parent->padding.top - parent->padding.bottom;
-        std::cout << get_indent() << "Growing Y to " << size.y << std::endl;
-    }
-
-    layout_depth--;
-    std::cout << get_indent() << "  → final size=(" << size.x << ", " << size.y << ")" << std::endl;
+    // no-op since no children
 }
 
 void EUI_Text::Place() {
@@ -106,6 +83,17 @@ void EUI_Text::Place() {
             break;
     }
 
+    // Apply relative positioning offset after normal placement
+    if (position == Position::Relative) {
+        pos.x += left - right;
+        pos.y += top - bottom;
+        text_pos.x += left - right;
+        text_pos.y += top - bottom;
+        std::cout << get_indent() << "Applied relative offset: left=" << left << " right=" << right
+                  << " top=" << top << " bottom=" << bottom << " → final pos=(" << pos.x << ", "
+                  << pos.y << ")" << std::endl;
+    }
+
     layout_depth--;
     std::cout << get_indent() << "  → text_pos=(" << text_pos.x << ", " << text_pos.y << ")"
               << std::endl;
@@ -127,7 +115,7 @@ void EUI_Text::Render() {
     if (border_radius > 0)
         DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, border_radius, border_color);
 
-    // Text (position already calculated in Place())
+    // Text
     DrawTextEx(Get_Font(), text.c_str(), text_pos, Get_Font_Size(), Get_Font_Spacing(),
                Get_Text_Color());
 }

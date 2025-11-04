@@ -24,7 +24,7 @@ class Size {
 
 enum class Alignment { Start, Center, End, Stretch };
 
-enum class Position { Static, Relative, Absolute, Fixed, Sticky };
+enum class Position { Static, Relative, Absolute };
 
 class EUI_Input;
 class EUI_Element;
@@ -116,8 +116,11 @@ class EUI_Element {
     Sides padding = {0};
 
     Position position = Position::Static;
-    // For relative positioning, the top/right/bottom/left values are relative to the parent
-    float top, right, bottom, left = 0;
+    // Positioning modes:
+    // - Static: normal flow (default)
+    // - Relative: placed in normal flow, then offset by left/right/top/bottom
+    // - Absolute: removed from flow, user sets pos.x/pos.y directly (pixel coordinates)
+    float top = 0, right = 0, bottom = 0, left = 0;  // Only used for Relative positioning
 
     Color border_color = BLACK;
     float border_radius = 0;
@@ -190,11 +193,8 @@ class EUI_Text : public EUI_Element {
 
     Vector2 text_pos;
 
-    // Fit size bottom up
     void Size() override;
-    // Expand grow containers top down
     void Grow() override;
-    // Place elements top down
     void Place() override;
 
     void Handle_Input() override;
