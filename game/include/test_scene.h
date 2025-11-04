@@ -8,11 +8,11 @@
 
 class Test_Scene : public Scene {
   private:
-    // Current active test (can be changed at runtime with 1-5 keys)
-    int active_test = 4;
+    // Current active test (can be changed at runtime with 1-6 keys)
+    int active_test = 6;
 
     // Pre-created test layouts (kept in memory to avoid create/destroy cycles)
-    EUI_Element* test_layouts[5] = {nullptr, nullptr, nullptr, nullptr, nullptr};
+    EUI_Element* test_layouts[6] = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
 
     // Helper to create a colored box with text
     EUI_Box* Create_Box(const std::string& label, Color color, Vector2 size,
@@ -49,7 +49,7 @@ class Test_Scene : public Scene {
         grow_box->padding = {15, 15, 15, 15};
 
         EUI_Text* grow_text = new EUI_Text("Grow Text");
-        grow_text->size = {Size::Grow(), Size::Fit()};
+        grow_text->size = {Size::Grow(), Size::Grow()};
         grow_text->cross_axis_alignment = Alignment::Center;
         grow_text->text_color = YELLOW;
         grow_text->background_color = Color{0, 0, 0, 100};
@@ -227,6 +227,138 @@ class Test_Scene : public Scene {
         return root;
     }
 
+    // Test 6: Positioning (Static, Relative, Absolute)
+    EUI_Element* Test_Positioning() {
+        EUI_Box* root = new EUI_Box(true);
+        root->id = "root";
+        root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
+        root->padding = {20, 20, 20, 20};
+        root->gap = 20;
+        root->main_axis_alignment = Alignment::Start;
+
+        // Title
+        EUI_Text* title = new EUI_Text("POSITIONING TEST (Static/Relative/Absolute)");
+        title->text_color = WHITE;
+        title->font_size = 20;
+        title->background_color = DARKPURPLE;
+        title->padding = {10, 10, 10, 10};
+        root->Add_Child(title);
+
+        // Container for examples
+        EUI_Box* examples = new EUI_Box();
+        examples->id = "examples";
+        examples->size = {Size::Grow(), Size::Grow()};
+        examples->gap = 30;
+        examples->main_axis_alignment = Alignment::End;
+
+        // === SECTION 1: Static positioning (normal flow) ===
+        EUI_Box* static_section =
+            Create_Box("", Color{40, 40, 40, 255}, {350, Size::Fit()}, Layout_Model::Vertical);
+        static_section->id = "static_section";
+        static_section->gap = 10;
+
+        EUI_Text* static_label = new EUI_Text("Static (Normal Flow)");
+        static_label->text_color = YELLOW;
+        static_label->font_size = 18;
+        static_section->Add_Child(static_label);
+
+        EUI_Box* box1 = Create_Box("Box 1", BLUE, {300, 80});
+        box1->position = Position::Static;
+        EUI_Box* box2 = Create_Box("Box 2", GREEN, {300, 80});
+        box2->position = Position::Static;
+        EUI_Box* box3 = Create_Box("Box 3", RED, {300, 80});
+        box3->position = Position::Static;
+
+        static_section->Add_Child(box1);
+        static_section->Add_Child(box2);
+        static_section->Add_Child(box3);
+
+        // === SECTION 2: Relative positioning ===
+        EUI_Box* relative_section =
+            Create_Box("", Color{40, 40, 40, 255}, {400, Size::Fit()}, Layout_Model::Vertical);
+        relative_section->id = "relative_section";
+        relative_section->gap = 10;
+
+        EUI_Text* relative_label = new EUI_Text("Relative (Offset from normal)");
+        relative_label->text_color = YELLOW;
+        relative_label->font_size = 18;
+        relative_section->Add_Child(relative_label);
+
+        // Box A: Normal static
+        EUI_Box* boxA = Create_Box("Static", DARKGRAY, {350, 60});
+        relative_section->Add_Child(boxA);
+
+        // Box B: Relative with right/down offset
+        EUI_Box* boxB = Create_Box("Relative (+20 right, +10 down)", ORANGE, {350, 60});
+        boxB->Set_Relative_Offset(20, 10); // Move 20px right, 10px down
+        relative_section->Add_Child(boxB);
+
+        // Box C: Shows space is preserved
+        EUI_Box* boxC = Create_Box("Static (note space above)", DARKGRAY, {350, 60});
+        relative_section->Add_Child(boxC);
+
+        examples->Add_Child(static_section);
+        examples->Add_Child(relative_section);
+
+        root->Add_Child(examples);
+
+        // === SECTION 3: Absolute positioning (overlays) ===
+        // These are NOT added to the normal flow, so we add them to root directly
+
+        // Overlay 1: Top-left corner
+        EUI_Box* overlay1 = Create_Box("Absolute\nTop-Left", PURPLE, {150, 100});
+        overlay1->Set_Absolute_Position(20, 80);
+        overlay1->main_axis_alignment = Alignment::Center;
+        overlay1->cross_axis_alignment = Alignment::Center;
+        root->Add_Child(overlay1);
+
+        // Overlay 2: Top-right corner
+        EUI_Box* overlay2 = Create_Box("Absolute\nTop-Right", Color{200, 0, 200, 255}, {150, 100});
+        overlay2->Set_Absolute_Position(SCREEN_WIDTH - 170, 80);
+        overlay2->main_axis_alignment = Alignment::Center;
+        overlay2->cross_axis_alignment = Alignment::Center;
+        root->Add_Child(overlay2);
+
+        // Overlay 3: Bottom-center (floating action button style)
+        EUI_Box* fab = Create_Box("FAB", Color{255, 100, 100, 255}, {100, 100});
+        fab->Set_Absolute_Position((SCREEN_WIDTH - 100) / 2, SCREEN_HEIGHT - 120);
+        fab->border_radius = 2;
+        fab->main_axis_alignment = Alignment::Center;
+        fab->cross_axis_alignment = Alignment::Center;
+        root->Add_Child(fab);
+
+        // Overlay 4: Nested absolute (absolute inside absolute)
+        EUI_Box* overlay_parent = Create_Box("", Color{0, 100, 200, 200}, {300, 250});
+        overlay_parent->Set_Absolute_Position(SCREEN_WIDTH - 320, SCREEN_HEIGHT - 270);
+        overlay_parent->padding = {20, 20, 20, 20};
+
+        EUI_Text* parent_label = new EUI_Text("Parent: Absolute");
+        parent_label->text_color = WHITE;
+        parent_label->font_size = 14;
+        overlay_parent->Add_Child(parent_label);
+
+        // Child inside absolute parent - also absolute
+        EUI_Box* overlay_child = Create_Box("Child\nAbsolute", YELLOW, {120, 80});
+        overlay_child->Set_Absolute_Position(160, 150); // Pixel coordinates
+        overlay_child->main_axis_alignment = Alignment::Center;
+        overlay_child->cross_axis_alignment = Alignment::Center;
+        overlay_child->text_color = BLACK;
+        overlay_parent->Add_Child(overlay_child);
+
+        root->Add_Child(overlay_parent);
+
+        // Info text showing absolute elements render on top
+        EUI_Text* info = new EUI_Text("Note: Purple boxes are absolute - they overlay everything!");
+        info->text_color = Color{255, 255, 100, 255};
+        info->font_size = 14;
+        info->background_color = Color{0, 0, 0, 150};
+        info->padding = {8, 8, 8, 8};
+        info->Set_Absolute_Position(20, SCREEN_HEIGHT - 40);
+        root->Add_Child(info);
+
+        return root;
+    }
+
     // Initialize all test layouts once
     void Initialize_All_Tests() {
         test_layouts[0] = Test_Grow_Sizing();
@@ -234,11 +366,12 @@ class Test_Scene : public Scene {
         test_layouts[2] = Test_End_Alignment();
         test_layouts[3] = Test_Mixed_Alignments();
         test_layouts[4] = Test_Complex_Nested();
+        test_layouts[5] = Test_Positioning();
 
         Card_Game& game = static_cast<Card_Game&>(application);
 
         // Attach all to context
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             if (test_layouts[i] && game.eui_ctx) {
                 test_layouts[i]->Set_Context(*game.eui_ctx);
             }
@@ -251,7 +384,7 @@ class Test_Scene : public Scene {
 
         // Just switch which layout is active (1-indexed to 0-indexed)
         int index = active_test - 1;
-        if (index >= 0 && index < 5) {
+        if (index >= 0 && index < 6) {
             root_elem = test_layouts[index];
 
             // Update size and context root, then perform layout
@@ -279,7 +412,7 @@ class Test_Scene : public Scene {
         root_elem = nullptr;
 
         // Clean up all pre-created layouts
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             if (test_layouts[i]) {
                 delete test_layouts[i];
                 test_layouts[i] = nullptr;
@@ -311,6 +444,12 @@ class Test_Scene : public Scene {
             active_test = 5;
             Load_Test();
             std::cout << "\n===== SWITCHED TO TEST 5: Complex Nested Layout =====\n" << std::endl;
+        } else if (IsKeyPressed(KEY_SIX)) {
+            active_test = 6;
+            Load_Test();
+            std::cout
+                << "\n===== SWITCHED TO TEST 6: Positioning (Static/Relative/Absolute) =====\n"
+                << std::endl;
         }
     }
 };
