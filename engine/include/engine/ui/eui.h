@@ -140,6 +140,27 @@ class EUI_Element {
     float Get_Font_Size() const;
     float Get_Font_Spacing() const;
 
+    // Position query methods
+    bool Is_Static() const { return position == Position::Static; }
+    bool Is_Relative() const { return position == Position::Relative; }
+    bool Is_Absolute() const { return position == Position::Absolute; }
+    bool Is_Positioned() const { return position != Position::Static; }
+
+    // Convenience setters for positioning
+    void Set_Relative_Offset(float x, float y) {
+        position = Position::Relative;
+        left = x;
+        top = y;
+        right = 0;
+        bottom = 0;
+    }
+
+    void Set_Absolute_Position(float x, float y) {
+        position = Position::Absolute;
+        pos.x = x;
+        pos.y = y;
+    }
+
     virtual void Set_Context(EUI_Context& ctx);
     virtual void Delete() { is_deleted = true; }
 

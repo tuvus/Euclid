@@ -84,7 +84,7 @@ void EUI_Text::Place() {
     }
 
     // Apply relative positioning offset after normal placement
-    if (position == Position::Relative) {
+    if (Is_Relative()) {
         pos.x += left - right;
         pos.y += top - bottom;
         text_pos.x += left - right;

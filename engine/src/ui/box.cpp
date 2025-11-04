@@ -66,7 +66,7 @@ void EUI_Box::Size() {
             child->Size();
 
             // Skip absolutely positioned children
-            if (child->position == Position::Absolute) {
+            if (child->Is_Absolute()) {
                 std::cout << get_indent() << "Skipping absolute child in size calculation"
                           << std::endl;
                 continue;
@@ -124,7 +124,7 @@ void EUI_Box::Grow() {
         }
 
         // Skip absolute positioned elements
-        if (child->position == Position::Absolute) {
+        if (child->Is_Absolute()) {
             std::cout << get_indent() << "Skipping absolute child in grow calculation" << std::endl;
             // Still need to recursively grow them since they might have growable children
             child->Grow();
@@ -157,7 +157,7 @@ void EUI_Box::Grow() {
         std::cout << get_indent() << "No growable children, skipping distribution" << std::endl;
         for (EUI_Element* child : children) {
             // Skip absolute since we already handled them
-            if (child->is_visible && child->position != Position::Absolute) {
+            if (child->is_visible && !child->Is_Absolute()) {
                 child->Grow();
             }
         }
@@ -231,7 +231,7 @@ void EUI_Box::Grow() {
     }
 
     for (auto* child : children) {
-        if (child->is_visible && child->position != Position::Absolute) {
+        if (child->is_visible && !child->Is_Absolute()) {
             // cross-axis grow
             if (child->size.y == Size::Grow() && layout_model == Layout_Model::Horizontal) {
                 child->size.y = remaining_height;
@@ -259,7 +259,7 @@ void EUI_Box::Place() {
     float total_children_size = 0;
     int visible_count = 0;
     for (EUI_Element* child : children) {
-        if (child->is_visible && child->position != Position::Absolute) {
+        if (child->is_visible && !child->Is_Absolute()) {
             visible_count++;
             if (layout_model == Layout_Model::Horizontal) {
                 total_children_size += child->size.x;
@@ -296,7 +296,7 @@ void EUI_Box::Place() {
 
     // Place non-absolute children with normal flow
     for (EUI_Element* child : children) {
-        if (!child->is_visible || child->position == Position::Absolute) {
+        if (!child->is_visible || child->Is_Absolute()) {
             continue;
         }
 
@@ -363,7 +363,7 @@ void EUI_Box::Place() {
 
     // Handle absolute positioned children
     for (EUI_Element* child : children) {
-        if (child->is_visible && child->position == Position::Absolute) {
+        if (child->is_visible && child->Is_Absolute()) {
             std::cout << get_indent() << "Placing absolute child at user-defined pos=("
                       << child->pos.x << ", " << child->pos.y << ")" << std::endl;
             // User has already set child->pos, just propagate to children
@@ -372,7 +372,7 @@ void EUI_Box::Place() {
     }
 
     // Apply relative positioning offset after normal placement
-    if (position == Position::Relative) {
+    if (Is_Relative()) {
         pos.x += left - right;
         pos.y += top - bottom;
         std::cout << get_indent() << "Applied relative offset: left=" << left << " right=" << right
@@ -395,7 +395,7 @@ void EUI_Box::Render() {
 
     // Render non-absolute children first
     for (EUI_Element* child : children) {
-        if (child->is_visible && child->position != Position::Absolute) {
+        if (child->is_visible && !child->Is_Absolute()) {
             child->Render();
         }
     }
@@ -403,7 +403,7 @@ void EUI_Box::Render() {
     // Render absolute positioned children last (on top)
     // TODO: potentially add z-indexing
     for (EUI_Element* child : children) {
-        if (child->is_visible && child->position == Position::Absolute) {
+        if (child->is_visible && child->Is_Absolute()) {
             child->Render();
         }
     }
