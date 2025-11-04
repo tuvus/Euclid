@@ -46,7 +46,8 @@ void Game_UI_Manager::Update_UI(std::chrono::milliseconds delta_time, EUI_Contex
 void Game_UI_Manager::DrawImage(Texture2D& texture, Vector2 pos, float rot, float scale,
                                 Color color) {
     BeginMode2D(camera);
-    DrawTexturePro(texture, {0, 0, (float) texture.width, (float) texture.height},
+    DrawTexturePro(texture,
+                   {0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)},
                    {pos.x, pos.y, texture.width * scale, texture.height * scale},
                    Vector2(texture.width * scale / 2, texture.height * scale / 2), rot, color);
     EndMode2D();
@@ -54,7 +55,8 @@ void Game_UI_Manager::DrawImage(Texture2D& texture, Vector2 pos, float rot, floa
 
 void Game_UI_Manager::DrawScreenImage(Texture2D& texture, Vector2 pos, float rot, float scale,
                                       Color color) {
-    DrawTexturePro(texture, {0, 0, (float) texture.width, (float) texture.height},
+    DrawTexturePro(texture,
+                   {0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)},
                    {pos.x, pos.y, texture.width * scale, texture.height * scale},
                    Vector2(texture.width * scale / 2, texture.height * scale / 2), rot, color);
 }
