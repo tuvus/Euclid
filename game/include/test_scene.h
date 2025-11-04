@@ -65,13 +65,12 @@ class Test_Scene : public Scene {
     // Test 2: Center alignment on both axes
     EUI_Element* Test_Center_Alignment() {
         EUI_Box* root = new EUI_Box();
-        root->main_axis_alignment = Alignment::Center;
-        root->cross_axis_alignment = Alignment::Center;
+        root->main_axis_alignment = Alignment::Stretch;
         root->gap = 20;
 
         // Horizontal centering test
         EUI_Box* hbox = Create_Box("", DARKGRAY, {800, 200});
-        hbox->main_axis_alignment = Alignment::Center;  // Center children horizontally
+        hbox->main_axis_alignment = Alignment::Stretch; // Center children horizontally
         hbox->cross_axis_alignment = Alignment::Center; // Center children vertically
         hbox->gap = 10;
 
