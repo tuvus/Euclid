@@ -1,4 +1,4 @@
-# \<GAME ENGINE NAME\>
+# Euclid Game Engine
 
 ## Entity Component System Design
 
