@@ -100,7 +100,7 @@ void EUI_Box::Grow() {
               << "' before=(" << size.x << ", " << size.y << ")" << std::endl;
     layout_depth++;
 
-    // CALCULATE REMAINING SPACE within THIS box to distribute to children
+    // CALCULATE REMAINING SPACE within this box to distribute to children
     float remaining_width = size.x - padding.left - padding.right;
     float remaining_height = size.y - padding.top - padding.bottom;
     std::vector<EUI_Element*> growable;
@@ -115,17 +115,15 @@ void EUI_Box::Grow() {
         if (layout_model == Layout_Model::Horizontal) {
             if (child->size.x == Size::Grow()) {
                 growable.push_back(child);
-            } else {
-                // Only subtract concrete sizes, not Grow() sentinel
-                remaining_width -= child->size.x;
+                child->size.x = min_size.x;
             }
+            remaining_width -= child->size.x;
         } else {
             if (child->size.y == Size::Grow()) {
                 growable.push_back(child);
-            } else {
-                // Only subtract concrete sizes, not Grow() sentinel
-                remaining_height -= child->size.y;
+                child->size.y = min_size.y;
             }
+            remaining_height -= child->size.y;
         }
     }
 
@@ -143,22 +141,7 @@ void EUI_Box::Grow() {
         return;
     }
 
-    // Initialize growable children to their min_size (replacing Grow() sentinel)
-    for (EUI_Element* child : growable) {
-        if (layout_model == Layout_Model::Horizontal) {
-            if (child->size.x == Size::Grow()) {
-                child->size.x = child->min_size.x;
-                remaining_width -= child->min_size.x;
-            }
-        } else {
-            if (child->size.y == Size::Grow()) {
-                child->size.y = child->min_size.y;
-                remaining_height -= child->min_size.y;
-            }
-        }
-    }
-
-    float total_gap = children.size() < 2 ? 0 : (children.size() - 1) * gap;
+    float total_gap = children.size() > 1 ? (children.size() - 1) * gap : 0;
     if (layout_model == Layout_Model::Horizontal) {
         remaining_width -= total_gap;
         std::cout << get_indent() << "After gap: remaining_width=" << remaining_width << std::endl;
@@ -170,7 +153,7 @@ void EUI_Box::Grow() {
 
     // GROW CHILDREN
     if (layout_model == Layout_Model::Horizontal) {
-        while (!growable.empty() && remaining_width > 0) {
+        while (remaining_width > 0) {
             float smallest = growable[0]->size.x;
             float second_smallest = INFINITY;
             float width_to_add = remaining_width;
@@ -196,7 +179,7 @@ void EUI_Box::Grow() {
             }
         }
     } else {
-        while (!growable.empty() && remaining_height > 0) {
+        while (remaining_height > 0) {
             float smallest = growable[0]->size.y;
             float second_smallest = INFINITY;
             float height_to_add = remaining_height;
@@ -261,6 +244,7 @@ void EUI_Box::Place() {
             }
         }
     }
+
     float total_gap = visible_count > 1 ? gap * (visible_count - 1) : 0;
     total_children_size += total_gap;
 
@@ -289,15 +273,24 @@ void EUI_Box::Place() {
     // place each children with correct gap and padding
     for (EUI_Element* child : children) {
         if (child->is_visible) {
-            // Set child position FIRST (so nested children can use correct parent pos)
             if (layout_model == Layout_Model::Horizontal) {
-                // Main axis (X): use offset cursor
+                // place child at offset cursor
                 child->pos.x = pos.x + offset;
+
+                // handle stretch alignment offset calculation
+                if (main_axis_alignment == Alignment::Stretch && children.size() > 1) {
+                    float stretch_gap =
+                        (size.x - total_children_size - padding.left - padding.right) /
+                        (children.size() - 1);
+                    offset += stretch_gap;
+                }
+
                 offset += child->size.x + gap;
 
-                // Cross axis (Y): apply parent's cross-axis alignment to position children
+                // cross (Y) axis
                 switch (cross_axis_alignment) {
                     case Alignment::Start:
+                    case Alignment::Stretch:
                         child->pos.y = pos.y + padding.top;
                         break;
                     case Alignment::Center:
@@ -306,19 +299,25 @@ void EUI_Box::Place() {
                     case Alignment::End:
                         child->pos.y = pos.y + size.y - child->size.y - padding.bottom;
                         break;
-                    case Alignment::Stretch:
-                        // Position at start; stretching should be done in Grow()
-                        child->pos.y = pos.y + padding.top;
-                        break;
                 }
             } else {
-                // Main axis (Y): use offset cursor
+                // place child at offset cursor
                 child->pos.y = pos.y + offset;
+
+                // handle stretch alignment offset calculation
+                if (main_axis_alignment == Alignment::Stretch && children.size() > 1) {
+                    float stretch_gap =
+                        (size.y - total_children_size - padding.top - padding.bottom) /
+                        (children.size() - 1);
+                    offset += stretch_gap;
+                }
+
                 offset += child->size.y + gap;
 
-                // Cross axis (X): apply parent's cross-axis alignment to position children
+                // cross (X) axis
                 switch (cross_axis_alignment) {
                     case Alignment::Start:
+                    case Alignment::Stretch:
                         child->pos.x = pos.x + padding.left;
                         break;
                     case Alignment::Center:
@@ -327,10 +326,6 @@ void EUI_Box::Place() {
                     case Alignment::End:
                         child->pos.x = pos.x + size.x - child->size.x - padding.right;
                         break;
-                    case Alignment::Stretch:
-                        // Position at start; stretching should be done in Grow()
-                        child->pos.x = pos.x + padding.left;
-                        break;
                 }
             }
 
@@ -338,7 +333,7 @@ void EUI_Box::Place() {
                       << ") with size (" << child->size.x << ", " << child->size.y << ")"
                       << std::endl;
 
-            // THEN propagate placement to children
+            // propagate placement to children after placement
             child->Place();
         }
     }
