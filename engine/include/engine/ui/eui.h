@@ -156,15 +156,9 @@ class EUI_Box : public EUI_Element {
     std::vector<EUI_Element*> children;
 
   public:
-    EUI_Box() : layout_model(Layout_Model::Horizontal) {
-        /*border_radius = 3;*/
-        /*border_color = RED;*/
-    }
+    EUI_Box() : layout_model(Layout_Model::Horizontal) {}
     EUI_Box(bool vertical)
-        : layout_model(vertical ? Layout_Model::Vertical : Layout_Model::Horizontal) {
-        /*border_radius = 3;*/
-        /*border_color = RED;*/
-    }
+        : layout_model(vertical ? Layout_Model::Vertical : Layout_Model::Horizontal) {}
     ~EUI_Box() override;
 
     Layout_Model layout_model;

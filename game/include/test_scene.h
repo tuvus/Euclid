@@ -135,23 +135,24 @@ class Test_Scene : public Scene {
         EUI_Box* row1 = Create_Box("", DARKGRAY, {900, 150});
         row1->gap = 20;
 
-        EUI_Box* col_start = Create_Box("", BLUE, {250, 130}, Layout_Model::Vertical);
+        EUI_Box* col_start =
+            Create_Box("", BLUE, {Size::Grow(), Size::Fit()}, Layout_Model::Vertical);
         col_start->main_axis_alignment = Alignment::Start;
         col_start->gap = 5;
-        col_start->Add_Child(Create_Box("Start", WHITE, {80, 30}));
-        col_start->Add_Child(Create_Box("Aligned", WHITE, {80, 30}));
+        col_start->Add_Child(Create_Box("Start", BLACK, {80, 30}));
+        col_start->Add_Child(Create_Box("Aligned", BLACK, {80, 30}));
 
-        EUI_Box* col_center = Create_Box("", GREEN, {250, 130}, Layout_Model::Vertical);
+        EUI_Box* col_center = Create_Box("", GREEN, {150, 130}, Layout_Model::Vertical);
         col_center->main_axis_alignment = Alignment::Center;
         col_center->gap = 5;
-        col_center->Add_Child(Create_Box("Center", WHITE, {80, 30}));
-        col_center->Add_Child(Create_Box("Aligned", WHITE, {80, 30}));
+        col_center->Add_Child(Create_Box("Center", BLACK, {80, 30}));
+        col_center->Add_Child(Create_Box("Aligned", BLACK, {80, 30}));
 
-        EUI_Box* col_end = Create_Box("", RED, {250, 130}, Layout_Model::Vertical);
+        EUI_Box* col_end = Create_Box("", RED, {Size::Grow(), 130}, Layout_Model::Vertical);
         col_end->main_axis_alignment = Alignment::End;
         col_end->gap = 5;
-        col_end->Add_Child(Create_Box("End", WHITE, {80, 30}));
-        col_end->Add_Child(Create_Box("Aligned", WHITE, {80, 30}));
+        col_end->Add_Child(Create_Box("End", BLACK, {80, 30}));
+        col_end->Add_Child(Create_Box("Aligned", BLACK, {80, 30}));
 
         row1->Add_Child(col_start);
         row1->Add_Child(col_center);
@@ -159,12 +160,13 @@ class Test_Scene : public Scene {
 
         // Bottom row: Cross-axis alignment
         EUI_Box* row2 = Create_Box("", DARKGRAY, {900, 200});
+        row2->size.y = Size::Grow();
         row2->gap = 15;
 
         EUI_Box* tall = Create_Box("Tall\nBox", ORANGE, {150, 150});
         tall->cross_axis_alignment = Alignment::Start;
 
-        EUI_Box* medium = Create_Box("Medium", PURPLE, {Size::Grow(), 100});
+        EUI_Box* medium = Create_Box("grow!", PURPLE, {Size::Grow(), Size::Grow()});
         medium->cross_axis_alignment = Alignment::Center;
         medium->main_axis_alignment = Alignment::Center;
 
