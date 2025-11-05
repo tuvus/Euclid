@@ -11,8 +11,7 @@ void Create_Application(unique_ptr<ApplicationFactory> application_factory, bool
     application->Start_Application();
 }
 
-Application::Application(std::string name, bool client, uint16_t screen_width,
-                         uint16_t screen_height)
+Application::Application(std::string name, bool client, float screen_width, float screen_height)
     : application_name(name), client(client), screen_width(screen_width),
       screen_height(screen_height), application_state(ApplicationState::SettingUp),
       network(nullptr) {

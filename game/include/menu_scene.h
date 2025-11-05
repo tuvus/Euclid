@@ -11,9 +11,10 @@ class Menu_Scene : public Scene {
         EUI_Box* root = new EUI_Box(true);
         root_elem = root;
         root->pos = {0, 0};
-        root->size = {float(GetScreenWidth()), float(GetScreenHeight())};
+        root->size = {static_cast<float>(card_game.screen_width),
+                      static_cast<float>(card_game.screen_height)};
         root->main_axis_alignment = Alignment::Center;
-        root->main_axis_alignment = Alignment::Center;
+        root->cross_axis_alignment = Alignment::Center;
         root->gap = 20;
 
         auto* title = new EUI_Text("Game Title!");

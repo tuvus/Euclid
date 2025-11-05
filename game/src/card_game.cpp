@@ -13,14 +13,10 @@ void Card_Game::resize_update() {
 
     auto root = scene->Get_Root();
     if (root) {
-<<<<<<< HEAD
-        root->size = {(float) screen_width, (float) screen_height};
-=======
-        root->dim = {static_cast<float>(screen_width), static_cast<float>(screen_height)};
->>>>>>> main
+        root->size = {static_cast<float>(screen_width), static_cast<float>(screen_height)};
     }
 
-    eui_ctx->Perform_Layout();
+    root->ctx->Perform_Layout();
 }
 
 void Card_Game::set_ui_screen(SCREEN new_screen) {
@@ -41,7 +37,7 @@ void Card_Game::Start_Client() {
     scenes.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
     scenes.insert({TEST, [this]() -> Scene* { return new Test_Scene(*this); }});
 
-    set_ui_screen(TEST);
+    set_ui_screen(MENU);
 
     resize_update();
 }
@@ -68,6 +64,14 @@ void Card_Game::Update_UI(chrono::milliseconds deltaTime) {
     if (IsKeyPressed(KEY_Q) && IsKeyDown(KEY_LEFT_CONTROL)) {
         Close_Application();
         return;
+    }
+
+    if (IsKeyPressed(KEY_T)) {
+        set_ui_screen(TEST);
+    }
+
+    if (IsKeyPressed(KEY_M)) {
+        set_ui_screen(MENU);
     }
 
     eui_ctx->Begin_Frame();
