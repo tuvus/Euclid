@@ -1,5 +1,7 @@
 #pragma once
 
+#include <raylib.h>
+
 #include "card_game.h"
 #include "scene.h"
 
@@ -9,9 +11,9 @@ class Menu_Scene : public Scene {
         EUI_Box* root = new EUI_Box(true);
         root_elem = root;
         root->pos = {0, 0};
-        root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
+        root->size = {float(GetScreenWidth()), float(GetScreenHeight())};
         root->main_axis_alignment = Alignment::Center;
-        root->cross_axis_alignment = Alignment::Center;
+        root->main_axis_alignment = Alignment::Center;
         root->gap = 20;
 
         auto* title = new EUI_Text("Game Title!");

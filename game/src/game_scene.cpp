@@ -1,6 +1,8 @@
 #include <raylib.h>
+#include <raymath.h>
 
 #include "base.h"
+#include "card.h"
 #include "card_player.h"
 #include "card_ui.h"
 #include "game_scene.h"
@@ -10,11 +12,13 @@
 #include "unit_card.h"
 
 Game_Scene::Game_Scene(Card_Game& card_game)
-    : Scene(card_game), card_game(card_game), active_card(nullptr), time_until_income(0) {
+    : Scene(card_game), card_game(card_game), time_until_income(0) {
     EUI_Box* root = new EUI_Box();
     root_elem = root;
 
-    root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
+    root->pos = {0, 0};
+    root->size = {static_cast<float>(card_game.screen_width),
+                  static_cast<float>(card_game.screen_height)};
     root->main_axis_alignment = Alignment::Center;
     root->gap = 20;
 
@@ -29,8 +33,8 @@ Game_Scene::Game_Scene(Card_Game& card_game)
     button->padding = {10, 20, 10, 20};
     root->Add_Child(button);
 
-    unit_data = {LoadTextureFromImage(LoadImage("resources/Arrow.png"))};
-    tower_data = {LoadTextureFromImage(LoadImage("resources/Tower.png"))};
+    unit_texture = LoadTextureFromImage(LoadImage("resources/Arrow.png"));
+    tower_texture = LoadTextureFromImage(LoadImage("resources/Tower.png"));
 }
 
 Game_Scene::~Game_Scene() {
@@ -43,6 +47,11 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ranges::sort(players, [](Player* a, Player* b) { return a->player_id <= b->player_id; });
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
+    ecs = new ECS(application, seed);
+    ecs->Register_System(new System(Get_Unit_Entity_Type(), Unit_Update));
+    ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update));
+    ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update));
+
     vector<Vector2> positions = vector<Vector2>();
     static uniform_int_distribution<int> start_dist(-200, 200);
     positions.emplace_back(start_dist(game_manager->random) + card_game.screen_width / 2,
@@ -63,71 +72,96 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     ranges::reverse(reversed);
     r_path = new Path(reversed);
 
-    game_ui_manager = make_unique<Game_UI_Manager>(card_game, *game_manager);
+    game_ui_manager = make_unique<Game_UI_Manager>(card_game, *ecs, *game_manager);
     if (static_cast<Card_Player*>(game_manager->local_player)->team == 1) {
         game_ui_manager->camera.rotation = 180;
     }
     card_game.Get_Network()->bind_rpc(
-        "playcard", [this](Player_ID player_id, Obj_ID object_id, float x, float y) {
+        "playcard", [this](Player_ID player_id, Entity_ID entity_id, float x, float y) {
             Card_Player* player = static_cast<Card_Player*>(game_manager->Get_Player(player_id));
-            Card* card = static_cast<Card*>(game_manager->Get_Object(object_id));
             // Check if the card is in the hand
-            if (ranges::find(player->deck->hand, card) == player->deck->hand.end())
+            if (ranges::find(player->Get_Deck()->hand, entity_id) == player->Get_Deck()->hand.end())
                 return RPC_Manager::INVALID;
-            if (!card->Can_Play_Card(player, Vector2(x, y)))
+            Entity card = get<0>(ecs->entities_by_id[entity_id]);
+            auto* card_component =
+                get<1>(card)->Get_Component<Card_Component>(card, &Card_Component::component_type);
+
+            if (!card_component->card_data->can_play_card(player, card, Vector2(x, y)))
                 return RPC_Manager::INVALID;
 
-            card->Play_Card(player, Vector2(x, y));
+            card_component->card_data->play_card(player, card, Vector2(x, y));
             return RPC_Manager::VALID_CALL_ON_CLIENTS;
         });
-    card_game.Get_Network()->bind_rpc("discard", [this](Player_ID player_id, Obj_ID object_id) {
+    card_game.Get_Network()->bind_rpc("discard", [this](Player_ID player_id, Entity_ID entity_id) {
         Card_Player* player = static_cast<Card_Player*>(game_manager->Get_Player(player_id));
-        Card* card = static_cast<Card*>(game_manager->Get_Object(object_id));
         // Check if the card is in the hand
-        if (ranges::find(player->deck->hand, card) == player->deck->hand.end())
+        if (ranges::find(player->Get_Deck()->hand, entity_id) == player->Get_Deck()->hand.end())
             return RPC_Manager::INVALID;
 
-        card->Discard_Card(player);
+        Discard_Card(player, get<0>(ecs->entities_by_id[entity_id]));
         return RPC_Manager::VALID_CALL_ON_CLIENTS;
     });
-    Texture2D card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
 
-    card_datas.emplace_back(
-        new Card_Data{card_texture, "Send Units", "Sends 7 units to the opponent.", 5});
-    card_datas.emplace_back(
-        new Card_Data{card_texture, "Send Units", "Sends 11 units to the opponent.", 8});
-    card_datas.emplace_back(
-        new Card_Data{card_texture, "Send Units", "Sends 18 units to the opponent.", 12});
-    card_datas.emplace_back(
-        new Card_Data{card_texture, "Tower", "Places a tower that shoots opposing units.", 15});
+    ecs->Create_Entity_Type(Get_Unit_Entity_Type()->components, Create_Unit_UI);
+    ecs->Create_Entity_Type(Get_Tower_Entity_Type()->components, Create_Tower_UI);
+    ecs->Create_Entity_Type(vector{&Deck_Component::component_type}, Create_Deck_UI);
+    ecs->Create_Entity_Type(Get_Unit_Card_Entity_Type()->components, Create_Card_UI);
+    ecs->Create_Entity_Type(Get_Tower_Card_Entity_Type()->components, Create_Card_UI);
+    ecs->Create_Entity_Type(Get_Base_Entity_Type()->components, nullptr);
 
-    vector<Card*> starting_cards{};
-    starting_cards.emplace_back(new Unit_Card(*game_manager, *this, *card_datas[0], unit_data, 7));
-    starting_cards.emplace_back(new Unit_Card(*game_manager, *this, *card_datas[0], unit_data, 7));
-    starting_cards.emplace_back(new Unit_Card(*game_manager, *this, *card_datas[1], unit_data, 11));
-    starting_cards.emplace_back(new Unit_Card(*game_manager, *this, *card_datas[2], unit_data, 18));
-    starting_cards.emplace_back(new Tower_Card(*game_manager, *this, *card_datas[3], tower_data));
+    card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
+    card_datas.emplace_back(new Card_Data{card_texture, "Send Units",
+                                          "Sends 7 units to the opponent.", 5, Can_Play_Card,
+                                          Play_Unit_Card, Discard_Card});
+    card_datas.emplace_back(new Card_Data{card_texture, "Send Units",
+                                          "Sends 11 units to the opponent.", 8, Can_Play_Card,
+                                          Play_Unit_Card, Discard_Card});
+    card_datas.emplace_back(new Card_Data{card_texture, "Send Units",
+                                          "Sends 18 units to the opponent.", 12, Can_Play_Card,
+                                          Play_Unit_Card, Discard_Card});
+    card_datas.emplace_back(new Card_Data{card_texture, "Tower",
+                                          "Places a tower that shoots opposing units.", 15,
+                                          Can_Play_Tower_Card, Play_Tower_Card, Discard_Card});
+
+    vector<Entity_ID> starting_cards{};
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+                                               card_datas[0], {7, &unit_texture}, &card_texture, 1,
+                                               WHITE));
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+                                               card_datas[0], {7, &unit_texture}, &card_texture, 1,
+                                               WHITE));
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+                                               card_datas[1], {11, &unit_texture}, &card_texture, 1,
+                                               WHITE));
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+                                               card_datas[2], {18, &unit_texture}, &card_texture, 1,
+                                               WHITE));
+    starting_cards.emplace_back(Init_Tower_Card(ecs->Create_Entity(Get_Tower_Card_Entity_Type()),
+                                                card_datas[3], {&tower_texture, 0, true, 1, 90},
+                                                &card_texture, 1, WHITE));
 
     for (auto player : game_manager->players) {
         Card_Player* card_player = static_cast<Card_Player*>(player);
         if (card_player->team == -1)
             continue;
+        card_player->path = Get_Team_Path(card_player->team);
 
-        card_player->deck = new Deck(*game_manager, card_player);
-        game_manager->Add_Object(card_player->deck);
+        auto deck = ecs->Create_Entity(Get_Deck_Entity_Type());
+        Init_Deck(deck, card_player, this);
+        card_player->deck = deck;
         for (auto& card : starting_cards) {
-            card_player->deck->deck.emplace_back(card->Clone());
-            game_manager->Add_Object(card_player->deck->deck.back());
+            card_player->Get_Deck()->deck.emplace_back(
+                Entity_Array::Get_Entity_Data(ecs->Copy_Entity(card)).id);
         }
-        card_player->deck->Shuffle_Deck();
-        card_player->deck->Draw_Card(3);
-        game_manager->Add_Object(new Base(*game_manager, *card_player,
-                                          Get_Team_Path(card_player->team)->positions[0],
-                                          Get_Team_Path(card_player->team), 20, 100));
+        Shuffle_Deck(card_player->deck);
+        Draw_Card(card_player->deck, 3);
+        Entity base = ecs->Create_Entity(Get_Base_Entity_Type());
+        Init_Base(base, card_player, Get_Team_Path(card_player->team)->positions[0],
+                  Get_Team_Path(card_player->team), 20, 100);
     }
 
-    for (int i = 0; i < starting_cards.size(); i++) {
-        game_manager->Delete_Object(starting_cards[i]);
+    for (Entity_ID starting_card : starting_cards) {
+        ecs->Delete_Entity(starting_card);
     }
     starting_cards.clear();
 
@@ -146,34 +180,47 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
     }
     EndMode2D();
 
-    // Draw arrows
     game_ui_manager->Update_UI(delta_time, card_game.eui_ctx);
 
     Card_Player* local_player = static_cast<Card_Player*>(game_manager->local_player);
+    if (get<0>(local_player->active_card) != nullptr) {
+        auto mouse_pos = card_game.eui_ctx->input.mouse_position;
+        auto world_pos = GetScreenToWorld2D(mouse_pos, game_ui_manager->camera);
+        if (get<1>(local_player->active_card)
+                ->entity_type.Is_Entity_Of_Type(Get_Tower_Card_Entity_Type())) {
+            if (Can_Place_Tower(local_player->active_card, local_player->path, world_pos, 50))
+                DrawCircle(mouse_pos.x, mouse_pos.y, 75, ColorAlpha(LIGHTGRAY, .3f));
+            DrawCircle(mouse_pos.x, mouse_pos.y, 20, local_player->team ? RED : BLUE);
 
-    auto mouse_pos = card_game.eui_ctx->input.mouse_position;
-    auto world_pos = GetScreenToWorld2D(mouse_pos, game_ui_manager->camera);
-    if (Tower_Card* tower_card = dynamic_cast<Tower_Card*>(active_card)) {
-        if (Can_Place_Tower(world_pos, 50))
-            DrawCircle(mouse_pos.x, mouse_pos.y, 75, ColorAlpha(LIGHTGRAY, .3f));
-        DrawCircle(mouse_pos.x, mouse_pos.y, 20, local_player->team ? RED : BLUE);
-
-        if (!card_game.eui_ctx->input.left_mouse_down) {
+            if (!card_game.eui_ctx->input.left_mouse_down) {
+                // If the cursor is still over the card, cancel
+                if (!static_cast<Card_UI*>(
+                         game_ui_manager->active_ui_objects[Entity_Array::Get_Entity_ID(
+                             local_player->active_card)])
+                         ->is_hovered &&
+                    Can_Play_Card(local_player, local_player->active_card,
+                                  Vector2(world_pos.x, world_pos.y)))
+                    this->card_game.Get_Network()->call_game_rpc(
+                        "playcard", local_player->player_id,
+                        Entity_Array::Get_Entity_ID(local_player->active_card), world_pos.x,
+                        world_pos.y);
+                local_player->active_card = tuple<unsigned char*, Entity_Array*>(nullptr, nullptr);
+            }
+        } else if (get<0>(local_player->active_card) != nullptr &&
+                   !card_game.eui_ctx->input.left_mouse_down) {
             // If the cursor is still over the card, cancel
-            if (!static_cast<Card_UI*>(game_ui_manager->active_ui_objects[active_card])
+            if (!static_cast<Card_UI*>(
+                     game_ui_manager->active_ui_objects[Entity_Array::Get_Entity_ID(
+                         local_player->active_card)])
                      ->is_hovered &&
-                active_card->Can_Play_Card(local_player, Vector2(world_pos.x, world_pos.y)))
+                Can_Play_Card(local_player, local_player->active_card,
+                              Vector2(world_pos.x, world_pos.y)))
                 this->card_game.Get_Network()->call_game_rpc(
-                    "playcard", local_player->player_id, tower_card->id, world_pos.x, world_pos.y);
-            active_card = nullptr;
+                    "playcard", local_player->player_id,
+                    Entity_Array::Get_Entity_ID(local_player->active_card), world_pos.x,
+                    world_pos.y);
+            local_player->active_card = tuple<unsigned char*, Entity_Array*>(nullptr, nullptr);
         }
-    } else if (active_card != nullptr && !card_game.eui_ctx->input.left_mouse_down) {
-        // If the cursor is still over the card, cancel
-        if (!static_cast<Card_UI*>(game_ui_manager->active_ui_objects[active_card])->is_hovered &&
-            active_card->Can_Play_Card(local_player, Vector2(world_pos.x, world_pos.y)))
-            this->card_game.Get_Network()->call_game_rpc("playcard", local_player->player_id,
-                                                         active_card->id, world_pos.x, world_pos.y);
-        active_card = nullptr;
     }
 
     money_text->Set_Text("Money: " + to_string(local_player->money));
@@ -181,21 +228,8 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
     root_elem->Render();
 }
 
-bool Game_Scene::Can_Place_Tower(Vector2 pos, float min_dist) const {
-    for (auto* object : game_manager->Get_All_Objects()) {
-        if (Tower* other = dynamic_cast<Tower*>(object)) {
-            if (Vector2Distance(pos, other->pos) <= min_dist)
-                return false;
-        }
-    }
-    for (auto path_pos : f_path->positions) {
-        if (Vector2Distance(pos, path_pos) <= min_dist)
-            return false;
-    }
-    return true;
-}
-
 void Game_Scene::Update(std::chrono::milliseconds) {
+    ecs->Update();
     game_manager->Update();
 
     if (IsKeyDown(KEY_A))
@@ -216,10 +250,6 @@ void Game_Scene::On_Disconnected() {
 void Game_Scene::On_Server_Stop() {
     card_game.set_ui_screen(MENU);
     card_game.Close_Network();
-}
-
-void Game_Scene::Activate_Card(Card* card) {
-    active_card = card;
 }
 
 Path* Game_Scene::Get_Team_Path(int team) const {

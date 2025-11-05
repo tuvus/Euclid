@@ -7,10 +7,12 @@ Lobby_Scene::Lobby_Scene(Card_Game& card_game)
     auto* root = new EUI_Box(true);
     root_elem = root;
     root->pos = {0, 0};
-    root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
+    root->size = {static_cast<float>(card_game.screen_width),
+                  static_cast<float>(card_game.screen_height)};
     root->main_axis_alignment = Alignment::Center;
     root->cross_axis_alignment = Alignment::Center;
     root->gap = 20;
+
     status_text = new EUI_Text("Connecting...");
     if (card_game.Get_Network()->Is_Server())
         status_text->Set_Text("Setting up server...");

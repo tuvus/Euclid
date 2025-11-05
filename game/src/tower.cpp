@@ -5,49 +5,78 @@
 #include "unit.h"
 
 #include <climits>
+#include <raymath.h>
 
-Tower::Tower(Game_Manager& game_manager, Tower_Data& tower_data, Vector2 pos, float range, int team,
-             float scale, Color color)
-    : Game_Object(game_manager, pos, team == 0 ? 0 : 180, scale, color), tower_data(tower_data),
-      range(range), team(team) {
-    spawned = true;
-    reload = 100;
+void Init_Tower(Entity entity, Vector2 pos, float range, int team, Texture2D* texture, float scale,
+                Color color) {
+    auto* tower =
+        get<1>(entity)->Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
+        entity, &Transform_Component::component_type);
+    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
+    transform->pos = pos;
+    transform->rot = 0;
+    transform->scale = .4;
+    tower->range = range;
+    tower->team = team;
+    ui->texture = texture;
+    ui->scale = scale;
+    ui->color = color;
 }
 
-void Tower::Update() {
-    if (reload != 0) {
-        reload--;
+void Tower_Update(ECS* ecs, Entity entity) {
+    auto* tower =
+        get<1>(entity)->Get_Component<Tower_Component>(entity, &Tower_Component::component_type);
+    if (tower->reload > 0)
+        tower->reload--;
+    if (tower->reload > 0)
         return;
-    }
-    Vector2 home = Vector2(team == 0 ? game_manager.application.screen_height : 0,
-                           game_manager.application.screen_width / 2);
-    Unit* closest_unit = nullptr;
-    float dist = INT_MAX;
-    for (auto* object : game_manager.Get_All_Objects()) {
-        if (Unit* other = dynamic_cast<Unit*>(object)) {
-            if (other->team == team || !other->spawned)
-                continue;
-            if (Vector2Distance(pos, other->pos) > range)
-                continue;
-            float new_dist = Vector2Distance(other->pos, home);
-            if (new_dist >= dist)
-                continue;
 
-            closest_unit = other;
-            dist = new_dist;
-        }
+    Entity_ID entity_id = Entity_Array::Get_Entity_Data(entity).id;
+    auto* transform = get<1>(entity)->Get_Component<Transform_Component>(
+        entity, &Transform_Component::component_type);
+    Vector2 home = Vector2(tower->team == 0 ? ecs->application.screen_height : 0,
+                           ecs->application.screen_width / 2);
+
+    tuple<Entity, Transform_Component*, Unit_Component*, float> closest_unit =
+        make_tuple(Entity{}, nullptr, nullptr, INT_MAX);
+    for (auto entity : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
+        Entity_ID other_id = get<1>(entity)->Get_Entity_Data(entity).id;
+        if (other_id == entity_id)
+            continue;
+        Unit_Component* unit =
+            get<1>(entity)->Get_Component<Unit_Component>(entity, &Unit_Component::component_type);
+        if (unit->team == tower->team || !unit->spawned)
+            continue;
+        Transform_Component* other_transform = get<1>(entity)->Get_Component<Transform_Component>(
+            entity, &Transform_Component::component_type);
+        if (Vector2Distance(transform->pos, other_transform->pos) > tower->range)
+            continue;
+        float new_dist = Vector2Distance(other_transform->pos, home);
+        if (new_dist >= get<3>(closest_unit))
+            continue;
+
+        closest_unit = make_tuple(entity, other_transform, unit, new_dist);
     }
 
-    if (closest_unit == nullptr)
+    if (get<1>(closest_unit) == nullptr)
         return;
 
     // Fire
-    closest_unit->spawned = false;
-    game_manager.Delete_Object(closest_unit);
-    reload = 100;
-    rot = Get_Rotation_From_Positions(pos, closest_unit->pos);
+    get<2>(closest_unit)->spawned = false;
+    ecs->Delete_Entity(Entity_Array::Get_Entity_Data(get<0>(closest_unit)).id);
+    tower->reload = 100;
+    transform->rot = Get_Rotation_From_Positions(transform->pos, get<1>(closest_unit)->pos);
 }
 
-Object_UI* Tower::Create_UI_Object(Game_UI_Manager& game_ui_manager) {
-    return new Tower_UI(this, game_ui_manager);
+Object_UI* Create_Tower_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
+    return new Tower_UI(entity, game_ui_manager);
 }
+
+Entity_Type* Get_Tower_Entity_Type() {
+    return new Entity_Type(vector{&UI_Component::component_type,
+                                  &Transform_Component::component_type,
+                                  &Tower_Component::component_type});
+}
+
+Component_Type Tower_Component::component_type = Component_Type{"Tower", sizeof(Tower_Component)};

@@ -1,26 +1,35 @@
 #include "card.h"
-
 #include "card_ui.h"
-#include <raymath.h>
 
-Card::Card(Game_Manager& game_manager, Game_Scene& game_scene, Card_Data& card_data)
-    : Game_Object(game_manager, Vector2Zero(), 0, 1, WHITE), game_scene(game_scene),
-      card_data(card_data) {
+void Init_Card(Entity entity, Card_Data& card_data, Texture2D* texture, float scale, Color color) {
+    auto* card_component =
+        get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
+    card_component->card_data = &card_data;
+    auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
+    ui->texture = texture;
+    ui->scale = scale;
+    ui->color = color;
 }
 
-bool Card::Can_Play_Card(Card_Player* card_player, Vector2 pos) {
-    return card_player->money >= card_data.cost;
+bool Can_Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
+    auto* card =
+        get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
+    return player->money >= card->card_data->cost;
 }
 
-void Card::Play_Card(Card_Player* card_player, Vector2 pos) {
-    card_player->money -= card_data.cost;
-    card_player->deck->Discard_Card(this);
+void Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
+    auto* card =
+        get<1>(entity)->Get_Component<Card_Component>(entity, &Card_Component::component_type);
+    player->money -= card->card_data->cost;
+    Discard_Card(player, entity);
 }
 
-void Card::Discard_Card(Card_Player* card_player) {
-    card_player->deck->Discard_Card(this);
+void Discard_Card(Card_Player* player, Entity entity) {
+    Discard_Deck_Card(player->deck, Entity_Array::Get_Entity_Data(entity).id);
 }
 
-Object_UI* Card::Create_UI_Object(Game_UI_Manager& game_ui_manager) {
-    return new Card_UI(this, game_ui_manager);
+Object_UI* Create_Card_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
+    return new Card_UI(entity, game_ui_manager);
 }
+
+Component_Type Card_Component::component_type = Component_Type{"Card", sizeof(Card_Component)};

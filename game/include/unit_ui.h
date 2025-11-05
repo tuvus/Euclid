@@ -1,14 +1,18 @@
 #pragma once
 #include "game_object_ui.h"
 #include "game_ui_manager.h"
-#include "unit.h"
 
-class Unit_UI : public Game_Object_UI<Unit> {
+class Unit_UI : public Object_UI {
   public:
-    Unit_UI(Unit* unit, Game_UI_Manager& game_ui_manager) : Game_Object_UI(unit, game_ui_manager) {}
+    Unit_UI(Entity entity, Game_UI_Manager& game_ui_manager) : Object_UI(entity, game_ui_manager) {}
 
     void Update_UI(EUI_Context* ctx) override {
-        game_ui_manager.DrawImage(object->unit_data.texture, object->pos, object->rot,
-                                  object->scale, object->color);
+        Entity entity = std::get<0>(ecs.entities_by_id[entity_id]);
+        auto* transform = std::get<1>(entity)->Get_Component<Transform_Component>(
+            entity, &Transform_Component::component_type);
+        auto* ui =
+            std::get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
+        game_ui_manager.DrawImage(*ui->texture, transform->pos, transform->rot, ui->scale,
+                                  ui->color);
     }
 };

@@ -1,47 +1,63 @@
 #include "deck.h"
-
 #include "deck_ui.h"
-#include "game_manager.h"
 
 #include <algorithm>
-#include <raymath.h>
 
-Deck::Deck(Game_Manager& game_manager, Card_Player* player)
-    : Game_Object(game_manager, Vector2Zero(), 0, 1, WHITE), player(player) {
+void Init_Deck(Entity entity, Card_Player* player, Game_Scene* game_scene) {
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
+    deck->player = player;
+    deck->deck = std::deque<Entity_ID>();
+    deck->hand = std::vector<Entity_ID>();
+    deck->discard = std::vector<Entity_ID>();
+    deck->game_scene = game_scene;
 }
 
-void Deck::Draw_Card(int cards) {
+void Draw_Card(Entity entity, int cards) {
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
     for (int i = 0; i < cards; i++) {
-        if (deck.empty())
-            Shuffle_Discard_Into_Deck();
-        if (deck.empty())
+        if (deck->deck.empty())
+            Shuffle_Discard_Into_Deck(entity);
+        if (deck->deck.empty())
             break;
 
-        hand.emplace_back(deck.front());
-        deck.pop_front();
+        deck->hand.emplace_back(deck->deck.front());
+        deck->deck.pop_front();
     }
 }
 
-void Deck::Shuffle_Discard_Into_Deck() {
-    for (auto card : discard) {
-        deck.emplace_back(card);
+void Shuffle_Discard_Into_Deck(Entity entity) {
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
+    for (auto card : deck->discard) {
+        deck->deck.emplace_back(card);
     }
-    discard.clear();
-    Shuffle_Deck();
+    deck->discard.clear();
+    Shuffle_Deck(entity);
 }
 
-void Deck::Shuffle_Deck() {
-    std::ranges::shuffle(deck, game_manager.random);
+void Shuffle_Deck(Entity entity) {
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
+    std::ranges::shuffle(deck->deck, get<1>(entity)->ecs.random);
 }
 
-void Deck::Update() {
+void Discard_Deck_Card(Entity entity, Entity_ID card) {
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
+    deck->hand.erase(ranges::find(deck->hand, card));
+    deck->discard.emplace_back(card);
 }
 
-void Deck::Discard_Card(Card* card) {
-    hand.erase(ranges::find(hand, card));
-    discard.emplace_back(card);
+Object_UI* Create_Deck_UI(Entity entity, Game_UI_Manager& game_ui_manager) {
+    auto deck =
+        std::get<1>(entity)->Get_Component<Deck_Component>(entity, &Deck_Component::component_type);
+    return new Deck_UI(entity, game_ui_manager, deck->player);
 }
 
-Object_UI* Deck::Create_UI_Object(Game_UI_Manager& game_ui_manager) {
-    return new Deck_UI(this, game_ui_manager);
+Entity_Type* Get_Deck_Entity_Type() {
+    return new Entity_Type(vector{&Deck_Component::component_type});
 }
+
+Component_Type Deck_Component::component_type = Component_Type{"Deck", sizeof(Deck_Component)};

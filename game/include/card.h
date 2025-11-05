@@ -4,30 +4,30 @@
 #include <string>
 
 #include "card_player.h"
-#include "game_object.h"
+#include "ecs.h"
 
 class Game_Scene;
 struct Card_Data {
-    Texture2D texture;
+    Texture2D& texture;
     std::string name;
     std::string desc;
     int cost;
+    function<bool(Card_Player*, Entity, Vector2)> can_play_card;
+    function<void(Card_Player*, Entity, Vector2)> play_card;
+    function<void(Card_Player*, Entity)> discard_card;
 };
 
-class Card : public Game_Object {
-  public:
-    Card_Data& card_data;
-    Game_Scene& game_scene;
-
-    Card(Game_Manager& game_manager, Game_Scene& game_scene, Card_Data& card_data);
-
-    virtual Card* Clone() = 0;
-
-    virtual bool Can_Play_Card(Card_Player* card_player, Vector2 pos);
-
-    virtual void Play_Card(Card_Player* card_player, Vector2 pos);
-
-    virtual void Discard_Card(Card_Player* card_player);
-
-    Object_UI* Create_UI_Object(Game_UI_Manager& game_ui_manager) override;
+struct Card_Component {
+    static Component_Type component_type;
+    Card_Data* card_data;
 };
+
+void Init_Card(Entity entity, Card_Data& card_data, Texture2D* texture, float scale, Color color);
+
+bool Can_Play_Card(Card_Player*, Entity, Vector2);
+
+void Play_Card(Card_Player*, Entity, Vector2);
+
+void Discard_Card(Card_Player*, Entity);
+
+Object_UI* Create_Card_UI(Entity entity, Game_UI_Manager& game_ui_manager);

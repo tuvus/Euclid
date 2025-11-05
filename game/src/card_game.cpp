@@ -1,17 +1,25 @@
-#include "card_game.h"
+#include <raylib.h>
+
 #include "application.h"
+#include "card_game.h"
 #include "game_scene.h"
 #include "lobby_scene.h"
 #include "menu_scene.h"
 #include "test_scene.h"
 
 void Card_Game::resize_update() {
+    screen_width = GetScreenWidth();
+    screen_height = GetScreenHeight();
+
     auto root = scene->Get_Root();
     if (root) {
+<<<<<<< HEAD
         root->size = {(float) screen_width, (float) screen_height};
+=======
+        root->dim = {static_cast<float>(screen_width), static_cast<float>(screen_height)};
+>>>>>>> main
     }
 
-    // TODO: should we panic if ctx is null?
     eui_ctx->Perform_Layout();
 }
 
@@ -45,17 +53,15 @@ void Card_Game::Update(chrono::milliseconds deltaTime) {
 void Card_Game::Update_UI(chrono::milliseconds deltaTime) {
     if (IsKeyPressed(KEY_F)) {
         ToggleFullscreen();
-        screen_width = GetScreenWidth();
-        screen_height = GetScreenHeight();
-
         resize_update();
     }
 
     if (IsKeyPressed(KEY_B)) {
         ToggleBorderlessWindowed();
-        screen_width = GetScreenWidth();
-        screen_height = GetScreenHeight();
+        resize_update();
+    }
 
+    if (screen_width != GetScreenWidth() || screen_height != GetScreenHeight()) {
         resize_update();
     }
 
