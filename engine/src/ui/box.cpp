@@ -138,13 +138,13 @@ void EUI_Box::Grow() {
         if (layout_model == Layout_Model::Horizontal) {
             if (child->size.x == Size::Grow()) {
                 growable.push_back(child);
-                child->size.x = min_size.x;
+                child->size.x = child->min_size.x;
             }
             remaining_width -= child->size.x;
         } else {
             if (child->size.y == Size::Grow()) {
                 growable.push_back(child);
-                child->size.y = min_size.y;
+                child->size.y = child->min_size.y;
             }
             remaining_height -= child->size.y;
         }
@@ -234,10 +234,10 @@ void EUI_Box::Grow() {
         if (child->is_visible && !child->Is_Absolute()) {
             // cross-axis grow
             if (child->size.y == Size::Grow() && layout_model == Layout_Model::Horizontal) {
-                child->size.y = remaining_height;
+                child->size.y = size.y - padding.top - padding.bottom;
             }
             if (child->size.x == Size::Grow() && layout_model == Layout_Model::Vertical) {
-                child->size.x = remaining_width;
+                child->size.x = size.x - padding.left - padding.right;
             }
             // propagate grow to children
             child->Grow();

@@ -163,7 +163,7 @@ box->cross_axis_alignment = Alignment::Stretch; // Fill cross axis
 
 ### Text Alignment
 
-Text elements use the same alignment properties to align the text within the element:
+Text elements use the same alignment properties to align the text within the element.
 
 ```cpp
 text->main_axis_alignment = Alignment::Center; // Vertical alignment

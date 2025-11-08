@@ -37,7 +37,7 @@ void Card_Game::Start_Client() {
     scenes.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
     scenes.insert({TEST, [this]() -> Scene* { return new Test_Scene(*this); }});
 
-    set_ui_screen(MENU);
+    set_ui_screen(TEST);
 
     resize_update();
 }

@@ -186,7 +186,7 @@ class Test_Scene : public Scene {
     EUI_Element* Test_Complex_Nested() {
         EUI_Box* root = new EUI_Box(true);
         root->id = "root";
-        root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
+        root->size = {application.screen_width, application.screen_height};
         root->gap = 10;
         root->padding = {10, 10, 10, 10};
 
@@ -231,7 +231,7 @@ class Test_Scene : public Scene {
     EUI_Element* Test_Positioning() {
         EUI_Box* root = new EUI_Box(true);
         root->id = "root";
-        root->size = {SCREEN_WIDTH, SCREEN_HEIGHT};
+        root->size = {application.screen_width, application.screen_height};
         root->padding = {20, 20, 20, 20};
         root->gap = 20;
         root->main_axis_alignment = Alignment::Start;
@@ -314,14 +314,15 @@ class Test_Scene : public Scene {
 
         // Overlay 2: Top-right corner
         EUI_Box* overlay2 = Create_Box("Absolute\nTop-Right", Color{200, 0, 200, 255}, {150, 100});
-        overlay2->Set_Absolute_Position(SCREEN_WIDTH - 170, 80);
+        overlay2->Set_Absolute_Position(application.screen_width - 170, 80);
         overlay2->main_axis_alignment = Alignment::Center;
         overlay2->cross_axis_alignment = Alignment::Center;
         root->Add_Child(overlay2);
 
         // Overlay 3: Bottom-center (floating action button style)
         EUI_Box* fab = Create_Box("FAB", Color{255, 100, 100, 255}, {100, 100});
-        fab->Set_Absolute_Position((SCREEN_WIDTH - 100) / 2, SCREEN_HEIGHT - 120);
+        fab->Set_Absolute_Position((application.screen_width - 100) / 2,
+                                   application.screen_height - 120);
         fab->border_radius = 2;
         fab->main_axis_alignment = Alignment::Center;
         fab->cross_axis_alignment = Alignment::Center;
@@ -329,7 +330,8 @@ class Test_Scene : public Scene {
 
         // Overlay 4: Nested absolute (absolute inside absolute)
         EUI_Box* overlay_parent = Create_Box("", Color{0, 100, 200, 200}, {300, 250});
-        overlay_parent->Set_Absolute_Position(SCREEN_WIDTH - 320, SCREEN_HEIGHT - 270);
+        overlay_parent->Set_Absolute_Position(application.screen_width - 320,
+                                              application.screen_height - 270);
         overlay_parent->padding = {20, 20, 20, 20};
 
         EUI_Text* parent_label = new EUI_Text("Parent: Absolute");
@@ -353,7 +355,7 @@ class Test_Scene : public Scene {
         info->font_size = 14;
         info->background_color = Color{0, 0, 0, 150};
         info->padding = {8, 8, 8, 8};
-        info->Set_Absolute_Position(20, SCREEN_HEIGHT - 40);
+        info->Set_Absolute_Position(20, application.screen_height - 40);
         root->Add_Child(info);
 
         return root;
