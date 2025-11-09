@@ -243,7 +243,7 @@ void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
             // the units would be played on
             Path* path = nullptr;
             float closest_point = numeric_limits<float>::max();
-            for (auto path1 : f_paths) {
+            for (auto path1 : Get_Team_Paths(local_player->team)) {
                 for (auto position : path1->positions) {
                     float dist = Vector2Distance(world_mouse_pos, position);
                     if (dist >= closest_point)

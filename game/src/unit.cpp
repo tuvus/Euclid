@@ -16,6 +16,7 @@ void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, int health, int
     unit->health = health;
     unit->damage = damage;
     unit->section = 0;
+    unit->lerp = 1;
     unit->bump_back = 0;
     unit->team = team;
     unit->spawned = true;
