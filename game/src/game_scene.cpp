@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <raymath.h>
 
 #include "base.h"
 #include "card.h"
@@ -10,28 +11,26 @@
 #include "unit.h"
 #include "unit_card.h"
 
-#include <raymath.h>
-
 Game_Scene::Game_Scene(Card_Game& card_game)
     : Scene(card_game), card_game(card_game), time_until_income(0) {
-    EUI_HBox* root = new EUI_HBox();
+    EUI_Box* root = new EUI_Box();
     root_elem = root;
 
     root->pos = {0, 0};
-    root->dim = {static_cast<float>(card_game.screen_width),
-                 static_cast<float>(card_game.screen_height)};
-    root->style.vertical_alignment = Alignment::Center;
-    root->style.horizontal_alignment = Alignment::Center;
+    root->size = {static_cast<float>(card_game.screen_width),
+                  static_cast<float>(card_game.screen_height)};
+    root->main_axis_alignment = Alignment::Center;
+    root->gap = 20;
 
     money_text = new EUI_Text("Money: 0");
-    money_text->style.font_size = 24;
+    money_text->font_size = 24;
     root->Add_Child(money_text);
     auto* button = new EUI_Button("Menu", [&card_game] {
         card_game.Close_Network();
         card_game.set_ui_screen(MENU);
     });
 
-    button->style.padding = {10, 20, 10, 20};
+    button->padding = {10, 20, 10, 20};
     root->Add_Child(button);
 
     unit_texture = LoadTextureFromImage(LoadImage("resources/Arrow.png"));

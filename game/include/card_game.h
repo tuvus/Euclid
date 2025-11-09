@@ -15,7 +15,7 @@ using namespace std;
 #define DEFAULT_SCREEN_HEIGHT 720
 #define TITLE_FONT_SIZE 24
 
-enum SCREEN { MENU, LOBBY, GAME };
+enum SCREEN { MENU, LOBBY, GAME, TEST };
 
 typedef struct Tile {
     Color color;
@@ -45,5 +45,5 @@ class Card_Game : public Application {
     void Close_Application() override;
 
     Scene* scene;
-    std::unordered_map<SCREEN, std::function<Scene*()>> sceens;
+    std::unordered_map<SCREEN, std::function<Scene*()>> scenes;
 };

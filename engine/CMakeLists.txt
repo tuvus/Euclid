@@ -10,9 +10,7 @@ set(Sources
         src/networking/rpc_manager.cpp
         src/ui/context.cpp
         src/ui/element.cpp
-        src/ui/container.cpp
-        src/ui/vbox.cpp
-        src/ui/hbox.cpp
+        src/ui/box.cpp
         src/ui/text.cpp
         src/ui/button.cpp
         src/game_manager.cpp

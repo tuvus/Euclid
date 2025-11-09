@@ -1,10 +1,7 @@
+#include <iostream>
 #include "ui/eui.h"
 
 /* EUI_Context Implementations */
-EUI_Context::EUI_Context(EUI_Style default_style) {
-    default_style = default_style;
-}
-
 EUI_Context::~EUI_Context() {
     delete root;
 }
@@ -32,8 +29,15 @@ void EUI_Context::Begin_Frame() {
 void EUI_Context::End_Frame() {
 }
 void EUI_Context::Perform_Layout() {
-    if (root)
-        root->Layout();
+    if (root) {
+        std::cout << "\n========== LAYOUT PASS 1: SIZE (Bottom-Up) ==========" << std::endl;
+        root->Size();
+        std::cout << "\n========== LAYOUT PASS 2: GROW (Top-Down) ==========" << std::endl;
+        root->Grow();
+        std::cout << "\n========== LAYOUT PASS 3: PLACE (Top-Down) ==========" << std::endl;
+        root->Place();
+        std::cout << "\n========== LAYOUT COMPLETE ==========\n" << std::endl;
+    }
 }
 void EUI_Context::Handle_Input() {
     if (root)

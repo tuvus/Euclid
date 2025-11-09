@@ -5,6 +5,7 @@
 #include "game_scene.h"
 #include "lobby_scene.h"
 #include "menu_scene.h"
+#include "test_scene.h"
 
 void Card_Game::resize_update() {
     screen_width = GetScreenWidth();
@@ -12,16 +13,16 @@ void Card_Game::resize_update() {
 
     auto root = scene->Get_Root();
     if (root) {
-        root->dim = {static_cast<float>(screen_width), static_cast<float>(screen_height)};
+        root->size = {static_cast<float>(screen_width), static_cast<float>(screen_height)};
     }
 
-    eui_ctx->Perform_Layout();
+    root->ctx->Perform_Layout();
 }
 
 void Card_Game::set_ui_screen(SCREEN new_screen) {
     if (scene != nullptr)
         to_delete.emplace_back(scene);
-    scene = sceens[new_screen]();
+    scene = scenes[new_screen]();
     // will panic if eui_ctx is null, shouldn't ever happen so let it crash
     // TODO: this should probably be in the engine
     eui_ctx->Set_Root(scene->Get_Root());
@@ -31,9 +32,10 @@ void Card_Game::set_ui_screen(SCREEN new_screen) {
 void Card_Game::Start_Client() {
     Application::Start_Client();
 
-    sceens.insert({MENU, [this]() -> Scene* { return new Menu_Scene(*this); }});
-    sceens.insert({LOBBY, [this]() -> Scene* { return new Lobby_Scene(*this); }});
-    sceens.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
+    scenes.insert({MENU, [this]() -> Scene* { return new Menu_Scene(*this); }});
+    scenes.insert({LOBBY, [this]() -> Scene* { return new Lobby_Scene(*this); }});
+    scenes.insert({GAME, [this]() -> Scene* { return new Game_Scene(*this); }});
+    scenes.insert({TEST, [this]() -> Scene* { return new Test_Scene(*this); }});
 
     set_ui_screen(MENU);
 
@@ -64,6 +66,14 @@ void Card_Game::Update_UI(chrono::milliseconds deltaTime) {
         return;
     }
 
+    if (IsKeyPressed(KEY_T)) {
+        set_ui_screen(TEST);
+    }
+
+    if (IsKeyPressed(KEY_M)) {
+        set_ui_screen(MENU);
+    }
+
     eui_ctx->Begin_Frame();
     eui_ctx->Update_Input();
     eui_ctx->Handle_Input();
@@ -92,8 +102,7 @@ void Card_Game::Update_UI(chrono::milliseconds deltaTime) {
 Card_Game::~Card_Game() {
     delete scene;
     scene = nullptr;
-    if (eui_ctx->default_style.font.has_value())
-        UnloadFont(eui_ctx->default_style.font.value());
+    UnloadFont(eui_ctx->default_font);
 }
 
 void Card_Game::Close_Application() {
