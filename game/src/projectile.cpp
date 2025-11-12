@@ -54,8 +54,8 @@ void Projectile_Update(ECS* ecs, Entity entity) {
         return;
     }
 
-    auto mov = Vector2(sin(transform->rot * numbers::pi / 180) * projectile->speed,
-                       -cos(transform->rot * numbers::pi / 180) * projectile->speed);
+    auto mov = Vector2(sin(transform->rot * DEG2RAD) * projectile->speed,
+                       -cos(transform->rot * DEG2RAD) * projectile->speed);
     transform->pos += mov;
     projectile->range -= projectile->speed;
     if (projectile->range <= 0)
