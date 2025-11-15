@@ -29,7 +29,7 @@ void Base_Update(ECS* ecs, Entity entity) {
     auto base = get<1>(entity)->Get_Component<Base_Component>(entity);
     if (--base->time_until_income <= 0) {
         base->card_player->money++;
-        base->time_until_income = 40;
+        base->time_until_income = base->base_income_speed;
     }
 
     if (base->card_player->Get_Deck()->hand.empty()) {
@@ -62,7 +62,7 @@ void Try_Placing_Tower(ECS* ecs, int card_index, Entity card_entity, Card_Compon
     for (auto path1 : base->paths) {
         max_path_length = max(max_path_length, static_cast<int>(path1->positions.size()));
     }
-    for (int i = 0; i < max_path_length; i++) {
+    for (int i = 5; i < 15; i++) {
         for (auto path : base->paths) {
             if (path->positions.size() <= i)
                 continue;

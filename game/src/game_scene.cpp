@@ -167,7 +167,7 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         Draw_Card(card_player->deck, 3);
         Entity base = ecs->Create_Entity(Get_Base_Entity_Type());
         Init_Base(base, card_player, Get_Team_Paths(card_player->team)[0]->positions[0],
-                  Get_Team_Paths(card_player->team), 20, 100);
+                  Get_Team_Paths(card_player->team), 10, 100);
     }
 
     for (Entity_ID starting_card : starting_cards) {
