@@ -21,8 +21,7 @@ class Deck_UI : public Object_UI {
 
         for (auto entity_id : card_player->Get_Deck()->hand) {
             Entity entity = get<0>(ecs.entities_by_id[entity_id]);
-            auto* ui_component =
-                get<1>(entity)->Get_Component<UI_Component>(entity, &UI_Component::component_type);
+            auto* ui_component = get<1>(entity)->Get_Component<UI_Component>(entity);
             Card_UI* card_ui = static_cast<Card_UI*>(game_ui_manager.active_ui_objects[entity_id]);
             float selected_offset = card_player->active_card == entity ? -40 : 0;
             card_ui->Update_UI(

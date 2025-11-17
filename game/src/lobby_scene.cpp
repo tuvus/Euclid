@@ -124,7 +124,7 @@ void Lobby_Scene::Server_Start_AI_Only() {
 void Lobby_Scene::Start_Game(long seed) {
     card_game.set_ui_screen(GAME);
     Game_Scene* game_scene = static_cast<Game_Scene*>(card_game.scene);
-    game_scene->Setup_Scene(players, local_player, seed);
+    game_scene->Setup_Scene(players, local_player, seed, 3);
 }
 
 void Lobby_Scene::Update_UI(std::chrono::milliseconds) {

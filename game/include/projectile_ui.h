@@ -2,9 +2,10 @@
 #include "game_object_ui.h"
 #include "game_ui_manager.h"
 
-class Unit_UI : public Object_UI {
+class Projectile_UI : public Object_UI {
   public:
-    Unit_UI(Entity entity, Game_UI_Manager& game_ui_manager) : Object_UI(entity, game_ui_manager) {}
+    Projectile_UI(Entity entity, Game_UI_Manager& game_ui_manager)
+        : Object_UI(entity, game_ui_manager) {}
 
     void Update_UI(EUI_Context* ctx) override {
         Entity entity = std::get<0>(ecs.entities_by_id[entity_id]);
