@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+class ECS_Worker;
 class Game_UI_Manager;
 class Object_UI;
 class Entity_Array;
@@ -130,9 +131,23 @@ class Entity_Type_Iterator {
     Entity_Iterator end();
 };
 
+struct Work_Data {
+    const std::function<void(ECS* ecs, Entity entity)>& op;
+    Entity_Array* entity_array;
+    int starting_index;
+    int ending_index;
+    Work_Data* next;
+};
+
 class ECS {
     std::unordered_set<Entity_ID> to_create;
     std::vector<Entity_ID> to_delete;
+    std::vector<ECS_Worker*> workers;
+    pthread_mutex_t work_mutex;
+    Work_Data* work_start;
+    Work_Data* work_end;
+
+    void Wait_Until_Work_Is_Complete();
 
   public:
     Application& application;
@@ -145,6 +160,7 @@ class ECS {
     std::minstd_rand random;
 
     ECS(Application& application, long seed);
+    ~ECS();
 
     void Update();
 
@@ -166,6 +182,19 @@ class ECS {
     Entity_Array* Get_Entities_Of_Exact_Type(Entity_Type* entity_type);
 
     void Register_System(System* system) { systems.emplace(system); }
+
+    Work_Data* Get_Work();
+};
+
+class ECS_Worker {
+    pthread_t thread;
+    ECS& ecs;
+    bool canceled;
+
+  public:
+    ECS_Worker(ECS& ecs);
+    void DoWork();
+    ~ECS_Worker();
 };
 
 struct Transform_Component {

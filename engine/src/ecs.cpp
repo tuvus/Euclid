@@ -1,5 +1,7 @@
 #include "ecs.h"
 #include "game_ui_manager.h"
+
+#include <thread>
 using namespace std;
 
 Entity_Type::Entity_Type(std::vector<Component_Type*> components)
@@ -130,12 +132,24 @@ Entity_Iterator Entity_Type_Iterator::end() {
     return Entity_Iterator(this, arrays.size());
 }
 
-ECS::ECS(Application& application, long seed) : application(application) {
+ECS::ECS(Application& application, long seed)
+    : application(application), work_start(nullptr), work_end(nullptr) {
     entity_components = std::unordered_set<Entity_Array*>();
     systems = std::unordered_set<System*>();
     entities_by_id = std::unordered_map<Entity_ID, std::tuple<Entity, int>>();
     to_delete = vector<Entity_ID>();
     random = std::minstd_rand(seed);
+    workers = vector<ECS_Worker*>();
+    pthread_mutex_init(&work_mutex, nullptr);
+    for (int i = 0; i < 32; i++) {
+        workers.emplace_back(new ECS_Worker(*this));
+    }
+}
+
+ECS::~ECS() {
+    for (auto worker : workers) {
+        delete worker;
+    }
 }
 
 void ECS::Update() {
@@ -147,6 +161,7 @@ void ECS::Update() {
     for (auto system : systems) {
         Apply_Function_To_Entities(system->entity_type, system->function);
     }
+    Wait_Until_Work_Is_Complete();
     for (Entity_ID entity_id : to_delete) {
         if (!entities_by_id.contains(entity_id))
             continue;
@@ -204,8 +219,25 @@ void ECS::Delete_Entity(Entity_ID entity_id) {
 
 void ECS::Apply_Function_To_Entities(Entity_Type* entity_type,
                                      const std::function<void(ECS* ecs, Entity entity)>& op) {
-    for (auto entity : Get_Entities_Of_Type(entity_type)) {
-        op(this, entity);
+    for (auto entity_array : entity_components) {
+        if (!entity_array->entity_type.Is_Entity_Of_Type(entity_type) ||
+            entity_array->entity_count == 0)
+            continue;
+        int start_index = 0;
+        int end_index = min(9, entity_array->entity_count - 1);
+        pthread_mutex_lock(&work_mutex);
+        while (start_index <= end_index) {
+            auto work = new Work_Data{op, entity_array, start_index, end_index, nullptr};
+            if (work_end == nullptr) {
+                work_start = work;
+            } else {
+                work_end->next = work;
+            }
+            work_end = work;
+            start_index = end_index + 1;
+            end_index = min(end_index + 10, entity_array->entity_count);
+        }
+        pthread_mutex_unlock(&work_mutex);
     }
 }
 
@@ -218,6 +250,56 @@ Entity_Array* ECS::Get_Entities_Of_Exact_Type(Entity_Type* entity_type) {
         return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
     });
     return e_array;
+}
+
+Work_Data* ECS::Get_Work() {
+    Work_Data* data = nullptr;
+    pthread_mutex_lock(&work_mutex);
+    data = work_start;
+    if (data != nullptr) {
+        work_start = data->next;
+        if (work_start == nullptr)
+            work_end = nullptr;
+    }
+    pthread_mutex_unlock(&work_mutex);
+    return data;
+}
+
+void ECS::Wait_Until_Work_Is_Complete() {
+    while (true) {
+        pthread_mutex_lock(&work_mutex);
+        if (work_end == nullptr) {
+        }
+        pthread_mutex_unlock(&work_mutex);
+        this_thread::yield();
+    }
+}
+
+void* Worker_Function(void* worker) {
+    static_cast<ECS_Worker*>(worker)->DoWork();
+    return nullptr;
+}
+
+ECS_Worker::ECS_Worker(ECS& ecs) : ecs(ecs), canceled(false) {
+    pthread_create(&thread, nullptr, Worker_Function, this);
+}
+
+void ECS_Worker::DoWork() {
+    while (!canceled) {
+        auto work = ecs.Get_Work();
+        if (work == nullptr) {
+            this_thread::yield();
+            continue;
+        }
+        for (int i = work->starting_index; i <= work->ending_index; i++) {
+            work->op(&ecs, work->entity_array->Get_Entity(i));
+        }
+    }
+}
+
+ECS_Worker::~ECS_Worker() {
+    canceled = true;
+    pthread_cancel(thread);
 }
 
 Component_Type Transform_Component::component_type =

@@ -94,7 +94,7 @@ void Application::Application_Loop() {
         wait--;
         if (wait == 0) {
             cout << totalTimes / static_cast<float>(pastTimes.size()) << endl;
-            wait = 10;
+            wait = 50;
         }
 
         if (client) {
