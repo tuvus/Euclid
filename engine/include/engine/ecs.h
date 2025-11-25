@@ -36,6 +36,7 @@ class Component_Type {
 
 class Entity_Type {
   public:
+    std::string name;
     std::vector<Component_Type*> components;
     // The size of each entity and its components in bytes
     int entity_size;
@@ -44,7 +45,8 @@ class Entity_Type {
     Entity_Type(std::vector<Component_Type*> components);
 
     Entity_Type(std::vector<Component_Type*> components,
-                std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function);
+                std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
+                std::string name);
 
     /**
      * Finds if the other entity is a superset of this entity.
@@ -95,7 +97,7 @@ class Entity_Array {
 
     void Delete_Entity(ECS* ecs, int index);
 
-    Entity Get_Entity(int index) { return tuple(entities + index * entity_type.entity_size, this); }
+    Entity Get_Entity(int index);
 };
 
 class System {
@@ -147,7 +149,7 @@ class ECS {
     Work_Data* work_start;
     Work_Data* work_end;
 
-    void Wait_Until_Work_Is_Complete();
+    void Complete_Work();
 
   public:
     Application& application;
@@ -166,7 +168,8 @@ class ECS {
 
     Entity_Array*
     Create_Entity_Type(std::vector<Component_Type*> components,
-                       std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function);
+                       std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
+                       string name);
 
     Entity Create_Entity(Entity_Type* entity_type);
 
@@ -189,12 +192,14 @@ class ECS {
 class ECS_Worker {
     pthread_t thread;
     ECS& ecs;
-    bool canceled;
+    atomic_bool doing_work;
+    atomic_bool canceled;
 
   public:
     ECS_Worker(ECS& ecs);
     void DoWork();
     ~ECS_Worker();
+    constexpr bool Doing_Work();
 };
 
 struct Transform_Component {

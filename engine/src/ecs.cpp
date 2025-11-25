@@ -5,12 +5,13 @@
 using namespace std;
 
 Entity_Type::Entity_Type(std::vector<Component_Type*> components)
-    : Entity_Type(components, nullptr) {
+    : Entity_Type(components, nullptr, "") {
 }
 
 Entity_Type::Entity_Type(std::vector<Component_Type*> components,
-                         std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function)
-    : components(std::move(components)), ui_creation_function(ui_creation_function) {
+                         std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
+                         string name)
+    : components(std::move(components)), ui_creation_function(ui_creation_function), name(name) {
     entity_size =
         std::accumulate(this->components.begin(), this->components.end(), sizeof(Entity_Component),
                         [](const int sum, const Component_Type* c) { return sum + c->size; });
@@ -30,7 +31,7 @@ bool Entity_Type::Is_Entity_Strictly_Of_type(Entity_Type* other) const {
 
 Entity_Array::Entity_Array(ECS& ecs, Entity_Type entity_type)
     : ecs(ecs), entity_type(Entity_Type(entity_type)), entity_count(0) {
-    entity_capacity = 10;
+    entity_capacity = 1000;
     entities = new unsigned char[entity_type.entity_size * entity_capacity];
 }
 
@@ -73,6 +74,13 @@ void Entity_Array::Delete_Entity(ECS* ecs, int index) {
         Get_Entity_Data(Get_Entity(index)).id = 0;
     }
     entity_count--;
+}
+
+Entity Entity_Array::Get_Entity(int index) {
+    if (index >= entity_count)
+        throw std::runtime_error("Index " + to_string(index) + " out of bound of size " +
+                                 to_string(entity_count) + " for entity_array " + entity_type.name);
+    return tuple(entities + index * entity_type.entity_size, this);
 }
 
 Entity_Iterator::Entity_Iterator(Entity_Type_Iterator* type_iterator)
@@ -161,7 +169,7 @@ void ECS::Update() {
     for (auto system : systems) {
         Apply_Function_To_Entities(system->entity_type, system->function);
     }
-    Wait_Until_Work_Is_Complete();
+    Complete_Work();
     for (Entity_ID entity_id : to_delete) {
         if (!entities_by_id.contains(entity_id))
             continue;
@@ -176,9 +184,10 @@ void ECS::Update() {
 
 Entity_Array*
 ECS::Create_Entity_Type(std::vector<Component_Type*> components,
-                        std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function) {
+                        std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
+                        string name) {
     auto* new_array = new Entity_Array(
-        *this, Entity_Type(std::move(components), std::move(ui_creation_function)));
+        *this, Entity_Type(std::move(components), std::move(ui_creation_function), name));
     entity_components.emplace(new_array);
     return new_array;
 }
@@ -226,7 +235,7 @@ void ECS::Apply_Function_To_Entities(Entity_Type* entity_type,
         int start_index = 0;
         int end_index = min(9, entity_array->entity_count - 1);
         pthread_mutex_lock(&work_mutex);
-        while (start_index <= end_index) {
+        while (start_index <= end_index && start_index < entity_array->entity_count) {
             auto work = new Work_Data{op, entity_array, start_index, end_index, nullptr};
             if (work_end == nullptr) {
                 work_start = work;
@@ -235,7 +244,7 @@ void ECS::Apply_Function_To_Entities(Entity_Type* entity_type,
             }
             work_end = work;
             start_index = end_index + 1;
-            end_index = min(end_index + 10, entity_array->entity_count);
+            end_index = min(start_index + 9, entity_array->entity_count);
         }
         pthread_mutex_unlock(&work_mutex);
     }
@@ -265,10 +274,21 @@ Work_Data* ECS::Get_Work() {
     return data;
 }
 
-void ECS::Wait_Until_Work_Is_Complete() {
+void ECS::Complete_Work() {
     while (true) {
         pthread_mutex_lock(&work_mutex);
         if (work_end == nullptr) {
+            bool has_work = false;
+            for (auto worker : workers) {
+                if (worker->Doing_Work()) {
+                    has_work = true;
+                    break;
+                }
+            }
+            if (!has_work) {
+                pthread_mutex_unlock(&work_mutex);
+                return;
+            }
         }
         pthread_mutex_unlock(&work_mutex);
         this_thread::yield();
@@ -300,6 +320,10 @@ void ECS_Worker::DoWork() {
 ECS_Worker::~ECS_Worker() {
     canceled = true;
     pthread_cancel(thread);
+}
+
+constexpr bool ECS_Worker::Doing_Work() {
+    return doing_work;
 }
 
 Component_Type Transform_Component::component_type =
