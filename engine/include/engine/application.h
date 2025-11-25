@@ -30,11 +30,11 @@ class Application {
     virtual void Start_Client();
 
   public:
-    Application(std::string name, bool client, uint16_t screen_width, uint16_t screen_height);
+    Application(std::string name, bool client, float screen_width, float screen_height);
     virtual ~Application() = default;
 
-    uint16_t screen_width;
-    uint16_t screen_height;
+    float screen_width;
+    float screen_height;
 
     EUI_Context* eui_ctx = new EUI_Context();
 

@@ -1,35 +1,36 @@
 #include "lobby_scene.h"
-
 #include "card_player.h"
 #include "game_scene.h"
 
 Lobby_Scene::Lobby_Scene(Card_Game& card_game)
     : Scene(card_game), card_game(card_game), player_id_count(0), player_count(0) {
-    auto* root = new EUI_VBox();
+    auto* root = new EUI_Box(true);
     root_elem = root;
     root->pos = {0, 0};
-    root->dim = {float(GetScreenWidth()), float(GetScreenHeight())};
-    root->style.vertical_alignment = Alignment::Center;
-    root->style.horizontal_alignment = Alignment::Center;
+    root->size = {static_cast<float>(card_game.screen_width),
+                  static_cast<float>(card_game.screen_height)};
+    root->main_axis_alignment = Alignment::Center;
+    root->cross_axis_alignment = Alignment::Center;
     root->gap = 20;
+
     status_text = new EUI_Text("Connecting...");
     if (card_game.Get_Network()->Is_Server())
         status_text->Set_Text("Setting up server...");
     root->Add_Child(status_text);
     start_button = new EUI_Button("Start Game", [this, &card_game]() { Server_Start_Game(); });
-    start_button->style.padding = {10, 20, 10, 20};
+    start_button->padding = {10, 20, 10, 20};
     root->Add_Child(start_button);
     start_button->is_visible = card_game.Get_Network()->Is_Server();
     ai_only_button =
         new EUI_Button("Start AI Only Game", [this, &card_game]() { Server_Start_AI_Only(); });
-    ai_only_button->style.padding = {10, 20, 10, 20};
+    ai_only_button->padding = {10, 20, 10, 20};
     root->Add_Child(ai_only_button);
     ai_only_button->is_visible = card_game.Get_Network()->Is_Server();
     auto* leave_button = new EUI_Button("Leave Room", [this, &card_game]() {
         card_game.Close_Network();
         card_game.set_ui_screen(MENU);
     });
-    leave_button->style.padding = {10, 20, 10, 20};
+    leave_button->padding = {10, 20, 10, 20};
     root->Add_Child(leave_button);
     card_game.Get_Network()->bind_rpc("setplayercount", [this](int new_player_count) {
         player_count = new_player_count;

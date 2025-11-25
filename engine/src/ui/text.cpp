@@ -1,33 +1,102 @@
 #include <algorithm>
+#include <iostream>
 
 #include "ui/eui.h"
 
-EUI_Text::EUI_Text(const std::string& text) : text(text) {
-    // default styles
-    style.border_radius = 0;
-
-    style.horizontal_alignment = Alignment::Start;
-    style.vertical_alignment = Alignment::Start;
-    style.text_horizontal_alignment = Alignment::Start;
-    style.text_vertical_alignment = Alignment::Start;
+// Layout debugging helpers (shared with box.cpp via extern)
+extern thread_local int layout_depth;
+static std::string get_indent() {
+    return std::string(layout_depth * 2, ' ');
 }
 
-void EUI_Text::Layout() {
-    EUI_Style style = Get_Effective_Style();
+EUI_Text::EUI_Text(const std::string& text) : text(text) {
+    // default styles
+    border_radius = 0;
+}
+
+void EUI_Text::Size() {
+    std::cout << get_indent() << "[SIZE] Text '" << text << "'" << std::endl;
+    layout_depth++;
 
     Vector2 text_size =
         MeasureTextEx(Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
 
-    // calculate preferred size
-    float width =
-        std::max(text_size.x + style.padding.left + style.padding.right, preferred_size.x);
-    float height =
-        std::max(text_size.y + style.padding.top + style.padding.bottom, preferred_size.y);
-    preferred_size = {width, height};
+    // min size is text and padding
+    min_size = {text_size.x + padding.left + padding.right,
+                text_size.y + padding.top + padding.bottom};
 
-    min_size = {text_size.x, text_size.y};
+    // set size to min size or fixed set size only if its larger
+    if (size.x != Size::Grow()) {
+        size.x = std::max(min_size.x, size.x);
+    }
+    if (size.y != Size::Grow()) {
+        size.y = std::max(min_size.y, size.y);
+    };
+
     // TODO: what should this be...
     max_size = {9999, 9999};
+
+    layout_depth--;
+    std::cout << get_indent() << "  → text_size=(" << text_size.x << ", " << text_size.y
+              << ") size=(" << size.x << ", " << size.y << ") min=(" << min_size.x << ", "
+              << min_size.y << ")" << std::endl;
+}
+
+void EUI_Text::Grow() {
+    // no-op since no children
+}
+
+void EUI_Text::Place() {
+    std::cout << get_indent() << "[PLACE] Text '" << text << "' at pos=(" << pos.x << ", " << pos.y
+              << ") size=(" << size.x << ", " << size.y << ")" << std::endl;
+    layout_depth++;
+
+    // Calculate text position based on alignment within element bounds
+    Vector2 text_size =
+        MeasureTextEx(Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
+
+    // Vertical alignment
+    switch (main_axis_alignment) {
+        case Alignment::Center:
+            text_pos.y = pos.y + (size.y - text_size.y + padding.top - padding.bottom) / 2.0f;
+            break;
+        case Alignment::End:
+            text_pos.y = pos.y + size.y - text_size.y - padding.bottom;
+            break;
+        case Alignment::Stretch:
+        case Alignment::Start:
+            text_pos.y = pos.y + padding.top;
+            break;
+    }
+
+    // Horizontal alignment
+    switch (cross_axis_alignment) {
+        case Alignment::Center:
+            text_pos.x = pos.x + (size.x - text_size.x + padding.left - padding.right) / 2.0f;
+            break;
+        case Alignment::End:
+            text_pos.x = pos.x + size.x - text_size.x - padding.right;
+            break;
+        case Alignment::Stretch:
+        case Alignment::Start:
+            text_pos.x = pos.x + padding.left;
+            break;
+    }
+
+    // Apply relative positioning offset after normal placement
+    if (Is_Relative()) {
+        pos.x += left - right;
+        pos.y += top - bottom;
+        text_pos.x += left - right;
+        text_pos.y += top - bottom;
+        std::cout << get_indent() << "Applied relative offset: left=" << left << " right=" << right
+                  << " top=" << top << " bottom=" << bottom << " → final pos=(" << pos.x << ", "
+                  << pos.y << ")" << std::endl;
+    }
+
+    layout_depth--;
+    std::cout << get_indent() << "  → text_pos=(" << text_pos.x << ", " << text_pos.y << ")"
+              << std::endl;
 }
 
 void EUI_Text::Handle_Input() {
@@ -38,45 +107,15 @@ void EUI_Text::Render() {
     if (!is_visible)
         return;
 
-    const auto style = Get_Effective_Style();
-
     // Background
-    if (style.background_color.has_value())
-        DrawRectangleRec({pos.x, pos.y, dim.x, dim.y}, style.background_color.value());
+    if (background_color.has_value())
+        DrawRectangleRec({pos.x, pos.y, size.x, size.y}, background_color.value());
 
     // Border
-    if (style.border_radius > 0)
-        DrawRectangleLinesEx({pos.x, pos.y, dim.x, dim.y}, style.border_radius, style.border_color);
+    if (border_radius > 0)
+        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, border_radius, border_color);
 
     // Text
-    Vector2 text_size =
-        MeasureTextEx(Get_Font(), text.c_str(), Get_Font_Size(), Get_Font_Spacing());
-
-    switch (style.text_vertical_alignment) {
-        case Alignment::Center:
-            text_pos.y =
-                pos.y + (dim.y - text_size.y + style.padding.top - style.padding.bottom) / 2.0f;
-            break;
-        case Alignment::End:
-            text_pos.y = pos.y + dim.y - text_size.y - style.padding.bottom;
-            break;
-        case Alignment::Stretch:
-        case Alignment::Start:
-            text_pos.y = pos.y;
-    }
-    switch (style.text_horizontal_alignment) {
-        case Alignment::Center:
-            text_pos.x =
-                pos.x + (dim.x - text_size.x + style.padding.left - style.padding.right) / 2;
-            break;
-        case Alignment::End:
-            text_pos.x = pos.x + dim.x - text_size.x - style.padding.right;
-            break;
-        case Alignment::Stretch:
-        case Alignment::Start:
-            text_pos.x = pos.x;
-    }
-
     DrawTextEx(Get_Font(), text.c_str(), text_pos, Get_Font_Size(), Get_Font_Spacing(),
                Get_Text_Color());
 }
@@ -89,6 +128,9 @@ void EUI_Text::Set_Text(const std::string& text) {
     this->text = text;
 
     // recalculate size
-    if (ctx && parent)
-        parent->Layout();
+    if (ctx && parent) {
+        parent->Size();
+        parent->Grow();
+        parent->Place();
+    }
 }

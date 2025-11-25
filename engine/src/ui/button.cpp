@@ -3,20 +3,17 @@
 EUI_Button::EUI_Button(const std::string& text, std::function<void()> on_click)
     : EUI_Text(text), on_click(on_click), is_enabled(true) {
     // default button styles
-    style.border_radius = 1;
-    style.border_color = BLACK;
-
-    style.text_horizontal_alignment = Alignment::Center;
-    style.text_vertical_alignment = Alignment::Center;
+    border_radius = 1;
+    border_color = BLACK;
 }
 
 void EUI_Button::Handle_Input() {
     if (!ctx || !is_visible)
         return;
 
-    style.border_color = is_enabled ? BLACK : GRAY;
+    border_color = is_enabled ? BLACK : GRAY;
 
-    is_hovered = CheckCollisionPointRec(ctx->input.mouse_position, {pos.x, pos.y, dim.x, dim.y});
+    is_hovered = CheckCollisionPointRec(ctx->input.mouse_position, {pos.x, pos.y, size.x, size.y});
     if (is_hovered && is_enabled) {
         ctx->hovered = this;
     } else {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "card_game.h"
-#include "card_player.h"
 #include "game_manager.h"
 #include "networking/network.h"
 #include "scene.h"

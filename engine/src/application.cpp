@@ -11,8 +11,7 @@ void Create_Application(unique_ptr<ApplicationFactory> application_factory, bool
     application->Start_Application();
 }
 
-Application::Application(std::string name, bool client, uint16_t screen_width,
-                         uint16_t screen_height)
+Application::Application(std::string name, bool client, float screen_width, float screen_height)
     : application_name(name), client(client), screen_width(screen_width),
       screen_height(screen_height), application_state(ApplicationState::SettingUp),
       network(nullptr) {
@@ -34,9 +33,9 @@ void Application::Start_Client() {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(screen_width, screen_height, application_name.c_str());
     if (eui_ctx->default_font_path.empty()) {
-        eui_ctx->default_style.font = GetFontDefault();
+        eui_ctx->default_font = GetFontDefault();
     } else {
-        eui_ctx->default_style.font = LoadFont(eui_ctx->default_font_path.c_str());
+        eui_ctx->default_font = LoadFont(eui_ctx->default_font_path.c_str());
     }
     SetTargetFPS(60);
     SetWindowFocused();
