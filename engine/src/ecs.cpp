@@ -32,7 +32,7 @@ bool Entity_Type::Is_Entity_Strictly_Of_type(Entity_Type* other) const {
 Entity_Array::Entity_Array(ECS& ecs, Entity_Type entity_type)
     : ecs(ecs), entity_type(Entity_Type(entity_type)) {
     pthread_mutex_init(&array_lock, nullptr);
-    array = {nullptr, 0, 10000, nullptr};
+    array = {nullptr, 0, 10, nullptr};
     array.entities = new unsigned char[entity_type.entity_size * array.entity_capacity];
 }
 
@@ -48,10 +48,19 @@ std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs, Entity_ID 
         // Other threads might be using the old array still
         // We will merge the two arrays in the clean_up phase
         Dynamic_Array* tmp = curr_arr;
-        curr_arr = new Dynamic_Array{
-            new unsigned char[entity_type.entity_size * array.entity_capacity * 2],
-            array.entity_count + 1, array.entity_capacity * 2, nullptr};
-        tmp->next = curr_arr;
+        curr_arr =
+            new Dynamic_Array{new unsigned char[entity_type.entity_size * tmp->entity_capacity * 2],
+                              tmp->entity_count, tmp->entity_capacity * 2, nullptr};
+
+        if (ecs->In_Block()) {
+            tmp->next = curr_arr;
+        } else {
+            memcpy(curr_arr->entities, tmp->entities, tmp->entity_count * entity_type.entity_size);
+            delete tmp->entities;
+            array = *curr_arr;
+            delete curr_arr;
+            curr_arr = &array;
+        }
     }
     int index = curr_arr->entity_count;
     curr_arr->entity_count++;
@@ -118,7 +127,7 @@ void Entity_Array::Clean_Up() {
     while (curr_array != end_array) {
         int entities_to_copy = curr_array->entity_count - starting_index;
         memcpy(end_array->entities + starting_index * entity_type.entity_size,
-               curr_array + starting_index * entity_type.entity_size,
+               curr_array->entities + starting_index * entity_type.entity_size,
                entities_to_copy * entity_type.entity_size);
         starting_index = curr_array->entity_count;
         delete curr_array->entities;

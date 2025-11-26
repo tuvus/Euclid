@@ -202,6 +202,7 @@ class ECS {
     void Register_System(System* system) { systems.emplace(system); }
 
     Work_Data* Get_Work(atomic_bool& atomic_bool);
+    bool In_Block() const { return in_block; }
 };
 
 class ECS_Worker {
