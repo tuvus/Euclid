@@ -4,9 +4,9 @@
 
 class Path {
   public:
-    std::vector<Vector2> positions;
+    const std::vector<Vector2> positions;
 
-    Path(std::vector<Vector2> positions) : positions(positions) {}
+    Path(std::vector<Vector2> positions) : positions(std::move(positions)) {}
     float Get_Rotation_On_Path(int progress) const {
         if (progress > positions.size())
             return 0;

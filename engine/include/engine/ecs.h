@@ -59,11 +59,17 @@ class Entity_Type {
 
 // Singleton class that describes how each entity with a certain set of components is laid out.
 class Entity_Array {
+    struct Dynamic_Array {
+        unsigned char* entities;
+        int entity_count;
+        int entity_capacity;
+        Dynamic_Array* next;
+    };
+    Dynamic_Array array;
+    pthread_mutex_t array_lock;
+
   public:
     Entity_Type entity_type;
-    unsigned char* entities;
-    int entity_count;
-    int entity_capacity;
     ECS& ecs;
 
     Entity_Array(ECS& ecs, Entity_Type entity_type);
@@ -98,6 +104,13 @@ class Entity_Array {
     void Delete_Entity(ECS* ecs, int index);
 
     Entity Get_Entity(int index);
+
+    /**
+     * Cleans up and merges any entity_arrays.
+     */
+    void Clean_Up();
+
+    inline int Count() const { return array.entity_count; }
 };
 
 class System {
@@ -142,18 +155,20 @@ struct Work_Data {
 };
 
 class ECS {
-    std::unordered_set<Entity_ID> to_create;
+    std::unordered_map<Entity_ID, tuple<Entity_Array*, int>> to_create;
+    pthread_mutex_t to_create_mutex;
     std::vector<Entity_ID> to_delete;
     std::vector<ECS_Worker*> workers;
     pthread_mutex_t work_mutex;
     Work_Data* work_start;
     Work_Data* work_end;
+    bool in_block;
 
     void Complete_Work();
 
   public:
     Application& application;
-    std::unordered_set<Entity_Array*> entity_components;
+    std::unordered_set<Entity_Array*> entity_arrays;
     std::unordered_set<System*> systems;
     std::unordered_map<Entity_ID, std::tuple<Entity, int>> entities_by_id;
     Entity_ID next_id = 1;
@@ -186,7 +201,7 @@ class ECS {
 
     void Register_System(System* system) { systems.emplace(system); }
 
-    Work_Data* Get_Work();
+    Work_Data* Get_Work(atomic_bool& atomic_bool);
 };
 
 class ECS_Worker {
