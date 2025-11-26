@@ -15,7 +15,7 @@ EUI_Text::EUI_Text(const std::string& text) : text(text) {
 }
 
 void EUI_Text::Size() {
-    std::cout << get_indent() << "[SIZE] Text '" << text << "'" << std::endl;
+    // std::cout << get_indent() << "[SIZE] Text '" << text << "'" << std::endl;
     layout_depth++;
 
     Vector2 text_size =
@@ -37,9 +37,9 @@ void EUI_Text::Size() {
     max_size = {9999, 9999};
 
     layout_depth--;
-    std::cout << get_indent() << "  → text_size=(" << text_size.x << ", " << text_size.y
-              << ") size=(" << size.x << ", " << size.y << ") min=(" << min_size.x << ", "
-              << min_size.y << ")" << std::endl;
+    // std::cout << get_indent() << "  → text_size=(" << text_size.x << ", " << text_size.y
+    // << ") size=(" << size.x << ", " << size.y << ") min=(" << min_size.x << ", "
+    // << min_size.y << ")" << std::endl;
 }
 
 void EUI_Text::Grow() {
@@ -47,8 +47,9 @@ void EUI_Text::Grow() {
 }
 
 void EUI_Text::Place() {
-    std::cout << get_indent() << "[PLACE] Text '" << text << "' at pos=(" << pos.x << ", " << pos.y
-              << ") size=(" << size.x << ", " << size.y << ")" << std::endl;
+    // std::cout << get_indent() << "[PLACE] Text '" << text << "' at pos=(" << pos.x << ", " <<
+    // pos.y
+    // << ") size=(" << size.x << ", " << size.y << ")" << std::endl;
     layout_depth++;
 
     // Calculate text position based on alignment within element bounds
@@ -89,14 +90,15 @@ void EUI_Text::Place() {
         pos.y += top - bottom;
         text_pos.x += left - right;
         text_pos.y += top - bottom;
-        std::cout << get_indent() << "Applied relative offset: left=" << left << " right=" << right
-                  << " top=" << top << " bottom=" << bottom << " → final pos=(" << pos.x << ", "
-                  << pos.y << ")" << std::endl;
+        // std::cout << get_indent() << "Applied relative offset: left=" << left << " right=" <<
+        // right
+        // << " top=" << top << " bottom=" << bottom << " → final pos=(" << pos.x << ", "
+        // << pos.y << ")" << std::endl;
     }
 
     layout_depth--;
-    std::cout << get_indent() << "  → text_pos=(" << text_pos.x << ", " << text_pos.y << ")"
-              << std::endl;
+    // std::cout << get_indent() << "  → text_pos=(" << text_pos.x << ", " << text_pos.y << ")"
+    // << std::endl;
 }
 
 void EUI_Text::Handle_Input() {
