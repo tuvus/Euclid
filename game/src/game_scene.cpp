@@ -51,10 +51,10 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
     ecs = new ECS(application, seed);
-    ecs->Register_System(new System(Get_Unit_Entity_Type(), Unit_Update));
-    ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update));
-    ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update));
-    ecs->Register_System(new System(Get_Projectile_Entity_Type(), Projectile_Update));
+    ecs->Register_System(new System(Get_Unit_Entity_Type(), Unit_Update), 1);
+    ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update), 1);
+    ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update), 0);
+    ecs->Register_System(new System(Get_Projectile_Entity_Type(), Projectile_Update), 0);
 
     for (int p = 0; p < num_paths; p++) {
         int pathx_offset = ((p + 1) / 2) * 220;

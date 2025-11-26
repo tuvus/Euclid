@@ -169,7 +169,7 @@ class ECS {
   public:
     Application& application;
     std::unordered_set<Entity_Array*> entity_arrays;
-    std::unordered_set<System*> systems;
+    std::vector<std::vector<System*>> blocks;
     std::unordered_map<Entity_ID, std::tuple<Entity, int>> entities_by_id;
     Entity_ID next_id = 1;
     std::function<void(Entity_ID)> on_add_entity;
@@ -199,8 +199,7 @@ class ECS {
 
     Entity_Array* Get_Entities_Of_Exact_Type(Entity_Type* entity_type);
 
-    void Register_System(System* system) { systems.emplace(system); }
-
+    void Register_System(System* system, int block_index);
     Work_Data* Get_Work(atomic_bool& atomic_bool);
     bool In_Block() const { return in_block; }
 };

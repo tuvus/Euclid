@@ -207,11 +207,11 @@ Entity_Iterator Entity_Type_Iterator::end() {
 ECS::ECS(Application& application, long seed)
     : application(application), work_start(nullptr), work_end(nullptr) {
     pthread_mutex_init(&to_create_mutex, nullptr);
-    entity_arrays = std::unordered_set<Entity_Array*>();
-    systems = std::unordered_set<System*>();
-    entities_by_id = std::unordered_map<Entity_ID, std::tuple<Entity, int>>();
+    entity_arrays = unordered_set<Entity_Array*>();
+    blocks = vector<vector<System*>>();
+    entities_by_id = unordered_map<Entity_ID, tuple<Entity, int>>();
     to_delete = vector<Entity_ID>();
-    random = std::minstd_rand(seed);
+    random = minstd_rand(seed);
     workers = vector<ECS_Worker*>();
     pthread_mutex_init(&work_mutex, nullptr);
     for (int i = 0; i < 30; i++) {
@@ -226,35 +226,38 @@ ECS::~ECS() {
 }
 
 void ECS::Update() {
-    in_block = true;
-    for (auto [entity_id, entity_array_index] : to_create) {
-        if (on_add_entity != nullptr)
-            on_add_entity(entity_id);
-    }
-    to_create.clear();
-    for (auto system : systems)
-        Apply_Function_To_Entities(system->entity_type, system->function);
-    Complete_Work();
-    for (auto entity_array : entity_arrays)
-        entity_array->Clean_Up();
+    for (auto systems : blocks) {
+        in_block = true;
+        for (auto [entity_id, entity_array_index] : to_create) {
+            if (on_add_entity != nullptr)
+                on_add_entity(entity_id);
+        }
+        to_create.clear();
+        for (auto system : systems)
+            Apply_Function_To_Entities(system->entity_type, system->function);
+        Complete_Work();
+        for (auto entity_array : entity_arrays)
+            entity_array->Clean_Up();
 
-    for (auto [entity_id, entity_array_index] : to_create) {
-        if (get<0>(entity_array_index) != nullptr)
-            entities_by_id.emplace(
-                entity_id, tuple(get<0>(entity_array_index)->Get_Entity(get<1>(entity_array_index)),
-                                 get<1>(entity_array_index)));
+        for (auto [entity_id, entity_array_index] : to_create) {
+            if (get<0>(entity_array_index) != nullptr)
+                entities_by_id.emplace(
+                    entity_id,
+                    tuple(get<0>(entity_array_index)->Get_Entity(get<1>(entity_array_index)),
+                          get<1>(entity_array_index)));
+        }
+        for (Entity_ID entity_id : to_delete) {
+            if (!entities_by_id.contains(entity_id))
+                continue;
+            auto [entity, index] = entities_by_id[entity_id];
+            entities_by_id.erase(entity_id);
+            get<1>(entity)->Delete_Entity(this, index);
+            if (on_delete_entity)
+                on_delete_entity(entity_id);
+        }
+        to_delete.clear();
+        in_block = false;
     }
-    for (Entity_ID entity_id : to_delete) {
-        if (!entities_by_id.contains(entity_id))
-            continue;
-        auto [entity, index] = entities_by_id[entity_id];
-        entities_by_id.erase(entity_id);
-        get<1>(entity)->Delete_Entity(this, index);
-        if (on_delete_entity)
-            on_delete_entity(entity_id);
-    }
-    to_delete.clear();
-    in_block = false;
 }
 
 Entity_Array*
@@ -347,6 +350,14 @@ Entity_Array* ECS::Get_Entities_Of_Exact_Type(Entity_Type* entity_type) {
         return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
     });
     return e_array;
+}
+
+void ECS::Register_System(System* system, int block_index) {
+    for (int i = 0; i <= block_index; i++) {
+        if (i == blocks.size())
+            blocks.emplace_back();
+    }
+    blocks[block_index].emplace_back(system);
 }
 
 Work_Data* ECS::Get_Work(atomic_bool& doing_work) {
