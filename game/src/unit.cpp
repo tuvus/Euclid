@@ -72,10 +72,8 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
             }
         }
     }
-    auto curr_pos = unit->path->positions[unit->section];
-    auto next_pos = unit->path->positions[unit->section + 1];
-
-    transform->pos = Vector2Lerp(curr_pos, next_pos, unit->lerp);
+    transform->pos = Vector2Lerp(unit->path->positions[unit->section],
+                                 unit->path->positions[unit->section + 1], unit->lerp);
     transform->rot = unit->path->Get_Rotation_On_Path(unit->section);
 
     for (auto entity : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
