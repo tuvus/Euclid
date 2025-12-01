@@ -76,7 +76,7 @@ void Application::Application_Loop() {
         if (network)
             network->Network_Update();
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1; i++) {
             Update(delta_time);
         }
 
@@ -92,7 +92,7 @@ void Application::Application_Loop() {
 
         wait--;
         if (wait == 0) {
-            cout << totalTimes / static_cast<float>(pastTimes.size()) << endl;
+            // cout << totalTimes / static_cast<float>(pastTimes.size()) << endl;
             wait = 50;
         }
 
