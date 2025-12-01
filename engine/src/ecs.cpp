@@ -30,9 +30,9 @@ bool Entity_Type::Is_Entity_Strictly_Of_type(Entity_Type* other) const {
 }
 
 Entity_Array::Entity_Array(ECS& ecs, Entity_Type entity_type)
-    : ecs(ecs), entity_type(Entity_Type(entity_type)) {
+    : ecs(ecs), entity_type(Entity_Type(entity_type)), entity_count(0) {
     pthread_mutex_init(&array_lock, nullptr);
-    array = {nullptr, 0, 10, nullptr};
+    array = {nullptr, 0, 10000, nullptr};
     array.entities = new unsigned char[entity_type.entity_size * array.entity_capacity];
 }
 
@@ -54,16 +54,19 @@ std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs, Entity_ID 
 
         if (ecs->In_Block()) {
             tmp->next = curr_arr;
+            cout << "Expand" << this->entity_type.name << endl;
         } else {
             memcpy(curr_arr->entities, tmp->entities, tmp->entity_count * entity_type.entity_size);
             delete tmp->entities;
             array = *curr_arr;
             delete curr_arr;
             curr_arr = &array;
+            cout << "CopyExpand" << this->entity_type.name << endl;
         }
     }
     int index = curr_arr->entity_count;
     curr_arr->entity_count++;
+    // cout << "Creating" << entity_type.name << id << endl;
     pthread_mutex_unlock(&array_lock);
 
     // Create and return the entity
@@ -90,6 +93,9 @@ void Entity_Array::Copy_Entity(int src_index, int dst_index) {
 
 void Entity_Array::Delete_Entity(ECS* ecs, int index) {
     pthread_mutex_lock(&array_lock);
+    // cout << "Deleting" << entity_type.name << Get_Entity_Data(Get_Entity(index)).id << " " <<
+    // index
+    // << endl;
     if (index != array.entity_count - 1) {
         std::memcpy(array.entities + index * entity_type.entity_size,
                     array.entities + (array.entity_count - 1) * entity_type.entity_size,
@@ -100,14 +106,22 @@ void Entity_Array::Delete_Entity(ECS* ecs, int index) {
         Get_Entity_Data(Get_Entity(index)).id = 0;
     }
     array.entity_count--;
+    entity_count--;
     pthread_mutex_unlock(&array_lock);
 }
 
 Entity Entity_Array::Get_Entity(int index) {
-    if (index >= array.entity_count)
+    if (index >= entity_count)
         throw std::runtime_error("Index " + to_string(index) + " out of bound of size " +
-                                 to_string(array.entity_count) + " for entity_array " +
-                                 entity_type.name);
+                                 to_string(entity_count) + " for entity_array " + entity_type.name);
+    auto* curr_array = &array;
+    while (index >= curr_array->entity_count) {
+        // if (curr_array->next == nullptr)
+        // throw std::runtime_error("Index " + to_string(index) + " out of bound of size " +
+        // to_string(array.entity_count) + " for entity_array " +
+        // entity_type.name);
+        curr_array = curr_array->next;
+    }
     return tuple(array.entities + index * entity_type.entity_size, this);
 }
 
@@ -115,6 +129,7 @@ void Entity_Array::Clean_Up() {
     Dynamic_Array* end_array = &array;
     while (end_array->next != nullptr)
         end_array = end_array->next;
+    entity_count = end_array->entity_count;
     // Check if there is merging to do
     if (end_array == &array)
         return;
@@ -144,6 +159,8 @@ void Entity_Array::Clean_Up() {
     for (int i = 0; i < starting_index; i++) {
         Entity entity = Get_Entity(i);
         Entity_ID e_id = Get_Entity_Data(entity).id;
+        if (e_id == 0)
+            cerr << "Bad Entity ID!" << endl;
         ecs.entities_by_id[e_id] = tuple(entity, i);
     }
 }
@@ -205,7 +222,8 @@ Entity_Iterator Entity_Type_Iterator::end() {
 }
 
 ECS::ECS(Application& application, long seed)
-    : application(application), work_start(nullptr), work_end(nullptr) {
+    : application(application), work_start(nullptr), work_end(nullptr),
+      main_thread(new ECS_Worker(*this, false)) {
     pthread_mutex_init(&to_create_mutex, nullptr);
     entity_arrays = unordered_set<Entity_Array*>();
     blocks = vector<vector<System*>>();
@@ -235,6 +253,7 @@ void ECS::Update() {
         to_create.clear();
         for (auto system : systems)
             Apply_Function_To_Entities(system->entity_type, system->function);
+        in_block = false;
         Complete_Work();
         for (auto entity_array : entity_arrays)
             entity_array->Clean_Up();
@@ -256,7 +275,6 @@ void ECS::Update() {
                 on_delete_entity(entity_id);
         }
         to_delete.clear();
-        in_block = false;
     }
 }
 
@@ -324,9 +342,9 @@ void ECS::Apply_Function_To_Entities(Entity_Type* entity_type,
         if (!entity_array->entity_type.Is_Entity_Of_Type(entity_type) || entity_array->Count() == 0)
             continue;
         int start_index = 0;
-        int end_index = min(9, entity_array->Count() - 1);
+        int end_index = min(29, entity_array->Count() - 1);
         pthread_mutex_lock(&work_mutex);
-        while (start_index <= end_index && start_index < entity_array->Count()) {
+        while (start_index <= end_index && start_index <= entity_array->Count() - 1) {
             auto work = new Work_Data{op, entity_array, start_index, end_index, nullptr};
             if (work_end == nullptr) {
                 work_start = work;
@@ -335,7 +353,7 @@ void ECS::Apply_Function_To_Entities(Entity_Type* entity_type,
             }
             work_end = work;
             start_index = end_index + 1;
-            end_index = min(start_index + 9, entity_array->Count());
+            end_index = min(start_index + 29, entity_array->Count() - 1);
         }
         pthread_mutex_unlock(&work_mutex);
     }
@@ -379,7 +397,7 @@ void ECS::Complete_Work() {
         pthread_mutex_lock(&work_mutex);
         if (work_end != nullptr) {
             pthread_mutex_unlock(&work_mutex);
-            this_thread::yield();
+            main_thread->Do_Work();
             continue;
         }
 
@@ -400,28 +418,30 @@ void ECS::Complete_Work() {
 }
 
 void* Worker_Function(void* worker) {
-    static_cast<ECS_Worker*>(worker)->DoWork();
+    static_cast<ECS_Worker*>(worker)->Do_Worker_Loop();
     return nullptr;
 }
 
-ECS_Worker::ECS_Worker(ECS& ecs) : ecs(ecs), canceled(false) {
-    pthread_create(&thread, nullptr, Worker_Function, this);
+ECS_Worker::ECS_Worker(ECS& ecs, bool separate_thread) : ecs(ecs), canceled(false) {
+    if (separate_thread)
+        pthread_create(&thread, nullptr, Worker_Function, this);
 }
 
-void ECS_Worker::DoWork() {
+void ECS_Worker::Do_Worker_Loop() {
     while (!canceled) {
-        auto work = ecs.Get_Work(doing_work);
-        if (work == nullptr) {
-            doing_work = false;
-            this_thread::yield();
-            continue;
-        }
-        // TODO: For now we limit it by the entity_array count, in the future this should be fixed
-        // somewhere else.
-        for (int i = work->starting_index;
-             i <= min(work->ending_index, work->entity_array->Count() - 1); i++) {
-            work->op(&ecs, work->entity_array->Get_Entity(i));
-        }
+        Do_Work();
+    }
+}
+
+void ECS_Worker::Do_Work() {
+    auto work = ecs.Get_Work(doing_work);
+    if (work == nullptr) {
+        doing_work = false;
+        this_thread::yield();
+        return;
+    }
+    for (int i = work->starting_index; i <= work->ending_index; i++) {
+        work->op(&ecs, work->entity_array->Get_Entity(i));
     }
 }
 

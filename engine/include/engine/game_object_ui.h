@@ -1,8 +1,7 @@
 #pragma once
 
-
-#include "ui/eui.h"
 #include "ecs.h"
+#include "ui/eui.h"
 
 class Object_UI {
   public:

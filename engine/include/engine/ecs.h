@@ -67,6 +67,8 @@ class Entity_Array {
     };
     Dynamic_Array array;
     pthread_mutex_t array_lock;
+    // This is the count of the entities in the array at the start of the block
+    int entity_count;
 
   public:
     Entity_Type entity_type;
@@ -110,7 +112,7 @@ class Entity_Array {
      */
     void Clean_Up();
 
-    inline int Count() const { return array.entity_count; }
+    inline int Count() const { return entity_count; }
 };
 
 class System {
@@ -159,6 +161,7 @@ class ECS {
     pthread_mutex_t to_create_mutex;
     std::vector<Entity_ID> to_delete;
     std::vector<ECS_Worker*> workers;
+    ECS_Worker* main_thread;
     pthread_mutex_t work_mutex;
     Work_Data* work_start;
     Work_Data* work_end;
@@ -211,8 +214,9 @@ class ECS_Worker {
     atomic_bool canceled;
 
   public:
-    ECS_Worker(ECS& ecs);
-    void DoWork();
+    ECS_Worker(ECS& ecs, bool separate_thread = true);
+    void Do_Worker_Loop();
+    inline void Do_Work();
     ~ECS_Worker();
     constexpr bool Doing_Work();
 };
