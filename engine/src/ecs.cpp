@@ -246,18 +246,17 @@ ECS::~ECS() {
 void ECS::Update() {
     for (auto systems : blocks) {
         in_block = true;
-        for (auto [entity_id, entity_array_index] : to_create) {
-            if (on_add_entity != nullptr)
-                on_add_entity(entity_id);
-        }
-        to_create.clear();
         for (auto system : systems)
             Apply_Function_To_Entities(system->entity_type, system->function);
-        in_block = false;
         Complete_Work();
+        in_block = false;
         for (auto entity_array : entity_arrays)
             entity_array->Clean_Up();
 
+        // At this point we have the valid index of the new entities stored in to_create
+        // We must add these to entities_by_id before doing any deletions
+        // this is because deletions will re-arrange the entity arrays and invalidate the indicies
+        // in to_create
         for (auto [entity_id, entity_array_index] : to_create) {
             if (get<0>(entity_array_index) != nullptr)
                 entities_by_id.emplace(
@@ -265,16 +264,25 @@ void ECS::Update() {
                     tuple(get<0>(entity_array_index)->Get_Entity(get<1>(entity_array_index)),
                           get<1>(entity_array_index)));
         }
+
         for (Entity_ID entity_id : to_delete) {
             if (!entities_by_id.contains(entity_id))
                 continue;
             auto [entity, index] = entities_by_id[entity_id];
             entities_by_id.erase(entity_id);
             get<1>(entity)->Delete_Entity(this, index);
+            if (to_create.contains(entity_id))
+                to_create.erase(entity_id);
             if (on_delete_entity)
                 on_delete_entity(entity_id);
         }
         to_delete.clear();
+
+        for (auto [entity_id, entity_array_index] : to_create) {
+            if (on_add_entity != nullptr)
+                on_add_entity(entity_id);
+        }
+        to_create.clear();
     }
 }
 
