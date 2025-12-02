@@ -393,8 +393,8 @@ void EUI_Box::Render() {
     if (background_color.has_value())
         DrawRectangleRec({pos.x, pos.y, size.x, size.y}, background_color.value());
 
-    if (border_radius > 0)
-        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, border_radius, border_color);
+    if (border_width > 0)
+        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, border_width, border_color);
 
     // Render non-absolute children first
     for (EUI_Element* child : children) {

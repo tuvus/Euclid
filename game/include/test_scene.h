@@ -323,7 +323,7 @@ class Test_Scene : public Scene {
         EUI_Box* fab = Create_Box("FAB", Color{255, 100, 100, 255}, {100, 100});
         fab->Set_Absolute_Position((application.screen_width - 100) / 2,
                                    application.screen_height - 120);
-        fab->border_radius = 2;
+        fab->border_width = 2;
         fab->main_axis_alignment = Alignment::Center;
         fab->cross_axis_alignment = Alignment::Center;
         root->Add_Child(fab);

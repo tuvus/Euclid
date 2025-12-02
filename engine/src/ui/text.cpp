@@ -11,7 +11,7 @@ static std::string get_indent() {
 
 EUI_Text::EUI_Text(const std::string& text) : text(text) {
     // default styles
-    border_radius = 0;
+    border_width = 0;
 }
 
 void EUI_Text::Size() {
