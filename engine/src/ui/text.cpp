@@ -11,7 +11,7 @@ static std::string get_indent() {
 
 EUI_Text::EUI_Text(const std::string& text) : text(text) {
     // default styles
-    border_radius = 0;
+    border_width = 0;
 }
 
 void EUI_Text::Size() {
@@ -32,9 +32,6 @@ void EUI_Text::Size() {
     if (size.y != Size::Grow()) {
         size.y = std::max(min_size.y, size.y);
     };
-
-    // TODO: what should this be...
-    max_size = {9999, 9999};
 
     layout_depth--;
     // std::cout << get_indent() << "  → text_size=(" << text_size.x << ", " << text_size.y
@@ -114,8 +111,8 @@ void EUI_Text::Render() {
         DrawRectangleRec({pos.x, pos.y, size.x, size.y}, background_color.value());
 
     // Border
-    if (border_radius > 0)
-        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, border_radius, border_color);
+    if (border_width > 0)
+        DrawRectangleLinesEx({pos.x, pos.y, size.x, size.y}, border_width, border_color);
 
     // Text
     DrawTextEx(Get_Font(), text.c_str(), text_pos, Get_Font_Size(), Get_Font_Spacing(),

@@ -60,7 +60,7 @@ class EUI_Context {
     Sides default_padding = {0};
 
     Color default_border_color = BLACK;
-    float default_border_radius = 0;
+    float default_border_width = 0;
 
     // default_font_path is needed to correctly load the font after window initialization
     // doing it this way allows the user to not have to load their default font specifically
@@ -99,7 +99,7 @@ class EUI_Element {
 
     Vector2 pos = {0};
     Vector2 size = {Size::Fit(), Size::Fit()};
-    Vector2 min_size, max_size, preferred_size;
+    Vector2 min_size, pref_size;
 
     bool is_visible = true;
     bool is_hovered = false;
@@ -120,10 +120,10 @@ class EUI_Element {
     // - Static: normal flow (default)
     // - Relative: placed in normal flow, then offset by left/right/top/bottom
     // - Absolute: removed from flow, user sets pos.x/pos.y directly (pixel coordinates)
-    float top = 0, right = 0, bottom = 0, left = 0;  // Only used for Relative positioning
+    float top = 0, right = 0, bottom = 0, left = 0; // only used for relative positioning
 
     Color border_color = BLACK;
-    float border_radius = 0;
+    float border_width = 0;
 
     std::optional<Font> font;
     std::optional<float> font_size;

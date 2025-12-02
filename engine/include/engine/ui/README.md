@@ -256,7 +256,7 @@ element->padding = {10, 10, 10, 10};
 ### Border
 
 ```cpp
-element->border_radius = 2; // Border thickness
+element->border_width = 2;
 element->border_color = BLACK;
 ```
 
@@ -474,7 +474,7 @@ EUI_Button* fab = new EUI_Button("+", []() {
 fab->Set_Absolute_Position(SCREEN_WIDTH - 80, SCREEN_HEIGHT - 80);
 fab->size = {60, 60};
 fab->background_color = RED;
-fab->border_radius = 2;
+fab->border_width = 2;
 fab->main_axis_alignment = Alignment::Center;
 fab->cross_axis_alignment = Alignment::Center;
 root->Add_Child(fab); // Renders on top
