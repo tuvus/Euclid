@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+class ECS_Worker;
 class Game_UI_Manager;
 class Object_UI;
 class Entity_Array;
@@ -35,6 +36,7 @@ class Component_Type {
 
 class Entity_Type {
   public:
+    std::string name;
     std::vector<Component_Type*> components;
     // The size of each entity and its components in bytes
     int entity_size;
@@ -43,7 +45,8 @@ class Entity_Type {
     Entity_Type(std::vector<Component_Type*> components);
 
     Entity_Type(std::vector<Component_Type*> components,
-                std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function);
+                std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
+                std::string name);
 
     /**
      * Finds if the other entity is a superset of this entity.
@@ -56,11 +59,19 @@ class Entity_Type {
 
 // Singleton class that describes how each entity with a certain set of components is laid out.
 class Entity_Array {
+    struct Dynamic_Array {
+        unsigned char* entities;
+        int entity_count;
+        int entity_capacity;
+        Dynamic_Array* next;
+    };
+    Dynamic_Array array;
+    pthread_mutex_t array_lock;
+    // This is the count of the entities in the array at the start of the block
+    int entity_count;
+
   public:
     Entity_Type entity_type;
-    unsigned char* entities;
-    int entity_count;
-    int entity_capacity;
     ECS& ecs;
 
     Entity_Array(ECS& ecs, Entity_Type entity_type);
@@ -94,7 +105,14 @@ class Entity_Array {
 
     void Delete_Entity(ECS* ecs, int index);
 
-    Entity Get_Entity(int index) { return tuple(entities + index * entity_type.entity_size, this); }
+    Entity Get_Entity(int index);
+
+    /**
+     * Cleans up and merges any entity_arrays.
+     */
+    void Clean_Up();
+
+    inline int Count() const { return entity_count; }
 };
 
 class System {
@@ -130,14 +148,31 @@ class Entity_Type_Iterator {
     Entity_Iterator end();
 };
 
+struct Work_Data {
+    const std::function<void(ECS* ecs, Entity entity)>& op;
+    Entity_Array* entity_array;
+    int starting_index;
+    int ending_index;
+    Work_Data* next;
+};
+
 class ECS {
-    std::unordered_set<Entity_ID> to_create;
+    std::unordered_map<Entity_ID, tuple<Entity_Array*, int>> to_create;
+    pthread_mutex_t to_create_mutex;
     std::vector<Entity_ID> to_delete;
+    std::vector<ECS_Worker*> workers;
+    ECS_Worker* main_thread;
+    pthread_mutex_t work_mutex;
+    Work_Data* work_start;
+    Work_Data* work_end;
+    bool in_block;
+
+    void Complete_Work();
 
   public:
     Application& application;
-    std::unordered_set<Entity_Array*> entity_components;
-    std::unordered_set<System*> systems;
+    std::unordered_set<Entity_Array*> entity_arrays;
+    std::vector<std::vector<System*>> blocks;
     std::unordered_map<Entity_ID, std::tuple<Entity, int>> entities_by_id;
     Entity_ID next_id = 1;
     std::function<void(Entity_ID)> on_add_entity;
@@ -145,12 +180,14 @@ class ECS {
     std::minstd_rand random;
 
     ECS(Application& application, long seed);
+    ~ECS();
 
     void Update();
 
     Entity_Array*
     Create_Entity_Type(std::vector<Component_Type*> components,
-                       std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function);
+                       std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
+                       string name);
 
     Entity Create_Entity(Entity_Type* entity_type);
 
@@ -165,7 +202,23 @@ class ECS {
 
     Entity_Array* Get_Entities_Of_Exact_Type(Entity_Type* entity_type);
 
-    void Register_System(System* system) { systems.emplace(system); }
+    void Register_System(System* system, int block_index);
+    Work_Data* Get_Work(atomic_bool& atomic_bool);
+    bool In_Block() const { return in_block; }
+};
+
+class ECS_Worker {
+    pthread_t thread;
+    ECS& ecs;
+    atomic_bool doing_work;
+    atomic_bool canceled;
+
+  public:
+    ECS_Worker(ECS& ecs, bool separate_thread = true);
+    void Do_Worker_Loop();
+    inline void Do_Work();
+    ~ECS_Worker();
+    constexpr bool Doing_Work();
 };
 
 struct Transform_Component {

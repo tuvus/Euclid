@@ -64,6 +64,9 @@ shared_ptr<Network> Application::Get_Network() {
 void Application::Application_Loop() {
     application_state = ApplicationState::Running;
     chrono::time_point<chrono::system_clock> frame_end_time = chrono::system_clock::now();
+    vector<long> pastTimes = vector<long>(100);
+    long totalTimes = 0;
+    int wait = 10;
     while (application_state == ApplicationState::Running) {
         chrono::time_point<chrono::system_clock> frame_start_time = chrono::system_clock::now();
         auto delta_time =
@@ -77,12 +80,27 @@ void Application::Application_Loop() {
             Update(delta_time);
         }
 
+        frame_end_time = chrono::system_clock::now();
+        long time =
+            chrono::duration_cast<chrono::milliseconds>(frame_end_time - frame_start_time).count();
+        if (pastTimes.size() == 100) {
+            totalTimes -= pastTimes.front();
+            pastTimes.erase(pastTimes.begin());
+        }
+        pastTimes.push_back(time);
+        totalTimes += time;
+
+        wait--;
+        if (wait == 0) {
+            // cout << totalTimes / static_cast<float>(pastTimes.size()) << endl;
+            wait = 50;
+        }
+
         if (client) {
             Update_UI(delta_time);
         }
 
         this_thread::sleep_until(frame_start_time + 16ms);
-        frame_end_time = chrono::system_clock::now();
     }
     Close_Application();
 }

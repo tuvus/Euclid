@@ -51,10 +51,10 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     game_manager = std::make_unique<Game_Manager>(card_game, *card_game.Get_Network(), players,
                                                   local_player, seed);
     ecs = new ECS(application, seed);
-    ecs->Register_System(new System(Get_Unit_Entity_Type(), Unit_Update));
-    ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update));
-    ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update));
-    ecs->Register_System(new System(Get_Projectile_Entity_Type(), Projectile_Update));
+    ecs->Register_System(new System(Get_Unit_Entity_Type(), Unit_Update), 1);
+    ecs->Register_System(new System(Get_Tower_Entity_Type(), Tower_Update), 1);
+    ecs->Register_System(new System(Get_Base_Entity_Type(), Base_Update), 0);
+    ecs->Register_System(new System(Get_Projectile_Entity_Type(), Projectile_Update), 0);
 
     for (int p = 0; p < num_paths; p++) {
         int pathx_offset = ((p + 1) / 2) * 220;
@@ -110,13 +110,14 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         return RPC_Manager::VALID_CALL_ON_CLIENTS;
     });
 
-    ecs->Create_Entity_Type(Get_Unit_Entity_Type()->components, Create_Unit_UI);
-    ecs->Create_Entity_Type(Get_Tower_Entity_Type()->components, Create_Tower_UI);
-    ecs->Create_Entity_Type(vector{&Deck_Component::component_type}, Create_Deck_UI);
-    ecs->Create_Entity_Type(Get_Unit_Card_Entity_Type()->components, Create_Card_UI);
-    ecs->Create_Entity_Type(Get_Tower_Card_Entity_Type()->components, Create_Card_UI);
-    ecs->Create_Entity_Type(Get_Base_Entity_Type()->components, nullptr);
-    ecs->Create_Entity_Type(Get_Projectile_Entity_Type()->components, Create_Projectile_UI);
+    ecs->Create_Entity_Type(Get_Unit_Entity_Type()->components, Create_Unit_UI, "Unit");
+    ecs->Create_Entity_Type(Get_Tower_Entity_Type()->components, Create_Tower_UI, "Tower");
+    ecs->Create_Entity_Type(vector{&Deck_Component::component_type}, Create_Deck_UI, "Deck");
+    ecs->Create_Entity_Type(Get_Unit_Card_Entity_Type()->components, Create_Card_UI, "UnitCard");
+    ecs->Create_Entity_Type(Get_Tower_Card_Entity_Type()->components, Create_Card_UI, "TowerCard");
+    ecs->Create_Entity_Type(Get_Base_Entity_Type()->components, nullptr, "Base");
+    ecs->Create_Entity_Type(Get_Projectile_Entity_Type()->components, Create_Projectile_UI,
+                            "Projectile");
 
     card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
     card_datas.emplace_back(new Card_Data{card_texture, "Send Units",

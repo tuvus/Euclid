@@ -115,10 +115,9 @@ void Lobby_Scene::Server_Start_AI_Only() {
     card_game.Get_Network()->call_rpc(true, "addaiplayer", ai_id);
     card_game.Get_Network()->call_rpc(true, "setplayerteam", ai_id, 1);
 
-    card_game.Get_Network()->call_rpc(
-        true, "startgame",
-        chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch())
-            .count());
+    card_game.Get_Network()->call_rpc(true, "startgame", 10L);
+    // chrono::duration_cast<chrono::milliseconds>(chrono::system_clock::now().time_since_epoch())
+    // .count());
 }
 
 void Lobby_Scene::Start_Game(long seed) {

@@ -72,7 +72,6 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
             }
         }
     }
-
     transform->pos = Vector2Lerp(unit->path->positions[unit->section],
                                  unit->path->positions[unit->section + 1], unit->lerp);
     transform->rot = unit->path->Get_Rotation_On_Path(unit->section);

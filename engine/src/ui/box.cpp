@@ -49,9 +49,9 @@ void EUI_Box::Handle_Input() {
 }
 
 void EUI_Box::Size() {
-    std::cout << get_indent() << "[SIZE] Box ("
-              << (layout_model == Layout_Model::Horizontal ? "HBox" : "VBox") << ") id='" << id
-              << "'" << std::endl;
+    // std::cout << get_indent() << "[SIZE] Box ("
+    // << (layout_model == Layout_Model::Horizontal ? "HBox" : "VBox") << ") id='" << id
+    // << "'" << std::endl;
     layout_depth++;
 
     // FIT SIZING
@@ -67,8 +67,8 @@ void EUI_Box::Size() {
 
             // Skip absolutely positioned children
             if (child->Is_Absolute()) {
-                std::cout << get_indent() << "Skipping absolute child in size calculation"
-                          << std::endl;
+                // std::cout << get_indent() << "Skipping absolute child in size calculation"
+                // << std::endl;
                 continue;
             }
 
@@ -101,15 +101,16 @@ void EUI_Box::Size() {
     };
 
     layout_depth--;
-    std::cout << get_indent() << "  → size=(" << size.x << ", " << size.y << ") min=(" << min_size.x
-              << ", " << min_size.y << ") padding=(" << padding.top << "," << padding.right << ","
-              << padding.bottom << "," << padding.left << ") gap=" << gap << std::endl;
+    // std::cout << get_indent() << "  → size=(" << size.x << ", " << size.y << ") min=(" <<
+    // min_size.x
+    // << ", " << min_size.y << ") padding=(" << padding.top << "," << padding.right << ","
+    // << padding.bottom << "," << padding.left << ") gap=" << gap << std::endl;
 }
 
 void EUI_Box::Grow() {
-    std::cout << get_indent() << "[GROW] Box ("
-              << (layout_model == Layout_Model::Horizontal ? "HBox" : "VBox") << ") id='" << id
-              << "' before=(" << size.x << ", " << size.y << ")" << std::endl;
+    // std::cout << get_indent() << "[GROW] Box ("
+    // << (layout_model == Layout_Model::Horizontal ? "HBox" : "VBox") << ") id='" << id
+    // << "' before=(" << size.x << ", " << size.y << ")" << std::endl;
     layout_depth++;
 
     // Calculate remaining space Within this box to distribute to children
@@ -125,15 +126,16 @@ void EUI_Box::Grow() {
 
         // Skip absolute positioned elements
         if (child->Is_Absolute()) {
-            std::cout << get_indent() << "Skipping absolute child in grow calculation" << std::endl;
-            // Still need to recursively grow them since they might have growable children
+            // std::cout << get_indent() << "Skipping absolute child in grow calculation" <<
+            // std::endl; Still need to recursively grow them since they might have growable
+            // children
             child->Grow();
             continue;
         }
 
         visible_count++;
-        std::cout << get_indent() << "Child " << child->id << " size=(" << child->size.x << ", "
-                  << child->size.y << ")" << std::endl;
+        // std::cout << get_indent() << "Child " << child->id << " size=(" << child->size.x << ", "
+        // << child->size.y << ")" << std::endl;
 
         if (layout_model == Layout_Model::Horizontal) {
             if (child->size.x == Size::Grow()) {
@@ -150,11 +152,12 @@ void EUI_Box::Grow() {
         }
     }
 
-    std::cout << get_indent() << "Growable children: " << growable.size() << " | Remaining space: ("
-              << remaining_width << ", " << remaining_height << ")" << std::endl;
+    // std::cout << get_indent() << "Growable children: " << growable.size() << " | Remaining space:
+    // ("
+    // << remaining_width << ", " << remaining_height << ")" << std::endl;
 
     if (growable.size() == 0) {
-        std::cout << get_indent() << "No growable children, skipping distribution" << std::endl;
+        // std::cout << get_indent() << "No growable children, skipping distribution" << std::endl;
         for (EUI_Element* child : children) {
             // Skip absolute since we already handled them
             if (child->is_visible && !child->Is_Absolute()) {
@@ -168,11 +171,12 @@ void EUI_Box::Grow() {
     float total_gap = visible_count > 1 ? (visible_count - 1) * gap : 0;
     if (layout_model == Layout_Model::Horizontal) {
         remaining_width -= total_gap;
-        std::cout << get_indent() << "After gap: remaining_width=" << remaining_width << std::endl;
+        // std::cout << get_indent() << "After gap: remaining_width=" << remaining_width <<
+        // std::endl;
     } else {
         remaining_height -= total_gap;
-        std::cout << get_indent() << "After gap: remaining_height=" << remaining_height
-                  << std::endl;
+        // std::cout << get_indent() << "After gap: remaining_height=" << remaining_height
+        // << std::endl;
     }
 
     // Grow children
@@ -245,14 +249,15 @@ void EUI_Box::Grow() {
     }
 
     layout_depth--;
-    std::cout << get_indent() << "  → final size=(" << size.x << ", " << size.y << ")" << std::endl;
+    // std::cout << get_indent() << "  → final size=(" << size.x << ", " << size.y << ")" <<
+    // std::endl;
 }
 
 void EUI_Box::Place() {
-    std::cout << get_indent() << "[PLACE] Box ("
-              << (layout_model == Layout_Model::Horizontal ? "HBox" : "VBox") << ") id='" << id
-              << "' at pos=(" << pos.x << ", " << pos.y << ") size=(" << size.x << ", " << size.y
-              << ")" << std::endl;
+    // std::cout << get_indent() << "[PLACE] Box ("
+    // << (layout_model == Layout_Model::Horizontal ? "HBox" : "VBox") << ") id='" << id
+    // << "' at pos=(" << pos.x << ", " << pos.y << ") size=(" << size.x << ", " << size.y
+    // << ")" << std::endl;
     layout_depth++;
 
     // Calculate total size of children for main-axis alignment (only static/relative)
@@ -291,8 +296,8 @@ void EUI_Box::Place() {
             break;
     }
 
-    std::cout << get_indent() << "Main-axis alignment offset: " << offset
-              << " (total_children_size=" << total_children_size << ")" << std::endl;
+    // std::cout << get_indent() << "Main-axis alignment offset: " << offset
+    // << " (total_children_size=" << total_children_size << ")" << std::endl;
 
     // Place non-absolute children with normal flow
     for (EUI_Element* child : children) {
@@ -354,8 +359,8 @@ void EUI_Box::Place() {
             }
         }
 
-        std::cout << get_indent() << "Placed child at (" << child->pos.x << ", " << child->pos.y
-                  << ") with size (" << child->size.x << ", " << child->size.y << ")" << std::endl;
+        // std::cout << get_indent() << "Placed child at (" << child->pos.x << ", " << child->pos.y
+        // << ") with size (" << child->size.x << ", " << child->size.y << ")" << std::endl;
 
         // propagate placement to children after placement
         child->Place();
@@ -364,8 +369,8 @@ void EUI_Box::Place() {
     // Handle absolute positioned children
     for (EUI_Element* child : children) {
         if (child->is_visible && child->Is_Absolute()) {
-            std::cout << get_indent() << "Placing absolute child at user-defined pos=("
-                      << child->pos.x << ", " << child->pos.y << ")" << std::endl;
+            // std::cout << get_indent() << "Placing absolute child at user-defined pos=("
+            // << child->pos.x << ", " << child->pos.y << ")" << std::endl;
             // User has already set child->pos, just propagate to children
             child->Place();
         }
@@ -375,9 +380,10 @@ void EUI_Box::Place() {
     if (Is_Relative()) {
         pos.x += left - right;
         pos.y += top - bottom;
-        std::cout << get_indent() << "Applied relative offset: left=" << left << " right=" << right
-                  << " top=" << top << " bottom=" << bottom << " → final pos=(" << pos.x << ", "
-                  << pos.y << ")" << std::endl;
+        // std::cout << get_indent() << "Applied relative offset: left=" << left << " right=" <<
+        // right
+        // << " top=" << top << " bottom=" << bottom << " → final pos=(" << pos.x << ", "
+        // << pos.y << ")" << std::endl;
     }
 
     layout_depth--;
