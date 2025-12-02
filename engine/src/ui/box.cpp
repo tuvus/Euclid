@@ -56,6 +56,7 @@ void EUI_Box::Size() {
 
     // FIT SIZING
     float children_main_size = 0;
+    float children_min_main_size = 0;
     float max_child_cross_size = 0;
     // # of visible, non-absolutely positioned children
     int visible_count = 0;
@@ -75,9 +76,11 @@ void EUI_Box::Size() {
             visible_count++;
             if (layout_model == Layout_Model::Horizontal) {
                 children_main_size += child->size.x != Size::Grow() ? child->size.x : 0;
+                children_min_main_size += child->min_size.x != Size::Grow() ? child->min_size.x : 0;
                 max_child_cross_size = std::max(max_child_cross_size, child->size.y);
             } else {
                 children_main_size += child->size.y != Size::Grow() ? child->size.y : 0;
+                children_min_main_size += child->min_size.y != Size::Grow() ? child->min_size.y : 0;
                 max_child_cross_size = std::max(max_child_cross_size, child->size.x);
             }
         }
@@ -87,11 +90,11 @@ void EUI_Box::Size() {
 
     // min size is fit size
     min_size.x = layout_model == Layout_Model::Horizontal
-                     ? children_main_size + padding.left + padding.right + total_gap
+                     ? children_min_main_size + padding.left + padding.right + total_gap
                      : max_child_cross_size + padding.left + padding.right;
     min_size.y = layout_model == Layout_Model::Horizontal
                      ? max_child_cross_size + padding.top + padding.bottom
-                     : children_main_size + padding.top + padding.bottom + total_gap;
+                     : children_min_main_size + padding.top + padding.bottom + total_gap;
 
     if (size.x != Size::Grow()) {
         size.x = std::max(min_size.x, size.x);
