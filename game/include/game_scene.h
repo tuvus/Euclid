@@ -30,6 +30,7 @@ class Game_Scene : public Scene, Network_Events_Receiver {
     ~Game_Scene() override;
     void Setup_Scene(vector<Player*> players, Player* local_player, long seed, int num_paths);
 
+    void Resize_UI(Vector2 screen_seize_change) override;
     void Update_UI(chrono::milliseconds) override;
     void Update(std::chrono::milliseconds) override;
 

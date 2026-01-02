@@ -178,6 +178,10 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
     money_text->is_visible = static_cast<Card_Player*>(game_manager->local_player)->team != -1;
 }
 
+void Game_Scene::Resize_UI(Vector2 screen_seize_change) {
+    game_ui_manager->Resize_UI(screen_seize_change);
+}
+
 void Game_Scene::Update_UI(chrono::milliseconds delta_time) {
     if (IsKeyDown(KEY_A))
         game_ui_manager->camera.offset.x += 10;
