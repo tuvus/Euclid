@@ -64,7 +64,7 @@ void Tower_Update(ECS* ecs, Entity entity) {
     // Fire
     transform->rot = Get_Rotation_From_Positions(transform->pos, get<1>(closest_unit)->pos);
 
-    auto projectile = ecs->Create_Entity(Get_Projectile_Entity_Type());
+    auto projectile = ecs->Create_Entity(Get_Projectile_Entity_Type(), entity_id);
     auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity);
     Init_Projectile(ecs, projectile, transform->pos, transform->rot,
                     {tower->team, tower->damage, tower->projectile_speed, tower->range},

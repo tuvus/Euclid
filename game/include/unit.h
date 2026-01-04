@@ -22,7 +22,7 @@ struct Unit_Component {
 void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, int health, int damage,
                float start_offset, int team, Texture2D* texture, float scale, Color color);
 
-void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, Entity_ID entity_id,
+void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, Entity entity,
                float dist_to_move);
 
 void Unit_Update(ECS* ecs, Entity entity);

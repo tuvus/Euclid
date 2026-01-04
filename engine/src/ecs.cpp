@@ -36,7 +36,7 @@ Entity_Array::Entity_Array(ECS& ecs, Entity_Type entity_type)
     array.entities = new unsigned char[entity_type.entity_size * array.entity_capacity];
 }
 
-std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs, Entity_ID id) {
+std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs) {
     pthread_mutex_lock(&array_lock);
     Dynamic_Array* curr_arr = &array;
     while (curr_arr->next != nullptr)
@@ -62,30 +62,39 @@ std::tuple<unsigned char*, int> Entity_Array::Create_Entity(ECS* ecs, Entity_ID 
             delete curr_arr;
             curr_arr = &array;
             cout << "CopyExpand" << this->entity_type.name << endl;
+            // Update all entities that have moved in the ECS entity to id map because their
+            // location has changed
+            for (int i = 0; i < curr_arr->entity_count; i++) {
+                Entity entity = Get_Entity(i);
+                Entity_ID e_id = Get_Entity_Data(entity).id;
+                if (e_id == 0)
+                    cerr << "Bad Entity ID!" << endl;
+                ecs->entities_by_id[e_id] = tuple(entity, i);
+            }
         }
     }
     int index = curr_arr->entity_count;
     curr_arr->entity_count++;
+    if (!ecs->In_Block())
+        entity_count = curr_arr->entity_count;
     // cout << "Creating" << entity_type.name << id << endl;
     pthread_mutex_unlock(&array_lock);
 
     // Create and return the entity
     unsigned char* ptr = curr_arr->entities + index * entity_type.entity_size;
     std::memset(ptr, 0, entity_type.entity_size);
-    Entity_Component& entity = Get_Entity_Data(tuple(ptr, this));
-    entity.id = id;
     return std::tuple(ptr, index);
 }
 
 void Entity_Array::Copy_Entity(int src_index, int dst_index) {
     if (src_index >= array.entity_count)
-        throw std::runtime_error("Index " + to_string(src_index) + " out of bound of size " +
+        throw std::runtime_error("Source index " + to_string(src_index) + " out of bound of size " +
                                  to_string(array.entity_count) + " for entity_array " +
                                  entity_type.name);
     if (dst_index >= array.entity_count)
-        throw std::runtime_error("Index " + to_string(dst_index) + " out of bound of size " +
-                                 to_string(array.entity_count) + " for entity_array " +
-                                 entity_type.name);
+        throw std::runtime_error("Destination index " + to_string(dst_index) +
+                                 " out of bound of size " + to_string(array.entity_count) +
+                                 " for entity_array " + entity_type.name);
     memcpy(array.entities + dst_index * entity_type.entity_size + sizeof(Entity_Component),
            array.entities + src_index * entity_type.entity_size + sizeof(Entity_Component),
            entity_type.entity_size - sizeof(Entity_Component));
@@ -253,36 +262,38 @@ void ECS::Update() {
         for (auto entity_array : entity_arrays)
             entity_array->Clean_Up();
 
-        // At this point we have the valid index of the new entities stored in to_create
-        // We must add these to entities_by_id before doing any deletions
-        // this is because deletions will re-arrange the entity arrays and invalidate the indicies
-        // in to_create
-        for (auto [entity_id, entity_array_index] : to_create) {
-            if (get<0>(entity_array_index) != nullptr)
-                entities_by_id.emplace(
-                    entity_id,
-                    tuple(get<0>(entity_array_index)->Get_Entity(get<1>(entity_array_index)),
-                          get<1>(entity_array_index)));
-        }
+        // Sort the list to maintain determinism
+        ranges::stable_sort(to_create, [](auto a, auto b) { return get<0>(a) < get<0>(b); });
+        for (auto [creator_id, entity_array, entity_index] : to_create) {
+            auto& entity_data =
+                Entity_Array::Get_Entity_Data(entity_array->Get_Entity(entity_index));
+            // If the entities ID is set to -1 instead of 0 then it must have been deleted by the
+            // init process. In this case we should still set it up and remove it to maintain
+            // predictability.
+            bool is_being_deleted = entity_data.id == -1;
 
+            Entity_ID id = next_id++;
+            entity_data.id = id;
+
+            entities_by_id.emplace(id, tuple(entity_array->Get_Entity(entity_index), entity_index));
+            if (on_add_entity != nullptr)
+                on_add_entity(id);
+            if (is_being_deleted)
+                to_delete.emplace_back(id);
+        }
+        to_create.clear();
+
+        ranges::stable_sort(to_delete);
         for (Entity_ID entity_id : to_delete) {
             if (!entities_by_id.contains(entity_id))
                 continue;
             auto [entity, index] = entities_by_id[entity_id];
             entities_by_id.erase(entity_id);
             get<1>(entity)->Delete_Entity(this, index);
-            if (to_create.contains(entity_id))
-                to_create.erase(entity_id);
             if (on_delete_entity)
                 on_delete_entity(entity_id);
         }
         to_delete.clear();
-
-        for (auto [entity_id, entity_array_index] : to_create) {
-            if (on_add_entity != nullptr)
-                on_add_entity(entity_id);
-        }
-        to_create.clear();
     }
 }
 
@@ -296,7 +307,7 @@ ECS::Create_Entity_Type(std::vector<Component_Type*> components,
     return new_array;
 }
 
-Entity ECS::Create_Entity(Entity_Type* entity_type) {
+Entity ECS::Create_Entity(Entity_Type* entity_type, Entity_ID creator_id) {
     auto search = std::ranges::find_if(entity_arrays, [entity_type](Entity_Array* e) {
         return e->entity_type.Is_Entity_Strictly_Of_type(entity_type);
     });
@@ -307,40 +318,57 @@ Entity ECS::Create_Entity(Entity_Type* entity_type) {
     } else {
         e_array = *search;
     }
-    Entity_ID id = next_id++;
-    auto [entity, index] = e_array->Create_Entity(this, id);
+    auto [entity, index] = e_array->Create_Entity(this);
     if (!in_block) {
-        to_create.emplace(id, tuple(nullptr, -1));
+        Entity_ID id = next_id++;
+        Entity_Array::Get_Entity_Data(e_array->Get_Entity(index)).id = id;
         entities_by_id.emplace(id, tuple(tuple(entity, e_array), index));
+        if (on_add_entity != nullptr)
+            on_add_entity(id);
     } else {
         pthread_mutex_lock(&to_create_mutex);
-        to_create.emplace(id, tuple(e_array, index));
+        to_create.emplace_back(creator_id, e_array, index);
         pthread_mutex_unlock(&to_create_mutex);
     }
     return tuple(entity, e_array);
 }
 
-Entity ECS::Copy_Entity(Entity_ID entity_id) {
-    auto [old_entity, old_entity_index] = entities_by_id[entity_id];
-    Entity_ID id = next_id++;
-    auto [new_entity, new_entity_index] = get<1>(old_entity)->Create_Entity(this, id);
+Entity ECS::Copy_Entity(Entity_ID to_copy_id, Entity_ID creator_id) {
+    auto [old_entity, old_entity_index] = entities_by_id[to_copy_id];
+    auto entity_array = get<1>(old_entity);
+    auto [new_entity, new_entity_index] = entity_array->Create_Entity(this);
     get<1>(old_entity)->Copy_Entity(old_entity_index, new_entity_index);
     if (!in_block) {
-        to_create.emplace(id, tuple(nullptr, -1));
-        entities_by_id.emplace(id, tuple(tuple(new_entity, get<1>(old_entity)), new_entity_index));
+        Entity_ID id = next_id++;
+        Entity_Array::Get_Entity_Data(entity_array->Get_Entity(new_entity_index)).id = id;
+        entities_by_id.emplace(id, tuple(tuple(new_entity, entity_array), new_entity_index));
+        if (on_add_entity != nullptr)
+            on_add_entity(id);
     } else {
         pthread_mutex_lock(&to_create_mutex);
-        to_create.emplace(id, tuple(get<1>(old_entity), new_entity_index));
+        to_create.emplace_back(creator_id, entity_array, new_entity_index);
         pthread_mutex_unlock(&to_create_mutex);
     }
-    return make_tuple(new_entity, get<1>(old_entity));
+    return make_tuple(new_entity, entity_array);
 }
 
 void ECS::Delete_Entity(Entity_ID entity_id) {
     pthread_mutex_lock(&to_create_mutex);
-    if (to_create.contains(entity_id))
-        to_create.erase(entity_id);
+    if (entity_id <= 0)
+        throw std::runtime_error("Entity ID has not been set or has already been deleted: " +
+                                 to_string(entity_id) + "!");
     to_delete.emplace_back(entity_id);
+    pthread_mutex_unlock(&to_create_mutex);
+}
+
+void ECS::Delete_Entity(Entity entity) {
+    pthread_mutex_lock(&to_create_mutex);
+    Entity_ID entity_id = Entity_Array::Get_Entity_ID(entity);
+    if (entity_id == 0) {
+        Entity_Array::Get_Entity_Data(entity).id = -1;
+    } else {
+        to_delete.emplace_back(entity_id);
+    }
     pthread_mutex_unlock(&to_create_mutex);
 }
 

@@ -134,20 +134,20 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
                                           Can_Play_Tower_Card, Play_Tower_Card, Discard_Card});
 
     vector<Entity_ID> starting_cards{};
-    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type(), 0),
                                                card_datas[0], {7, 1.3f, 3, 2, &unit_texture},
                                                &card_texture, 1, WHITE));
-    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type(), 0),
                                                card_datas[0], {7, 1.3f, 3, 2, &unit_texture},
                                                &card_texture, 1, WHITE));
-    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type(), 0),
                                                card_datas[1], {11, 1, 8, 1, &unit_texture},
                                                &card_texture, 1, WHITE));
-    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type(), 0),
                                                card_datas[2], {18, .8f, 10, 1, &unit_texture},
                                                &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Tower_Card(
-        ecs->Create_Entity(Get_Tower_Card_Entity_Type()), card_datas[3],
+        ecs->Create_Entity(Get_Tower_Card_Entity_Type(), 0), card_datas[3],
         {&tower_texture, 0, true, 30, 2, 120, 5, &unit_texture}, &card_texture, 1, WHITE));
 
     for (auto player : game_manager->players) {
@@ -156,16 +156,16 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
             continue;
         card_player->paths = Get_Team_Paths(card_player->team);
 
-        auto deck = ecs->Create_Entity(Get_Deck_Entity_Type());
+        auto deck = ecs->Create_Entity(Get_Deck_Entity_Type(), -1);
         Init_Deck(deck, card_player, this);
         card_player->deck = deck;
         for (auto& card : starting_cards) {
             card_player->Get_Deck()->deck.emplace_back(
-                Entity_Array::Get_Entity_Data(ecs->Copy_Entity(card)).id);
+                Entity_Array::Get_Entity_Data(ecs->Copy_Entity(card, -1)).id);
         }
         Shuffle_Deck(card_player->deck);
         Draw_Card(card_player->deck, 3);
-        Entity base = ecs->Create_Entity(Get_Base_Entity_Type());
+        Entity base = ecs->Create_Entity(Get_Base_Entity_Type(), -1);
         Init_Base(base, card_player, Get_Team_Paths(card_player->team)[0]->positions[0],
                   Get_Team_Paths(card_player->team), 20, 100);
     }
