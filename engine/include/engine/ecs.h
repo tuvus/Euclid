@@ -4,7 +4,6 @@
 #include <cstring>
 #include <functional>
 #include <memory>
-#include <numeric>
 #include <random>
 #include <raylib.h>
 #include <stdexcept>
@@ -41,12 +40,15 @@ class Entity_Type {
     // The size of each entity and its components in bytes
     int entity_size;
     std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function;
+    std::function<void(Entity)> setup_function;
+    std::function<void(Entity)> delete_function;
 
     Entity_Type(std::vector<Component_Type*> components);
 
-    Entity_Type(std::vector<Component_Type*> components,
+    Entity_Type(std::vector<Component_Type*> components, std::string name,
                 std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
-                std::string name);
+                std::function<void(Entity)> setup_function,
+                std::function<void(Entity)> delete_function);
 
     /**
      * Finds if the other entity is a superset of this entity.
@@ -186,9 +188,10 @@ class ECS {
     void Update();
 
     Entity_Array*
-    Create_Entity_Type(std::vector<Component_Type*> components,
+    Create_Entity_Type(std::vector<Component_Type*> components, string name,
                        std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
-                       string name);
+                       std::function<void(Entity)> setup_function = nullptr,
+                       std::function<void(Entity)> delete_function = nullptr);
 
     Entity Create_Entity(Entity_Type* entity_type, Entity_ID creator_id);
 

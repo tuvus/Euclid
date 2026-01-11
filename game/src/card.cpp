@@ -22,7 +22,8 @@ void Play_Card(Card_Player* player, Entity entity, Vector2 pos) {
 }
 
 void Discard_Card(Card_Player* player, Entity entity) {
-    Discard_Deck_Card(player->deck, Entity_Array::Get_Entity_Data(entity).id);
+    Discard_Deck_Card(get<0>(get<1>(entity)->ecs.entities_by_id[player->deck_id]),
+                      Entity_Array::Get_Entity_Data(entity).id);
 }
 
 Object_UI* Create_Card_UI(Entity entity, Game_UI_Manager& game_ui_manager) {

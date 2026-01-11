@@ -37,9 +37,9 @@ void Play_Unit_Card(Card_Player* card_player, Entity entity, Vector2 pos) {
     for (int i = 0; i < unit_card->unit_count; i++) {
         auto unit = get<1>(entity)->ecs.Create_Entity(Get_Unit_Entity_Type(),
                                                       Entity_Array::Get_Entity_ID(entity));
-        Init_Unit(&get<1>(entity)->ecs, unit, path, unit_card->unit_speed, unit_card->unit_health,
-                  unit_card->unit_damage, i * 10, card_player->team, unit_card->unit_texture, .4f,
-                  Game_Scene::Get_Team_Color(card_player->team));
+        Init_Unit(&get<1>(entity)->ecs, unit, card_player->base_id, path, unit_card->unit_speed,
+                  unit_card->unit_health, unit_card->unit_damage, i * 10, card_player->team,
+                  unit_card->unit_texture, .4f, Game_Scene::Get_Team_Color(card_player->team));
     }
 }
 

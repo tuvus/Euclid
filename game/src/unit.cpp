@@ -1,16 +1,19 @@
 
 #include "unit.h"
 
+#include "base.h"
 #include "game_manager.h"
 #include "unit_ui.h"
 
 #include <raymath.h>
 
-void Init_Unit(ECS* ecs, Entity entity, Path* path, float speed, int health, int damage,
-               float start_offset, int team, Texture2D* texture, float scale, Color color) {
+void Init_Unit(ECS* ecs, Entity entity, Entity_ID base, Path* path, float speed, int health,
+               int damage, float start_offset, int team, Texture2D* texture, float scale,
+               Color color) {
     auto* unit = get<1>(entity)->Get_Component<Unit_Component>(entity);
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
     auto* ui = get<1>(entity)->Get_Component<UI_Component>(entity);
+    unit->base_id = base;
     unit->path = path;
     unit->speed = speed;
     unit->health = health;
@@ -77,16 +80,20 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
     transform->rot = unit->path->Get_Rotation_On_Path(unit->section);
 
     Entity_ID entity_id = Entity_Array::Get_Entity_ID(entity);
-    for (auto other_entity : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
-        Entity_ID other_id = Entity_Array::Get_Entity_ID(other_entity);
+    auto base_entity = get<0>(ecs->entities_by_id[unit->base_id]);
+    auto* base = get<1>(base_entity)->Get_Component<Base_Component>(base_entity);
+    auto other_base_entity = get<0>(ecs->entities_by_id[base->other_base_id]);
+    auto* other_base = get<1>(other_base_entity)->Get_Component<Base_Component>(other_base_entity);
+    for (auto other_id : *other_base->units_on_path[unit->path->index]) {
+        auto other_entity = get<0>(ecs->entities_by_id[other_id]);
         if (other_id == entity_id)
             continue;
-        Unit_Component* other = get<1>(other_entity)->Get_Component<Unit_Component>(other_entity);
+        auto* other = get<1>(other_entity)->Get_Component<Unit_Component>(other_entity);
 
         if (other->team == unit->team || !other->spawned)
             continue;
 
-        Transform_Component* other_transform =
+        auto* other_transform =
             get<1>(other_entity)->Get_Component<Transform_Component>(other_entity);
         if (Vector2Distance(transform->pos, other_transform->pos) > 30)
             continue;
@@ -108,6 +115,27 @@ void Move_Unit(ECS* ecs, Unit_Component* unit, Transform_Component* transform, E
         }
         return;
     }
+}
+
+void Setup_Unit(Entity entity) {
+    auto* unit = get<1>(entity)->Get_Component<Unit_Component>(entity);
+    auto base_entity = get<0>(get<1>(entity)->ecs.entities_by_id[unit->base_id]);
+    auto* base = get<1>(base_entity)->Get_Component<Base_Component>(base_entity);
+    base->units_on_path[unit->path->index]->emplace_back(Entity_Array::Get_Entity_ID(entity));
+}
+
+void Delete_Unit(Entity entity) {
+    auto* unit = get<1>(entity)->Get_Component<Unit_Component>(entity);
+    auto base_entity = get<0>(get<1>(entity)->ecs.entities_by_id[unit->base_id]);
+    auto* base = get<1>(base_entity)->Get_Component<Base_Component>(base_entity);
+
+    auto& units_on_path = *base->units_on_path[unit->path->index];
+    auto found_entity = ranges::find(units_on_path, Entity_Array::Get_Entity_ID(entity));
+    if (found_entity != units_on_path.end())
+        units_on_path.erase(found_entity);
+    else
+        throw runtime_error(
+            "Could not find the unit on the path to delete! Was it already deleted?");
 }
 
 void Unit_Update(ECS* ecs, Entity entity) {

@@ -5,13 +5,16 @@
 using namespace std;
 
 Entity_Type::Entity_Type(std::vector<Component_Type*> components)
-    : Entity_Type(components, nullptr, "") {
+    : Entity_Type(components, "", nullptr, nullptr, nullptr) {
 }
 
-Entity_Type::Entity_Type(std::vector<Component_Type*> components,
+Entity_Type::Entity_Type(std::vector<Component_Type*> components, string name,
                          std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
-                         string name)
-    : components(std::move(components)), ui_creation_function(ui_creation_function), name(name) {
+                         std::function<void(Entity)> setup_function,
+                         std::function<void(Entity)> delete_function)
+    : components(std::move(components)), name(std::move(name)),
+      ui_creation_function(std::move(ui_creation_function)),
+      setup_function(std::move(setup_function)), delete_function(std::move(delete_function)) {
     entity_size =
         std::accumulate(this->components.begin(), this->components.end(), sizeof(Entity_Component),
                         [](const int sum, const Component_Type* c) { return sum + c->size; });
@@ -241,7 +244,7 @@ ECS::ECS(Application& application, long seed)
     random = minstd_rand(seed);
     workers = vector<ECS_Worker*>();
     pthread_mutex_init(&work_mutex, nullptr);
-    for (int i = 0; i < 30; i++) {
+    for (int i = 0; i < 0; i++) {
         workers.emplace_back(new ECS_Worker(*this));
     }
 }
@@ -264,9 +267,21 @@ void ECS::Update() {
 
         // Sort the list to maintain determinism
         ranges::stable_sort(to_create, [](auto a, auto b) { return get<0>(a) < get<0>(b); });
+        // We must create the entities and add them to the entities_by_id map before we delete
+        // any from the entity arrays. This is because we only have the index of the entity
+        // in to_create and need to assign each entity their ID before the re-arrangement that
+        // can occur from the deletion process.
         for (auto [creator_id, entity_array, entity_index] : to_create) {
             auto& entity_data =
                 Entity_Array::Get_Entity_Data(entity_array->Get_Entity(entity_index));
+            if (entity_data.id > 0) {
+                if (entity_array->entity_type.setup_function != nullptr)
+                    entity_array->entity_type.setup_function(
+                        entity_array->Get_Entity(entity_index));
+                if (on_add_entity != nullptr)
+                    on_add_entity(entity_data.id);
+                continue;
+            }
             // If the entities ID is set to -1 instead of 0 then it must have been deleted by the
             // init process. In this case we should still set it up and remove it to maintain
             // predictability.
@@ -276,6 +291,8 @@ void ECS::Update() {
             entity_data.id = id;
 
             entities_by_id.emplace(id, tuple(entity_array->Get_Entity(entity_index), entity_index));
+            if (entity_array->entity_type.setup_function != nullptr)
+                entity_array->entity_type.setup_function(entity_array->Get_Entity(entity_index));
             if (on_add_entity != nullptr)
                 on_add_entity(id);
             if (is_being_deleted)
@@ -288,21 +305,25 @@ void ECS::Update() {
             if (!entities_by_id.contains(entity_id))
                 continue;
             auto [entity, index] = entities_by_id[entity_id];
-            entities_by_id.erase(entity_id);
-            get<1>(entity)->Delete_Entity(this, index);
+            if (get<1>(entity)->entity_type.delete_function != nullptr)
+                get<1>(entity)->entity_type.delete_function(entity);
             if (on_delete_entity)
                 on_delete_entity(entity_id);
+            entities_by_id.erase(entity_id);
+            get<1>(entity)->Delete_Entity(this, index);
         }
         to_delete.clear();
     }
 }
 
 Entity_Array*
-ECS::Create_Entity_Type(std::vector<Component_Type*> components,
+ECS::Create_Entity_Type(std::vector<Component_Type*> components, string name,
                         std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
-                        string name) {
+                        std::function<void(Entity)> setup_function,
+                        std::function<void(Entity)> delete_function) {
     auto* new_array = new Entity_Array(
-        *this, Entity_Type(std::move(components), std::move(ui_creation_function), name));
+        *this, Entity_Type(std::move(components), std::move(name), std::move(ui_creation_function),
+                           std::move(setup_function), std::move(delete_function)));
     entity_arrays.emplace(new_array);
     return new_array;
 }
@@ -320,16 +341,15 @@ Entity ECS::Create_Entity(Entity_Type* entity_type, Entity_ID creator_id) {
     }
     auto [entity, index] = e_array->Create_Entity(this);
     if (!in_block) {
+        // If we are not in a block then we want to get the entity ID immediately.
+        // However, we are not able to set up the entity yet because it hasn't been initialized.
         Entity_ID id = next_id++;
         Entity_Array::Get_Entity_Data(e_array->Get_Entity(index)).id = id;
         entities_by_id.emplace(id, tuple(tuple(entity, e_array), index));
-        if (on_add_entity != nullptr)
-            on_add_entity(id);
-    } else {
-        pthread_mutex_lock(&to_create_mutex);
-        to_create.emplace_back(creator_id, e_array, index);
-        pthread_mutex_unlock(&to_create_mutex);
     }
+    pthread_mutex_lock(&to_create_mutex);
+    to_create.emplace_back(creator_id, e_array, index);
+    pthread_mutex_unlock(&to_create_mutex);
     return tuple(entity, e_array);
 }
 
@@ -342,13 +362,10 @@ Entity ECS::Copy_Entity(Entity_ID to_copy_id, Entity_ID creator_id) {
         Entity_ID id = next_id++;
         Entity_Array::Get_Entity_Data(entity_array->Get_Entity(new_entity_index)).id = id;
         entities_by_id.emplace(id, tuple(tuple(new_entity, entity_array), new_entity_index));
-        if (on_add_entity != nullptr)
-            on_add_entity(id);
-    } else {
-        pthread_mutex_lock(&to_create_mutex);
-        to_create.emplace_back(creator_id, entity_array, new_entity_index);
-        pthread_mutex_unlock(&to_create_mutex);
     }
+    pthread_mutex_lock(&to_create_mutex);
+    to_create.emplace_back(creator_id, entity_array, new_entity_index);
+    pthread_mutex_unlock(&to_create_mutex);
     return make_tuple(new_entity, entity_array);
 }
 
