@@ -22,6 +22,7 @@ class Application {
     string application_name;
     ApplicationState application_state;
     shared_ptr<Network> network;
+    bool in_update;
 
     void Application_Loop();
 
@@ -49,6 +50,8 @@ class Application {
 
     string Get_Name();
     shared_ptr<Network> Get_Network();
+    /* Used to tell worker threads if we are still doing work */
+    bool In_Update();
 
     virtual void Close_Application();
     void Close_Network();

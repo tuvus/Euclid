@@ -244,7 +244,7 @@ ECS::ECS(Application& application, long seed)
     random = minstd_rand(seed);
     workers = vector<ECS_Worker*>();
     pthread_mutex_init(&work_mutex, nullptr);
-    for (int i = 0; i < 0; i++) {
+    for (int i = 0; i < 30; i++) {
         workers.emplace_back(new ECS_Worker(*this));
     }
 }
@@ -490,7 +490,10 @@ void ECS_Worker::Do_Work() {
     auto work = ecs.Get_Work(doing_work);
     if (work == nullptr) {
         doing_work = false;
-        this_thread::yield();
+        if (ecs.application.In_Update())
+            this_thread::sleep_for(chrono::microseconds(1));
+        else
+            this_thread::sleep_for(chrono::milliseconds(1));
         return;
     }
     for (int i = work->starting_index; i <= work->ending_index; i++) {
