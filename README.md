@@ -1,4 +1,12 @@
 # Oskar Niesen & Alex Young
+## Euclid Game Engine
+
+Euclid is a game engine focusing on multithreading and network synchronization.
+
+### Demo Game
+
+
+
 
 ### Building Locally
 
