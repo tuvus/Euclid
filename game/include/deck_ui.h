@@ -13,8 +13,8 @@ class Deck_UI : public Object_UI {
         : Object_UI(entity, game_ui_manager), card_player(card_player) {}
 
     void Update_UI(EUI_Context* ctx) override {
-        if (static_cast<Card_Player*>(game_ui_manager.game_manager.local_player)->deck !=
-            card_player->deck)
+        if (static_cast<Card_Player*>(game_ui_manager.game_manager.local_player)->deck_id !=
+            card_player->deck_id)
             return;
 
         float x_pos = 10;

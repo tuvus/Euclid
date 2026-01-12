@@ -5,9 +5,11 @@
 
 class Card_Player : public Player {
   public:
+    ECS* ecs;
+    Entity_ID base_id;
     int team;
     int money;
-    Entity deck;
+    Entity_ID deck_id;
     vector<Path*> paths;
     Entity active_card;
 
@@ -18,5 +20,8 @@ class Card_Player : public Player {
     Card_Player(Player_ID player_id, int team)
         : Player(player_id), team(team), money(10), paths(vector<Path*>{}) {}
 
-    Deck_Component* Get_Deck() { return get<1>(deck)->Get_Component<Deck_Component>(deck); }
+    Deck_Component* Get_Deck() const {
+        auto deck = get<0>(ecs->entities_by_id[deck_id]);
+        return get<1>(deck)->Get_Component<Deck_Component>(deck);
+    }
 };

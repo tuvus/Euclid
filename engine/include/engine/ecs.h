@@ -4,7 +4,6 @@
 #include <cstring>
 #include <functional>
 #include <memory>
-#include <numeric>
 #include <random>
 #include <raylib.h>
 #include <stdexcept>
@@ -41,12 +40,15 @@ class Entity_Type {
     // The size of each entity and its components in bytes
     int entity_size;
     std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function;
+    std::function<void(Entity)> setup_function;
+    std::function<void(Entity)> delete_function;
 
     Entity_Type(std::vector<Component_Type*> components);
 
-    Entity_Type(std::vector<Component_Type*> components,
+    Entity_Type(std::vector<Component_Type*> components, std::string name,
                 std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
-                std::string name);
+                std::function<void(Entity)> setup_function,
+                std::function<void(Entity)> delete_function);
 
     /**
      * Finds if the other entity is a superset of this entity.
@@ -96,7 +98,7 @@ class Entity_Array {
                                     " for an entity.");
     }
 
-    std::tuple<unsigned char*, int> Create_Entity(ECS* ecs, Entity_ID id);
+    std::tuple<unsigned char*, int> Create_Entity(ECS* ecs);
 
     /**
      * Copies all components from src_index to dst_index, does not include the entities id.
@@ -157,7 +159,8 @@ struct Work_Data {
 };
 
 class ECS {
-    std::unordered_map<Entity_ID, tuple<Entity_Array*, int>> to_create;
+    // Stores a list of the creator id, the entity array and the index of the newly created entity.
+    std::vector<tuple<Entity_ID, Entity_Array*, int>> to_create;
     pthread_mutex_t to_create_mutex;
     std::vector<Entity_ID> to_delete;
     std::vector<ECS_Worker*> workers;
@@ -185,15 +188,28 @@ class ECS {
     void Update();
 
     Entity_Array*
-    Create_Entity_Type(std::vector<Component_Type*> components,
+    Create_Entity_Type(std::vector<Component_Type*> components, string name,
                        std::function<Object_UI*(Entity, Game_UI_Manager&)> ui_creation_function,
-                       string name);
+                       std::function<void(Entity)> setup_function = nullptr,
+                       std::function<void(Entity)> delete_function = nullptr);
 
-    Entity Create_Entity(Entity_Type* entity_type);
+    Entity Create_Entity(Entity_Type* entity_type, Entity_ID creator_id);
 
-    Entity Copy_Entity(Entity_ID entity_id);
+    Entity Copy_Entity(Entity_ID to_copy_id, Entity_ID creator_id);
 
+    /**
+     * Schedules an Entity for deletion after the next block.
+     * Does not accept zero or negative values for the entity_id.
+     */
     void Delete_Entity(Entity_ID entity_id);
+
+    /**
+     * Schedules an Entity for deletion after the next block.
+     * This version of Delete_Entity can handle entities that
+     * haven't been assigned an ID yet and are being deleted
+     * right after they have been created
+     */
+    void Delete_Entity(Entity entity);
 
     void Apply_Function_To_Entities(Entity_Type* entity_type,
                                     const std::function<void(ECS* ecs, Entity)>& op);

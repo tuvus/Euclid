@@ -73,10 +73,10 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
                                    prev_pos.y - forward_dist(game_manager->random));
         }
 
-        auto f_path = new Path(positions);
+        auto f_path = new Path(p, positions);
         vector<Vector2> reversed = vector<Vector2>(positions);
         ranges::reverse(reversed);
-        auto r_path = new Path(reversed);
+        auto r_path = new Path(p, reversed);
         f_paths.emplace_back(f_path);
         r_paths.emplace_back(r_path);
     }
@@ -110,14 +110,15 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
         return RPC_Manager::VALID_CALL_ON_CLIENTS;
     });
 
-    ecs->Create_Entity_Type(Get_Unit_Entity_Type()->components, Create_Unit_UI, "Unit");
-    ecs->Create_Entity_Type(Get_Tower_Entity_Type()->components, Create_Tower_UI, "Tower");
-    ecs->Create_Entity_Type(vector{&Deck_Component::component_type}, Create_Deck_UI, "Deck");
-    ecs->Create_Entity_Type(Get_Unit_Card_Entity_Type()->components, Create_Card_UI, "UnitCard");
-    ecs->Create_Entity_Type(Get_Tower_Card_Entity_Type()->components, Create_Card_UI, "TowerCard");
-    ecs->Create_Entity_Type(Get_Base_Entity_Type()->components, nullptr, "Base");
-    ecs->Create_Entity_Type(Get_Projectile_Entity_Type()->components, Create_Projectile_UI,
-                            "Projectile");
+    ecs->Create_Entity_Type(Get_Unit_Entity_Type()->components, "Unit", Create_Unit_UI, Setup_Unit,
+                            Delete_Unit);
+    ecs->Create_Entity_Type(Get_Tower_Entity_Type()->components, "Tower", Create_Tower_UI);
+    ecs->Create_Entity_Type(vector{&Deck_Component::component_type}, "Deck", Create_Deck_UI);
+    ecs->Create_Entity_Type(Get_Unit_Card_Entity_Type()->components, "UnitCard", Create_Card_UI);
+    ecs->Create_Entity_Type(Get_Tower_Card_Entity_Type()->components, "TowerCard", Create_Card_UI);
+    ecs->Create_Entity_Type(Get_Base_Entity_Type()->components, "Base", nullptr);
+    ecs->Create_Entity_Type(Get_Projectile_Entity_Type()->components, "Projectile",
+                            Create_Projectile_UI);
 
     card_texture = LoadTextureFromImage(LoadImage("resources/Card.png"));
     card_datas.emplace_back(new Card_Data{card_texture, "Send Units",
@@ -134,41 +135,51 @@ void Game_Scene::Setup_Scene(vector<Player*> players, Player* local_player, long
                                           Can_Play_Tower_Card, Play_Tower_Card, Discard_Card});
 
     vector<Entity_ID> starting_cards{};
-    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type(), 0),
                                                card_datas[0], {7, 1.3f, 3, 2, &unit_texture},
                                                &card_texture, 1, WHITE));
-    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type(), 0),
                                                card_datas[0], {7, 1.3f, 3, 2, &unit_texture},
                                                &card_texture, 1, WHITE));
-    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type(), 0),
                                                card_datas[1], {11, 1, 8, 1, &unit_texture},
                                                &card_texture, 1, WHITE));
-    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type()),
+    starting_cards.emplace_back(Init_Unit_Card(ecs->Create_Entity(Get_Unit_Card_Entity_Type(), 0),
                                                card_datas[2], {18, .8f, 10, 1, &unit_texture},
                                                &card_texture, 1, WHITE));
     starting_cards.emplace_back(Init_Tower_Card(
-        ecs->Create_Entity(Get_Tower_Card_Entity_Type()), card_datas[3],
+        ecs->Create_Entity(Get_Tower_Card_Entity_Type(), 0), card_datas[3],
         {&tower_texture, 0, true, 30, 2, 120, 5, &unit_texture}, &card_texture, 1, WHITE));
 
+    Entity base0 = ecs->Create_Entity(Get_Base_Entity_Type(), -1);
+    auto team0_players = vector<Card_Player*>();
+    Entity base1 = ecs->Create_Entity(Get_Base_Entity_Type(), -1);
+    auto team1_players = vector<Card_Player*>();
+
     for (auto player : game_manager->players) {
-        Card_Player* card_player = static_cast<Card_Player*>(player);
+        auto* card_player = static_cast<Card_Player*>(player);
         if (card_player->team == -1)
             continue;
+        card_player->ecs = ecs;
+        card_player->base_id = Entity_Array::Get_Entity_ID(card_player->team == 0 ? base0 : base1);
+        card_player->team == 0 ? team0_players.emplace_back(card_player)
+                               : team1_players.emplace_back(card_player);
         card_player->paths = Get_Team_Paths(card_player->team);
 
-        auto deck = ecs->Create_Entity(Get_Deck_Entity_Type());
+        auto deck = ecs->Create_Entity(Get_Deck_Entity_Type(), -1);
         Init_Deck(deck, card_player, this);
-        card_player->deck = deck;
+        card_player->deck_id = Entity_Array::Get_Entity_ID(deck);
         for (auto& card : starting_cards) {
             card_player->Get_Deck()->deck.emplace_back(
-                Entity_Array::Get_Entity_Data(ecs->Copy_Entity(card)).id);
+                Entity_Array::Get_Entity_Data(ecs->Copy_Entity(card, -1)).id);
         }
-        Shuffle_Deck(card_player->deck);
-        Draw_Card(card_player->deck, 3);
-        Entity base = ecs->Create_Entity(Get_Base_Entity_Type());
-        Init_Base(base, card_player, Get_Team_Paths(card_player->team)[0]->positions[0],
-                  Get_Team_Paths(card_player->team), 20, 100);
+        Shuffle_Deck(deck);
+        Draw_Card(deck, 3);
     }
+    Init_Base(base0, this, team0_players, Entity_Array::Get_Entity_ID(base1), 0,
+              Get_Team_Paths(0)[0]->positions[0], Get_Team_Paths(0), 20, 100);
+    Init_Base(base1, this, team1_players, Entity_Array::Get_Entity_ID(base0), 1,
+              Get_Team_Paths(1)[0]->positions[0], Get_Team_Paths(1), 20, 100);
 
     for (Entity_ID starting_card : starting_cards) {
         ecs->Delete_Entity(starting_card);

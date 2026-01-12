@@ -28,17 +28,17 @@ void Projectile_Update(ECS* ecs, Entity entity) {
     auto* transform = get<1>(entity)->Get_Component<Transform_Component>(entity);
     auto* projectile = get<1>(entity)->Get_Component<Projectile_Component>(entity);
 
-    for (auto entity : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
-        Entity_ID other_id = get<1>(entity)->Get_Entity_Data(entity).id;
+    for (auto other_entity : ecs->Get_Entities_Of_Type(Get_Unit_Entity_Type())) {
+        Entity_ID other_id = Entity_Array::Get_Entity_ID(other_entity);
         if (other_id == entity_id)
             continue;
-        Unit_Component* other = get<1>(entity)->Get_Component<Unit_Component>(entity);
+        Unit_Component* other = get<1>(other_entity)->Get_Component<Unit_Component>(other_entity);
 
         if (other->team == projectile->team || !other->spawned)
             continue;
 
         Transform_Component* other_transform =
-            get<1>(entity)->Get_Component<Transform_Component>(entity);
+            get<1>(other_entity)->Get_Component<Transform_Component>(other_entity);
         if (Vector2Distance(transform->pos, other_transform->pos) > 30)
             continue;
 
@@ -46,11 +46,11 @@ void Projectile_Update(ECS* ecs, Entity entity) {
         other->health -= projectile->damage;
         if (other->health <= 0) {
             other->spawned = false;
-            ecs->Delete_Entity(other_id);
+            ecs->Delete_Entity(other_entity);
         } else {
             other->bump_back = projectile->damage * 5;
         }
-        ecs->Delete_Entity(entity_id);
+        ecs->Delete_Entity(entity);
         return;
     }
 
@@ -59,7 +59,7 @@ void Projectile_Update(ECS* ecs, Entity entity) {
     transform->pos += mov;
     projectile->range -= projectile->speed;
     if (projectile->range <= 0)
-        ecs->Delete_Entity(entity_id);
+        ecs->Delete_Entity(entity);
 }
 
 Entity_Type* Get_Projectile_Entity_Type() {

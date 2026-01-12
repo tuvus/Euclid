@@ -76,9 +76,11 @@ void Application::Application_Loop() {
         if (network)
             network->Network_Update();
 
+        in_update = true;
         for (int i = 0; i < 1; i++) {
             Update(delta_time);
         }
+        in_update = false;
 
         frame_end_time = chrono::system_clock::now();
         long time =
@@ -103,6 +105,10 @@ void Application::Application_Loop() {
         this_thread::sleep_until(frame_start_time + 16ms);
     }
     Close_Application();
+}
+
+bool Application::In_Update() {
+    return in_update;
 }
 
 void Application::Close_Application() {
