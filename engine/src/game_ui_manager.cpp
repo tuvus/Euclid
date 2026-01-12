@@ -18,6 +18,11 @@ Game_UI_Manager::Game_UI_Manager(Application& application, ECS& ecs, Game_Manage
     ecs.on_delete_entity = [](Entity_ID id) { game_ui_manager_instance->On_Delete_Object(id); };
 }
 
+void Game_UI_Manager::Resize_UI(Vector2 screen_seize_change) {
+    camera.offset = {camera.offset.x - screen_seize_change.x / 2,
+                     camera.offset.y - screen_seize_change.y / 2};
+}
+
 void Game_UI_Manager::Update_UI(std::chrono::milliseconds delta_time, EUI_Context* eui_ctx) {
     for (auto id : to_create) {
         if (to_delete.contains(id))

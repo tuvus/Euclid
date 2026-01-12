@@ -32,6 +32,7 @@ class Game_UI_Manager {
 
     Game_UI_Manager(Application& application, ECS& ecs, Game_Manager& game_manager);
 
+    void Resize_UI(Vector2 screen_seize_change);
     void Update_UI(std::chrono::milliseconds delta_time, EUI_Context* eui_ctx);
 
     void DrawImage(Texture2D& texture, Vector2 pos, float rot, float scale, Color color);

@@ -8,8 +8,11 @@
 #include "test_scene.h"
 
 void Card_Game::resize_update() {
-    screen_width = GetScreenWidth();
-    screen_height = GetScreenHeight();
+    Vector2 screen_size_diff = {screen_width - GetRenderWidth(), screen_height - GetRenderHeight()};
+    screen_width = GetRenderWidth();
+    screen_height = GetRenderHeight();
+
+    scene->Resize_UI(screen_size_diff);
 
     auto root = scene->Get_Root();
     if (root) {
@@ -57,7 +60,7 @@ void Card_Game::Update_UI(chrono::milliseconds deltaTime) {
         resize_update();
     }
 
-    if (screen_width != GetScreenWidth() || screen_height != GetScreenHeight()) {
+    if (screen_width != GetRenderWidth() || screen_height != GetRenderHeight()) {
         resize_update();
     }
 
