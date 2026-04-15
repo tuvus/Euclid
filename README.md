@@ -1,11 +1,14 @@
 # Oskar Niesen & Alex Young
 ## Euclid Game Engine
 
-Euclid is a game engine focusing on multithreading and network synchronization.
+Euclid is a game engine focusing on a new paradigm of multithreading and network synchronization.
+Euclid uses the Entity-Component-System model in tandem with advanced multithreading techniques to improve the multithreading experience for game developers.
 
 ### Demo Game
 
+To demonstrate Euclid a multiplayer tower defense game is included.
 
+![](/Docs/GameScreenshot.png)
 
 
 ### Building Locally
