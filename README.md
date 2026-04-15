@@ -4,6 +4,8 @@
 Euclid is a game engine focusing on a new paradigm of multithreading and network synchronization.
 Euclid uses the Entity-Component-System model in tandem with advanced multithreading techniques to improve the multithreading experience for game developers.
 
+Euclid's design is described in this ![paper](<https://github.com/tuvus/tree/main/Docs/Euclid: A Parallel Programming first Game Engine.pdf>).
+
 ### Demo Game
 
 To demonstrate Euclid a multiplayer tower defense game is included.
